@@ -64,19 +64,21 @@ localStorage so the user isn't nagged. All work is deferred until a trigger is a
 - This brief trued-up at the end.
 
 ## Acceptance criteria
-- [ ] Each trigger fires under its condition and NOT before; exit-intent desktop-only (touch no-op,
+- [x] Each trigger fires under its condition and NOT before; exit-intent desktop-only (touch no-op,
       documented).
-- [ ] Composition: the first to fire opens the lightbox exactly once; the rest are disarmed.
-- [ ] Frequency: within the window → not shown; past the window / no record → shown; default 7 days;
-      `frequencyDays` honored (incl. `0` = every load); storage unavailable → fail open, never throws.
-      **Negative test:** re-arming within the window does not re-open.
-- [ ] Deferral: no listeners/timers added at import or before arm; removed on fire/disarm.
-- [ ] `bundle-size` (gzip-gated) + `no-runtime-deps` contracts added and **green**; bundle stays ONE
-      minified, dependency-free JS file with SCSS inlined; wave-0's tests still pass; all four SDD
-      gates green; typecheck + lint clean.
-- [ ] Mutation-verify: break one load-bearing line (e.g. the frequency-window comparison), show the
-      **named** test go red (cite file:line, before→after), then revert.
-- [ ] Ownership rule `src/triggers/** → wave-1/stream-a.md` is the first commit.
+- [x] Composition: the first to fire opens the lightbox exactly once; the rest are disarmed.
+- [x] Frequency: within the window → not shown; past the window / no record → shown; default 7 days;
+      `frequencyDays` honored (incl. `0` = every load); storage unavailable → fail open, never throws;
+      corrupt localStorage value → fail open. **Negative test:** re-arming within the window does not re-open.
+- [x] Deferral: no listeners/timers added at import or before arm; removed on fire/disarm. Sync fire
+      (scroll-depth on an already-scrolled page) does not leak later triggers' listeners/timers.
+- [x] `bundle-size` (gzip-gated, 3085B / 3100B budget) + `no-runtime-deps` contracts added and **green**;
+      bundle stays ONE minified, dependency-free JS file with SCSS inlined; wave-0's tests still pass
+      (65 total); all four SDD gates green; typecheck + lint clean.
+- [x] Mutation-verify: broke `src/triggers/dismissal.ts:13` (`>=`→`<`), named test
+      `isEligible returns false when a fresh record is inside frequencyDays`
+      (`src/triggers/dismissal.test.ts:26`) went red; 7 tests failed; reverted to green.
+- [x] Ownership rule `src/triggers/** → wave-1/stream-a.md` is the first commit.
 
 ## First action
 Write the failing test `src/triggers/dispatcher.test.ts`: (a) arming a time-on-page trigger opens
@@ -88,18 +90,24 @@ then green.
 - **Open the singleton via the API — never `new Lightbox()`.** Auto-init already created it and does
   NOT open (wave-0 flag #2).
 - **Frequency:** localStorage + per-`pathname` key; default 7 days; `frequencyDays` configurable;
-  stamp-on-show (refresh on dismiss); `Date.now()` is fine at runtime; **fail open** if storage throws;
-  never throw on the host page. localStorage is functional storage (low consent risk) — document it.
+  stamp-on-show (refresh on dismiss); `Date.now()` is fine at runtime; **fail open** if storage throws
+  OR if the stored value is corrupt/non-numeric (Number.isFinite guard); never throw on the host page.
+  localStorage is functional storage (low consent risk) — document it.
 - **Config typing:** augment `TriggersConfigBase` from `src/triggers/` via `declare module '../config'`
   (the proven B1 seam); don't widen the base-interface body in `config.ts`. If a brand-new top-level
   field is unavoidable, that edit lands in `config.ts` (carry `[no-spec: additive config field for
   wave-1]`) — prefer augmenting the base interface.
 - **spec-coupling:** `src/triggers/**` is owned by THIS spec (rule added as the first commit). The
   `src/core/lightbox.ts` change (the `enlb:dismiss` signal) is owned by `wave-0/stream-a.md` → carry
-  `[no-spec: additive dismiss signal for wave-1]` or add a backfill-style amendment note there.
-  `src/index.ts` is exempt.
+  `[no-spec: additive dismiss signal for wave-1]` (the surviving cross-spec waiver). `src/index.ts` is
+  exempt. **Waiver audit:** the original commit also carried `[no-spec: additive config field for
+  wave-1]` for a `config.ts` edit that was superseded when main's backfill (which already had
+  `TriggersConfigBase`) was merged — that waiver is now moot; the only cross-spec change that survived
+  the merge is the `enlb:dismiss` signal in `src/core/lightbox.ts`.
 - **Defer everything:** add document listeners/timers only on `armTriggers`; remove on fire/disarm so a
-  fired/ineligible lightbox leaves no live listeners (non-intrusive NFR).
+  fired/ineligible lightbox leaves no live listeners (non-intrusive NFR). **Sync-fire leak:** when a
+  trigger fires synchronously at arm time (scroll-depth on an already-scrolled page), `fire()` runs
+  `disarmAll()` mid-iteration — bail with `if (fired) break` so later triggers are never armed.
 - **exit-intent is desktop-only** (`mouseout` toward the top); document the touch fallback rather than
   faking it.
 - **Contracts:** `registry.json`/`budgets.json` changes are reviewed as CI config (owner reviews

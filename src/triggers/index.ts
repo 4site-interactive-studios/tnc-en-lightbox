@@ -1,0 +1,6 @@
+export { normalizeTriggers } from './config'
+export type { TriggerSpec, NormalizedTriggers } from './config'
+export { createDispatcher } from './dispatcher'
+export type { Dispatcher } from './dispatcher'
+export { isEligible, stamp, dismissalKey } from './dismissal'
+export type { Trigger } from './types'

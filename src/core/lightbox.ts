@@ -100,6 +100,12 @@ export class Lightbox {
       this.prevFocus.focus()
       this.prevFocus = null
     }
+    document.dispatchEvent(
+      new CustomEvent('enlb:dismiss', {
+        detail: { pathname: location.pathname },
+        bubbles: true,
+      }),
+    )
   }
 
   destroy(): void {

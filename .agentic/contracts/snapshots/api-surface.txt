@@ -1,5 +1,10 @@
+armTriggers : (config?: TriggersConfigBase) => void
+close : () => void
+disarmTriggers : () => void
 ENLightboxAPI
 getInstance : () => Lightbox | null
 init : (config?: Partial<ENLightboxConfig>) => Lightbox
+isEligible : () => boolean
 Lightbox : typeof Lightbox
 normalizeConfig : (input?: Partial<ENLightboxConfig>) => NormalizedConfig
+open : () => void

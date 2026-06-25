@@ -22,17 +22,17 @@ wave-3 adds EN CTA semantics.
 
 | Stream | Brief | Status |
 |--------|-------|--------|
-| stream-a — Behavior triggers, frequency-capped dismissal & composition | [stream-a](./stream-a.md) | planned |
+| stream-a — Behavior triggers, frequency-capped dismissal & composition | [stream-a](./stream-a.md) | in progress (PR #11) |
 
 ## Exit criteria
 
-- [ ] Each of the four triggers opens the lightbox under its condition and not before (jsdom + fake
+- [x] Each of the four triggers opens the lightbox under its condition and not before (jsdom + fake
       timers / stubbed metrics / synthetic events).
-- [ ] Multiple triggers compose: first-to-fire opens once; the rest disarm.
-- [ ] Frequency cap enforced: localStorage, per `location.pathname`, configurable `frequencyDays`
+- [x] Multiple triggers compose: first-to-fire opens once; the rest disarm.
+- [x] Frequency cap enforced: localStorage, per `location.pathname`, configurable `frequencyDays`
       (default 7); within the window → not shown; past it / no record → shown; storage unavailable →
       fail open, never throws.
-- [ ] `bundle-size` (gzip-gated) and `no-runtime-deps` contracts added and green; bundle stays one
+- [x] `bundle-size` (gzip-gated) and `no-runtime-deps` contracts added and green; bundle stays one
       dependency-free file with SCSS inlined; wave-0's tests stay green; all SDD gates green.
 
 ## Retrospective (complete at wave exit)
