@@ -13,7 +13,7 @@ prose.
 
 | Wave | Streams | Status |
 |------|---------|--------|
-| [wave-0](./wave-0/README.md) — Foundation | stream-a (build pipeline + core lightbox) | complete (PR #2) |
+| [wave-0](./wave-0/README.md) — Foundation | stream-a (core, PR #2) + stream-b (backfill) | stream-a merged; backfill planned |
 | wave-1 — Triggers | time-on-page · scroll-depth · inactivity · exit-intent; dismiss-once-per-session; manual multi-trigger composition | planned |
 | wave-2 — Theming & layout | 2-col image+content, mobile stacking, hide-image-on-mobile toggle, multiple themes, full UI customization | planned |
 | wave-3 — EN integration | page-type/page-ID detection, CTA redirect vs. close, no form interference, editor + advanced README | planned |

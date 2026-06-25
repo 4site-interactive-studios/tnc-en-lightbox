@@ -22,6 +22,11 @@ since every later feature builds on this build pipeline, test harness, and core 
 | Stream | Brief | Status |
 |--------|-------|--------|
 | stream-a — Build pipeline & core lightbox | [stream-a](./stream-a.md) | merged (PR #2) |
+| stream-b — Backfill: config seam, foundation contracts & a11y hardening | [stream-b](./stream-b.md) | planned |
+
+> stream-b is the **wave-0 backfill** the master-plan gap audit surfaced (config-extension seam,
+> `no-css-emitted`/`api-surface`/`config-schema` contracts, core a11y/UX slice). It must land before
+> wave-1. See [ROADMAP.md](../ROADMAP.md) B1–B5.
 
 ## Exit criteria
 
