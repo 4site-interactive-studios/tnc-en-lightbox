@@ -10,7 +10,9 @@ export function isEligible(frequencyDays: number, pathname?: string): boolean {
   try {
     const stored = localStorage.getItem(dismissalKey(path))
     if (!stored) return true
-    return Date.now() - Number(stored) >= frequencyDays * DAY_MS
+    const parsed = Number(stored)
+    if (!Number.isFinite(parsed)) return true
+    return Date.now() - parsed >= frequencyDays * DAY_MS
   } catch {
     return true
   }

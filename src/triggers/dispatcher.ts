@@ -44,7 +44,10 @@ export function createDispatcher(specs: TriggerSpec[], onFire: () => void): Disp
       if (specs.length === 0) return
       fired = false
       armed = specs.map((spec) => createTrigger(spec))
-      for (const t of armed) t.arm(fire)
+      for (const t of armed) {
+        if (fired) break
+        t.arm(fire)
+      }
     },
     disarm() {
       disarmAll()
