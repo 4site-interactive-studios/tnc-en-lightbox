@@ -1,4 +1,12 @@
 {
   "_doc": "Index of committed, machine-checked contracts. Each has a source of truth, a generate command, a check command, and a CI job. check_contracts.py runs every check command (300s timeout). A contract with no check command is a promise, not a gate. If a check uses `git diff`, it must also use `git add -AN` to catch newly-emitted untracked files.",
-  "contracts": []
+  "contracts": [
+    {
+      "name": "bundle",
+      "source": "src/ + vite.config.ts",
+      "generate": "npm run build",
+      "check": "npm run build && git add -AN && git diff --exit-code dist/",
+      "ci": "contracts-check"
+    }
+  ]
 }

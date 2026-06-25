@@ -4,7 +4,7 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   build: {
     target: 'es2020',
-    minify: 'esbuild',
+    minify: 'oxc',
     cssCodeSplit: false,
     emptyOutDir: true,
     lib: {
@@ -12,11 +12,6 @@ export default defineConfig({
       name: 'ENLightboxAPI',
       fileName: () => 'en-lightbox.js',
       formats: ['iife'],
-    },
-    rollupOptions: {
-      output: {
-        inlineDynamicImports: true,
-      },
     },
   },
   test: {
