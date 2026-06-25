@@ -21,21 +21,29 @@ since every later feature builds on this build pipeline, test harness, and core 
 
 | Stream | Brief | Status |
 |--------|-------|--------|
-| stream-a — Build pipeline & core lightbox | [stream-a](./stream-a.md) | planned |
+| stream-a — Build pipeline & core lightbox | [stream-a](./stream-a.md) | merged (PR #2) |
 
 ## Exit criteria
 
-- [ ] `npm run build` emits a single minified, dependency-free JS file in `dist/` with SCSS inlined
+- [x] `npm run build` emits a single minified, dependency-free JS file in `dist/` with SCSS inlined
       (no separate `.css`).
-- [ ] The core lightbox instantiates from the global config and closes via ESC, the X button, and an
+- [x] The core lightbox instantiates from the global config and closes via ESC, the X button, and an
       overlay click; focus is trapped while open and restored on close.
-- [ ] Vitest + jsdom suite is green and covers render, all three close paths, the inside-click
+- [x] Vitest + jsdom suite is green and covers render, all three close paths, the inside-click
       no-close case, and focus trap/restore.
-- [ ] The `bundle` freshness contract is green (committed `dist/` matches source) and all SDD gates
+- [x] The `bundle` freshness contract is green (committed `dist/` matches source) and all SDD gates
       pass in CI.
 
-## Retrospective (complete at wave exit)
+## Retrospective
 
-- **What worked:** (1-2 bullets)
-- **What didn't:** (1-2 bullets)
-- **What to change next wave:** (1 bullet, actionable)
+- **What worked:** TDD plus the `bundle` freshness contract did their job — the walking skeleton
+  landed green with real, non-vacuous coverage (20 tests), and the independent-reviewer protocol
+  caught a genuine integration discrepancy instead of rubber-stamping the author's report.
+- **What didn't:** The coordinator merged a side governance PR (#3, the merge-commit policy) into
+  `main` while the feature PR (#2) was still open off older `main`. The moved base made stream-a's
+  diff-vs-main look like it *deleted* an out-of-scope rule, producing a false-positive review BLOCK
+  that cost a full review cycle. (Also: the merge method wasn't in the canon at first — fixed by #3.)
+- **What to change next wave:** Don't move the base under an open PR — land governance/docs PRs
+  before opening feature PRs, or sync the feature branch with `main` (merge, not rebase) before
+  dispatching review; and when the base has advanced, review the real 3-way merge result, not a
+  two-dot `branch..main` diff.

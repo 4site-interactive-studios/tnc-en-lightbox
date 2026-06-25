@@ -13,10 +13,12 @@ prose.
 
 | Wave | Streams | Status |
 |------|---------|--------|
-| [wave-0](./wave-0/README.md) — Foundation | stream-a (build pipeline + core lightbox) | planned |
+| [wave-0](./wave-0/README.md) — Foundation | stream-a (build pipeline + core lightbox) | complete (PR #2) |
 | wave-1 — Triggers | time-on-page · scroll-depth · inactivity · exit-intent; dismiss-once-per-session; manual multi-trigger composition | planned |
 | wave-2 — Theming & layout | 2-col image+content, mobile stacking, hide-image-on-mobile toggle, multiple themes, full UI customization | planned |
 | wave-3 — EN integration | page-type/page-ID detection, CTA redirect vs. close, no form interference, editor + advanced README | planned |
 
-Folders for wave-1+ are created when each wave is scheduled (one wave at a time); the rows above are
-the planned roadmap.
+wave-0 is complete. The full waves-1–4 **master plan** — decomposition, the holistic config +
+`ENLightboxAPI` contract, the machine-checked contracts, and the NFR/use-case coverage matrix — lives
+in [ROADMAP.md](./ROADMAP.md) (gap-audited; owner decisions recorded). Per-wave folders
+(`wave-N/{README,stream-*}.md`) are scaffolded just-in-time at each wave entry per the plan.
