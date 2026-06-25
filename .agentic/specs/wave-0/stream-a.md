@@ -2,7 +2,7 @@
 
 **Wave:** 0 · **Branch:** `feat/wave-0-core` · **Depends on:** none ·
 **Required reading:** [`AGENTS.md`](../../AGENTS.md), [`WORKFLOW.md`](../../WORKFLOW.md), the [wave-0 README](./README.md), this brief.
-**Status:** implemented — core open/close lifecycle, a11y, and Vitest suite landed on `feat/wave-0-core`; build/contract/CI verification in progress.
+**Status:** implemented — core open/close lifecycle, a11y, and Vitest suite landed on `feat/wave-0-core`; build, bundle contract, and all SDD gates green in CI (PR #2).
 
 ## Goal
 Stand up the toolchain and ship a walking-skeleton lightbox. After this lands, the repo builds a
@@ -65,7 +65,7 @@ later wave (triggers, theming, EN integration) builds on.
       overlay click does not close.
 - [x] `destroy()` removes all DOM and listeners — opening/closing repeatedly leaks nothing.
 - [x] `python3 tools/sdd/check_contracts.py` passes with the new `bundle` contract (dist matches src).
-- [ ] All SDD gates green in CI; `npm run typecheck` and `npm run lint` clean.
+- [x] All SDD gates green in CI; `npm run typecheck` and `npm run lint` clean.
 - [x] Mutation-verify: break one load-bearing line (e.g. the ESC handler), show the **named** test go
       red (cite file:line, before→after), then revert.
 
