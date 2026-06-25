@@ -62,4 +62,9 @@ describe('dismissal (frequency-capped)', () => {
     expect(isEligible(7, '/A')).toBe(false)
     expect(isEligible(7, '/B')).toBe(true)
   })
+
+  it('isEligible fails OPEN when the stored value is corrupt (non-numeric)', () => {
+    localStorage.setItem('enlb:shown:/', 'abc')
+    expect(isEligible(7, '/')).toBe(true)
+  })
 })

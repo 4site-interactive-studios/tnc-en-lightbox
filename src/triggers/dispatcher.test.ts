@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { createDispatcher } from './dispatcher'
 
 describe('trigger dispatcher', () => {
   beforeEach(() => {
@@ -100,5 +101,59 @@ describe('trigger dispatcher', () => {
 
     vi.advanceTimersByTime(10000)
     expect(document.querySelector('.enlb-overlay')).toBeNull()
+  })
+
+  it('sync fire from scroll-depth does not leak inactivity listeners/timers after disarm', async () => {
+    vi.spyOn(window, 'scrollY', 'get').mockReturnValue(600)
+    vi.spyOn(document.documentElement, 'scrollHeight', 'get').mockReturnValue(2000)
+    vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(800)
+
+    const mod = await import('../index')
+    mod.init({
+      header: 'Hi',
+      body: 'B',
+      triggers: { scroll: 50, inactivity: 5000, frequencyDays: 7 },
+    })
+    mod.armTriggers()
+
+    expect(document.querySelector('.enlb-overlay')).not.toBeNull()
+
+    mod.close()
+    mod.disarmTriggers()
+
+    vi.advanceTimersByTime(5000)
+    expect(document.querySelector('.enlb-overlay')).toBeNull()
+  })
+})
+
+describe('dispatcher (direct — sync fire leak)', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+    vi.restoreAllMocks()
+  })
+
+  it('sync fire from scroll-depth does not leak the inactivity timer after disarm', () => {
+    vi.spyOn(window, 'scrollY', 'get').mockReturnValue(600)
+    vi.spyOn(document.documentElement, 'scrollHeight', 'get').mockReturnValue(2000)
+    vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(800)
+
+    const onFire = vi.fn()
+    const dispatcher = createDispatcher(
+      [
+        { type: 'scroll', percent: 50 },
+        { type: 'inactivity', idleMs: 5000 },
+      ],
+      onFire,
+    )
+    dispatcher.arm()
+    expect(onFire).toHaveBeenCalledTimes(1)
+
+    dispatcher.disarm()
+
+    vi.advanceTimersByTime(5000)
+    expect(onFire).toHaveBeenCalledTimes(1)
   })
 })
