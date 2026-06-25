@@ -4,6 +4,7 @@ import { normalizeConfig } from '../config'
 
 afterEach(() => {
   document.body.innerHTML = ''
+  document.head.querySelectorAll('style[data-enlb]').forEach((el) => el.remove())
 })
 
 describe('Lightbox', () => {

@@ -2,6 +2,7 @@
 
 **Wave:** 0 · **Branch:** `feat/wave-0-core` · **Depends on:** none ·
 **Required reading:** [`AGENTS.md`](../../AGENTS.md), [`WORKFLOW.md`](../../WORKFLOW.md), the [wave-0 README](./README.md), this brief.
+**Status:** implemented — core open/close lifecycle, a11y, and Vitest suite landed on `feat/wave-0-core`; build/contract/CI verification in progress.
 
 ## Goal
 Stand up the toolchain and ship a walking-skeleton lightbox. After this lands, the repo builds a
