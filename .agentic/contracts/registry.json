@@ -42,6 +42,13 @@
       "generate": "",
       "check": "node tools/sdd/check_no_runtime_deps.mjs",
       "ci": "contracts-check"
+    },
+    {
+      "name": "cross-browser-smoke",
+      "source": "e2e/smoke.spec.ts + e2e/harness.html + dist/en-lightbox.js",
+      "generate": "npm run build",
+      "check": "",
+      "ci": "cross-browser-smoke"
     }
   ]
 }
