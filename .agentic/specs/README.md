@@ -14,7 +14,7 @@ prose.
 | Wave | Streams | Status |
 |------|---------|--------|
 | [wave-0](./wave-0/README.md) — Foundation | stream-a (core, PR #2) + stream-b (backfill, PR #8) | complete |
-| [wave-1](./wave-1/README.md) — Triggers | time-on-page · scroll-depth · inactivity · exit-intent; frequency-capped dismissal (localStorage, default 7d); manual multi-trigger composition | in progress |
+| [wave-1](./wave-1/README.md) — Triggers | time-on-page · scroll-depth · inactivity · exit-intent; frequency-capped dismissal (localStorage, default 7d); manual multi-trigger composition | complete (PR #11) |
 | wave-2 — Theming & layout | 2-col image+content, mobile stacking, hide-image-on-mobile toggle, multiple themes, full UI customization | planned |
 | wave-3 — EN integration | page-type/page-ID detection, CTA redirect vs. close, no form interference, editor + advanced README | planned |
 
@@ -22,3 +22,7 @@ wave-0 is complete. The full waves-1–4 **master plan** — decomposition, the 
 `ENLightboxAPI` contract, the machine-checked contracts, and the NFR/use-case coverage matrix — lives
 in [ROADMAP.md](./ROADMAP.md) (gap-audited; owner decisions recorded). Per-wave folders
 (`wave-N/{README,stream-*}.md`) are scaffolded just-in-time at each wave entry per the plan.
+
+A committed **cross-browser-smoke mini-stream** (Playwright; NFR N5, Decision D3) runs **between
+wave-1 and wave-2** — it validates the cumulative core + triggers in real browsers before theming
+lands. See [cross-browser-smoke.md](./cross-browser-smoke.md).

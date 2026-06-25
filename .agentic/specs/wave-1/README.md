@@ -22,7 +22,7 @@ wave-3 adds EN CTA semantics.
 
 | Stream | Brief | Status |
 |--------|-------|--------|
-| stream-a — Behavior triggers, frequency-capped dismissal & composition | [stream-a](./stream-a.md) | in progress (PR #11) |
+| stream-a — Behavior triggers, frequency-capped dismissal & composition | [stream-a](./stream-a.md) | merged (PR #11) |
 
 ## Exit criteria
 
@@ -35,8 +35,16 @@ wave-3 adds EN CTA semantics.
 - [x] `bundle-size` (gzip-gated) and `no-runtime-deps` contracts added and green; bundle stays one
       dependency-free file with SCSS inlined; wave-0's tests stay green; all SDD gates green.
 
-## Retrospective (complete at wave exit)
+## Retrospective
 
-- **What worked:** (1-2 bullets)
-- **What didn't:** (1-2 bullets)
-- **What to change next wave:** (1 bullet, actionable)
+- **What worked:** The coordinator's pre-review adversarial verification (5 lenses) caught a **HIGH**
+  defect (sync-fire listener/timer leak) and a **MEDIUM** (corrupt-storage fail-closed) that CI *and*
+  the author's 62 tests missed — both fixed before review, so the independent review was a clean
+  confirm. The frequency-cap dismissal + trigger engine landed solid (65 tests, real mutation-verify).
+- **What didn't:** The coding agent branched off a **stale `main`** (pre-backfill / pre-wave-1-entry)
+  and had to merge `main` + resolve 5 conflicts — avoidable churn and risk (the merge verified clean,
+  but it was an unnecessary hazard).
+- **What to change next wave:** Strengthen the launch GATE from "branch off main" to "**`git fetch
+  origin` && branch off `origin/main`**," and have the coordinator confirm the agent's reported base
+  SHA == current `origin/main` *before* review — catch a stale base at dispatch, not in conflict
+  resolution.
