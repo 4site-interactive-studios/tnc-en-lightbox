@@ -1,11 +1,32 @@
 {
-  "_doc": "Index of committed, machine-checked contracts. Each has a source of truth, a generate command, a check command, and a CI job. check_contracts.py runs every check command (300s timeout). A contract with no check command is a promise, not a gate. If a check uses `git diff`, it must also use `git add -AN` to catch newly-emitted untracked files.",
+  "_doc": "Index of committed, machine-checked contracts. Each has a source of truth, a generate command, a check command, and a CI job. check_contracts.py runs each check command (300s timeout). A contract with no check command is a promise, not a gate. If a check uses `git diff`, it must also use `git add -AN` to catch newly-emitted untracked files.",
   "contracts": [
     {
       "name": "bundle",
       "source": "src/ + vite.config.ts",
       "generate": "npm run build",
       "check": "npm run build && git add -AN && git diff --exit-code dist/",
+      "ci": "contracts-check"
+    },
+    {
+      "name": "no-css-emitted",
+      "source": "vite.config.ts build output",
+      "generate": "npm run build",
+      "check": "npm run build && git add -AN && if find dist -name '*.css' -type f | grep -q .; then echo 'ERROR: .css emitted'; exit 1; fi",
+      "ci": "contracts-check"
+    },
+    {
+      "name": "api-surface",
+      "source": "src/index.ts public exports + IIFE global",
+      "generate": "npm run contracts:api-surface",
+      "check": "npm run contracts:api-surface && git add -AN && git diff --exit-code .agentic/contracts/snapshots/api-surface.txt",
+      "ci": "contracts-check"
+    },
+    {
+      "name": "config-schema",
+      "source": "src/config.ts",
+      "generate": "npm run contracts:config-schema",
+      "check": "npm run contracts:config-schema && git add -AN && git diff --exit-code .agentic/contracts/snapshots/config-schema.txt",
       "ci": "contracts-check"
     },
     {

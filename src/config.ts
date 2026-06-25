@@ -8,8 +8,13 @@ export interface ENLightboxCta {
   href?: string
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type -- intentionally empty; populated via declaration merging from src/triggers/config.ts (B1/R1)
 export interface TriggersConfigBase {}
+
+export interface ThemeConfigBase {}
+
+export interface LayoutConfigBase {}
+
+export interface ENIntegrationConfigBase {}
 
 export interface ENLightboxConfig {
   header?: string
@@ -20,7 +25,9 @@ export interface ENLightboxConfig {
   closeOnEsc?: boolean
   hideImageOnMobile?: boolean
   triggers?: TriggersConfigBase
-  theme?: unknown
+  theme?: ThemeConfigBase
+  layout?: LayoutConfigBase
+  en?: ENIntegrationConfigBase
 }
 
 export interface NormalizedConfig {
@@ -31,6 +38,10 @@ export interface NormalizedConfig {
   closeOnOverlay: boolean
   closeOnEsc: boolean
   hideImageOnMobile: boolean
+  triggers: TriggersConfigBase
+  theme: ThemeConfigBase
+  layout: LayoutConfigBase
+  en: ENIntegrationConfigBase
 }
 
 export function normalizeConfig(input?: Partial<ENLightboxConfig>): NormalizedConfig {
@@ -43,5 +54,9 @@ export function normalizeConfig(input?: Partial<ENLightboxConfig>): NormalizedCo
     closeOnOverlay: src.closeOnOverlay ?? true,
     closeOnEsc: src.closeOnEsc ?? true,
     hideImageOnMobile: src.hideImageOnMobile ?? true,
+    triggers: src.triggers ?? {},
+    theme: src.theme ?? {},
+    layout: src.layout ?? {},
+    en: src.en ?? {},
   }
 }

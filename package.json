@@ -11,7 +11,10 @@
     "build": "vite build",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "contracts:api-surface": "tsx tools/sdd/generate-api-surface.ts",
+    "contracts:config-schema": "tsx tools/sdd/generate-config-schema.ts",
+    "contracts:generate": "npm run contracts:api-surface && npm run contracts:config-schema"
   },
   "private": true,
   "license": "UNLICENSED",
@@ -21,6 +24,8 @@
     "eslint": "^10.5.0",
     "jsdom": "^29.1.1",
     "sass": "^1.101.0",
+    "ts-morph": "^28.0.0",
+    "tsx": "^4.22.4",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.62.0",
     "vite": "^8.1.0",

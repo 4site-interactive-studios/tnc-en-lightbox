@@ -7,6 +7,10 @@ describe('normalizeConfig', () => {
     expect(c.closeOnEsc).toBe(true)
     expect(c.closeOnOverlay).toBe(true)
     expect(c.hideImageOnMobile).toBe(true)
+    expect(c.triggers).toEqual({})
+    expect(c.theme).toEqual({})
+    expect(c.layout).toEqual({})
+    expect(c.en).toEqual({})
   })
 
   it('defaults content fields to empty strings and leaves image undefined', () => {

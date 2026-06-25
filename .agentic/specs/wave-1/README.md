@@ -2,37 +2,41 @@
 
 ## Goal
 
-Make the auto-instantiated (not-yet-opened) lightbox appear in response to user behavior and ensure
-it never nags. A `src/triggers/` dispatcher reads trigger config, arms the requested triggers, fires
-`open()` exactly once on the first match (any-of semantics, first-to-fire wins), then tears down all
-listeners. Four trigger implementations (time-on-page, scroll-depth, inactivity, exit-intent) behind a
-common interface. Frequency-capped dismissal via `localStorage` keyed per `location.pathname` with a
-page-editor `frequencyDays` setting prevents re-showing within the cooldown window.
+Make the lightbox fire itself on user behavior and respect a per-page display frequency, on top of
+wave-0's core + backfill. A trigger engine opens the auto-instantiated lightbox when a configured
+trigger fires (time-on-page, scroll-depth, inactivity, exit-intent), composes multiple triggers
+(first-to-fire wins), and enforces a persistent, page-editor-configurable display frequency (default
+once every 7 days) via localStorage so users aren't nagged. All work is deferred until a trigger is
+armed. Landing this turns the static core into a campaign-ready behavioral overlay; wave-2 themes it,
+wave-3 adds EN CTA semantics.
 
 ## Dependencies
 
-- **Depends on:** wave-0 (core lightbox + build pipeline + test harness). The wave-0 backfill B1
-  (config extension seam) is folded into this stream — `config.ts` carries empty extensible base
-  interfaces that `src/triggers/` populates via declaration merging.
-- **Unlocks:** wave-2 (theming) can assume triggers exist; wave-3 (EN integration) can gate trigger
-  arming via EN eligibility (future `canArm` hook, not in this stream).
+- **Depends on:** wave-0 — the core `Lightbox` + `ENLightboxAPI` singleton, the config-extension seam
+  (`TriggersConfigBase` etc., backfill stream-b), the a11y slice, and the foundation contracts.
+  Triggers open the auto-instantiated instance; they never construct their own.
+- **Unlocks:** behavior-driven display with frequency control. wave-2 themes the UI; wave-3 adds EN
+  CTA routing + non-interference.
 
 ## Streams
 
 | Stream | Brief | Status |
 |--------|-------|--------|
-| stream-a — Trigger dispatcher, trigger set, frequency-capped dismissal & composition | [stream-a](./stream-a.md) | in progress |
+| stream-a — Behavior triggers, frequency-capped dismissal & composition | [stream-a](./stream-a.md) | in progress (PR #11) |
 
 ## Exit criteria
 
-- [ ] `npm test` green: dispatcher, all 4 triggers, frequency-capped dismissal, and composition
-      (first-to-fire wins) covered by unit tests in jsdom.
-- [ ] `npm run typecheck` and `npm run lint` clean; `npm run build` emits a single dependency-free
-      JS file.
-- [ ] `bundle-size` and `no-runtime-deps` contracts green.
-- [ ] All four SDD gates green in CI.
-- [ ] Mutation-verify: break one load-bearing line, show the named test go red, revert.
+- [x] Each of the four triggers opens the lightbox under its condition and not before (jsdom + fake
+      timers / stubbed metrics / synthetic events).
+- [x] Multiple triggers compose: first-to-fire opens once; the rest disarm.
+- [x] Frequency cap enforced: localStorage, per `location.pathname`, configurable `frequencyDays`
+      (default 7); within the window → not shown; past it / no record → shown; storage unavailable →
+      fail open, never throws.
+- [x] `bundle-size` (gzip-gated) and `no-runtime-deps` contracts added and green; bundle stays one
+      dependency-free file with SCSS inlined; wave-0's tests stay green; all SDD gates green.
 
-## Retrospective
+## Retrospective (complete at wave exit)
 
-_To be filled at wave exit._
+- **What worked:** (1-2 bullets)
+- **What didn't:** (1-2 bullets)
+- **What to change next wave:** (1 bullet, actionable)

@@ -1,117 +1,109 @@
-# stream-a — Trigger dispatcher, trigger set, frequency-capped dismissal & composition
+# stream-a — Behavior triggers, frequency-capped dismissal & composition
 
-**Wave:** 1 · **Branch:** `feat/wave-1-triggers` · **Depends on:** wave-0 (core lightbox) ·
-**Required reading:** [`AGENTS.md`](../../AGENTS.md), [`WORKFLOW.md`](../../WORKFLOW.md), the
-[wave-1 README](./README.md), this brief, [`ROADMAP.md`](../ROADMAP.md) (wave-1 section +
-amendments).
+**Wave:** 1 · **Branch:** `feat/wave-1-triggers` · **Depends on:** wave-0 (core + backfill) ·
+**Required reading:** [`AGENTS.md`](../../AGENTS.md), [`WORKFLOW.md`](../../WORKFLOW.md), the [wave-1 README](./README.md), this brief, [`ROADMAP.md`](../ROADMAP.md) (the wave-1 section **and the "Amendments — wave-1 entry"** section, which governs), and the wave-0 config seam (`src/config.ts` base interfaces).
 
 ## Goal
-
-Deliver the behavior-triggered lightbox: a `src/triggers/` dispatcher that arms four trigger
-implementations (time-on-page, scroll-depth, inactivity, exit-intent), fires `open()` exactly once
-on the first match (any-of semantics, first-to-fire wins, others disarm), and enforces
-frequency-capped dismissal via `localStorage` so the lightbox never nags. The wiring lives in
-`src/index.ts` as thin call-through only; the dispatcher, normalizer, and dismissal logic live in
-governed `src/triggers/` modules.
+Make the lightbox fire itself and respect a per-page display frequency. A trigger engine opens the
+auto-instantiated lightbox when a configured behavior trigger fires (time-on-page, scroll-depth,
+inactivity, exit-intent), composes multiple triggers (first-to-fire wins, the rest disarm), and
+enforces a persistent, page-editor-configurable display frequency (default: once every 7 days) via
+localStorage so the user isn't nagged. All work is deferred until a trigger is armed.
 
 ## In scope
-
-- **`src/triggers/` dispatcher + 4 triggers:** time-on-page, scroll-depth, inactivity, exit-intent
-  behind a common `Trigger` interface (`arm(onFire)`, `disarm()`). First-to-fire opens ONCE via
-  `ENLightboxAPI.getInstance().open()`; all others disarm immediately.
-- **Frequency-capped dismissal:** `localStorage`, keyed per `location.pathname`; page-editor
-  `frequencyDays` (default 7; 0 = every load); eligible iff no record or
-  `Date.now() - stored >= frequencyDays * 86_400_000`; stamp on show (refresh on dismiss); storage
-  unavailable → fail OPEN, never throw. Single key-derivation function (`enlb:shown:${pathname}`).
-- **Config typing:** augment `TriggersConfigBase` via `declare module '../config'` from
-  `src/triggers/` (don't widen the base-interface body). B1 backfill: replace `triggers?: unknown`
-  with `export interface TriggersConfigBase {}` + `triggers?: TriggersConfigBase` in `config.ts`.
-- **Wiring from `src/index.ts`:** frequency gate + arm triggers from `window.ENLightbox`; API
-  `armTriggers` / `disarmTriggers` / `isEligible` / `open` / `close`. Minimal additive `enlb:dismiss`
-  `CustomEvent` on the core (`Lightbox.close()` dispatches `{ detail: { pathname } }`).
-- **Contracts:** add `bundle-size` (gzip-gated; committed budget in
-  `.agentic/contracts/budgets.json`, baseline from current dist) and `no-runtime-deps` to
-  `registry.json`.
-- **Ownership:** `src/triggers/**` → `.agentic/specs/wave-1/stream-a.md` added to
-  `ownership.json.rules{}` as the first commit (Decision D9).
+- **`src/triggers/` dispatcher + four triggers + composition:** a dispatcher that arms the configured
+  triggers and, on the first to fire, calls `ENLightboxAPI.getInstance()?.open()` exactly once, then
+  disarms the rest. Triggers: **time-on-page** (after N ms), **scroll-depth** (≥ X%), **inactivity**
+  (after N ms idle; input resets the timer), **exit-intent** (desktop pointer-out-top; touch = no-op).
+- **Frequency-capped dismissal (the wave-1 dismissal model):**
+  - **localStorage**, keyed per `location.pathname` (e.g. `enlb:shown:${pathname}` = a timestamp).
+  - Page-editor field **`frequencyDays?: number`** (default **7**; `0` = show every load): "show at most
+    once per `frequencyDays` on a given page."
+  - Eligible to open iff no stored timestamp **or** `Date.now() - stored ≥ frequencyDays·86 400 000`.
+    Stamp the timestamp when the lightbox is shown (`open()`); refresh on dismiss. (Stamp-on-show
+    semantics — confirmed with the owner.)
+  - localStorage unavailable/throwing (Safari private mode, disabled) ⇒ **fail open** (treat as
+    eligible) and **never throw** on the host page; unit-test a throwing storage.
+  - A single internal key/derivation function used by both the writer and the eligibility check.
+- **Trigger + frequency config typing** owned in `src/triggers/`: augment `TriggersConfigBase` via the
+  proven wave-0 seam (`declare module '../config'`) — do NOT widen the base-interface body in
+  `config.ts`. Export the concrete `TriggersConfig`/`frequencyDays` types for docs.
+- **Wiring in `src/index.ts`** (exempt from spec-coupling): after auto-init instantiates the Lightbox
+  from `window.ENLightbox`, apply the frequency gate and arm triggers from the config. Public API:
+  `ENLightboxAPI.armTriggers(config?)`, `disarmTriggers()`, `isEligible()`/`isDismissed()`, `open()`,
+  `close()`.
+- **Minimal additive `enlb:dismiss` CustomEvent** dispatched by `Lightbox.close()` (the backfill did
+  NOT add it) so the frequency guard records/refreshes the timestamp. Keep the core change tiny/additive.
+- **No `canArm()` hook** (dropped — see ROADMAP Amendments; EN targeting is by-hand).
+- **Contracts (wave-1, per ROADMAP):** add **`bundle-size`** (gzip-gated; budget in
+  `.agentic/contracts/budgets.json`, baseline from current `dist/`) and **`no-runtime-deps`** to
+  `registry.json`, both green.
+- **Ownership carve-out** `src/triggers/** → .agentic/specs/wave-1/stream-a.md` added to
+  `ownership.json.rules{}` as the **first commit** of this PR (Decision D9), before any `src/triggers/`
+  file lands.
+- **Tests** under `src/triggers/**` (Vitest + jsdom; fake timers; mocked `localStorage`; controlled
+  `Date`): each trigger arms/fires under its condition and not before; composition (first-to-fire opens
+  once, others disarm); the frequency gate (within window suppressed, past window/no-record shown,
+  default 7, `frequencyDays` honored, storage-throw → fail open); deferral (no listeners/timers before
+  arm; removed on fire/disarm).
 
 ## Out of scope
-
-- EN detection / `canArm` hook / `ENPageContext` — editor places config by hand; no canArm hook this
-  stream.
-- Theming — wave-2.
-- Analytics / A-B / video-progress trigger — BACKLOG.
-- `sessionStorage`-based session dismissal — superseded by `localStorage` frequency-capped dismissal
-  (this stream's JIT authority).
-- Per-bucket sub-normalizer composition for theme/layout/en — their waves.
+- EN page-type/page-ID detection, `canArm`, `ENPageContext` — **not needed** (editor places config by
+  hand); wave-3 EN is CTA semantics + non-interference + docs only.
+- Theming / layout — **wave-2**.
+- Analytics/lifecycle hooks, A/B, video-progress trigger — **deferred** ([`BACKLOG.md`](../../BACKLOG.md)).
 
 ## Deliverables
-
-- `src/triggers/types.ts` — common `Trigger` interface.
-- `src/triggers/config.ts` — trigger config types, `TriggersConfigBase` augmentation via
-  `declare module '../config'`, `normalizeTriggers()`.
-- `src/triggers/dismissal.ts` — frequency-capped dismissal: key derivation, `isEligible()`, `stamp()`.
-- `src/triggers/dispatcher.ts` — trigger dispatcher (arm/disarm, first-to-fire wins).
-- `src/triggers/time-on-page.ts`, `src/triggers/scroll-depth.ts`, `src/triggers/inactivity.ts`,
-  `src/triggers/exit-intent.ts` — 4 trigger implementations.
-- `src/triggers/index.ts` — barrel re-exports (spec-exempt).
-- `src/triggers/dispatcher.test.ts` + per-trigger and dismissal test files.
-- `src/config.ts` — `TriggersConfigBase` empty interface (B1 backfill; `[no-spec: additive config
-  field for wave-1]`).
-- `src/core/lightbox.ts` — additive `enlb:dismiss` `CustomEvent` on `close()` (`[no-spec: additive
-  dismiss signal for wave-1]`).
-- `src/index.ts` — API methods + auto-init trigger arming + `enlb:dismiss` listener (spec-exempt).
-- `.agentic/contracts/registry.json` — `bundle-size` + `no-runtime-deps` entries.
-- `.agentic/contracts/budgets.json` — gzip budget.
-- `tools/sdd/check_size.mjs` — bundle-size check tool.
-- `.agentic/ownership.json` — `src/triggers/**` rule.
-- `.agentic/specs/wave-1/README.md` + `.agentic/specs/wave-1/stream-a.md` — this spec.
-- Refreshed `dist/en-lightbox.js`.
+- `src/triggers/` — dispatcher, the four triggers, the frequency-capped dismissal guard, the config
+  typer (augmenting the seam).
+- `src/index.ts` — frequency gate + trigger arming from the global config; `ENLightboxAPI` controls.
+- `src/core/lightbox.ts` — minimal additive `enlb:dismiss` signal.
+- `.agentic/contracts/registry.json` (+ `budgets.json`) — `bundle-size` + `no-runtime-deps` contracts.
+- `.agentic/ownership.json` — the `src/triggers/**` carve-out.
+- Vitest suite under `src/triggers/**`; refreshed `dist/en-lightbox.js`.
+- This brief trued-up at the end.
 
 ## Acceptance criteria
-
-- [ ] `npm test` green: dispatcher, all 4 triggers, frequency-capped dismissal (eligible + blocked +
-      storage-unavailable fail-open), composition (first-to-fire wins, others disarm) covered.
-- [ ] `npm run typecheck` passes with the `TriggersConfigBase` augmentation; `npm run lint` clean;
-      `npm run build` emits one dependency-free JS file.
-- [ ] `bundle-size` and `no-runtime-deps` contracts green (`python3 tools/sdd/check_contracts.py`).
-- [ ] All four SDD gates green in CI.
-- [ ] Mutation-verify: break one load-bearing line (e.g. the frequency-window comparison), show the
-      named test go red (file:line, before→after), revert.
-- [ ] Negative test: a fresh `enlb:shown` localStorage record inside `frequencyDays` blocks arming.
-- [ ] Storage-unavailable path fails OPEN (never throws).
+- [x] Each trigger fires under its condition and NOT before; exit-intent desktop-only (touch no-op,
+      documented).
+- [x] Composition: the first to fire opens the lightbox exactly once; the rest are disarmed.
+- [x] Frequency: within the window → not shown; past the window / no record → shown; default 7 days;
+      `frequencyDays` honored (incl. `0` = every load); storage unavailable → fail open, never throws.
+      **Negative test:** re-arming within the window does not re-open.
+- [x] Deferral: no listeners/timers added at import or before arm; removed on fire/disarm.
+- [x] `bundle-size` (gzip-gated, 2755B / 2800B budget) + `no-runtime-deps` contracts added and **green**;
+      bundle stays ONE minified, dependency-free JS file with SCSS inlined; wave-0's tests still pass
+      (55 total); all four SDD gates green; typecheck + lint clean.
+- [x] Mutation-verify: broke `src/triggers/dismissal.ts:13` (`>=`→`<`), named test
+      `isEligible returns false when a fresh record is inside frequencyDays`
+      (`src/triggers/dismissal.test.ts:26`) went red; 7 tests failed; reverted to green.
+- [x] Ownership rule `src/triggers/** → wave-1/stream-a.md` is the first commit.
 
 ## First action
-
 Write the failing test `src/triggers/dispatcher.test.ts`: (a) arming a time-on-page trigger opens
-`ENLightboxAPI.getInstance()` after the delay (fake timers) and NOT before; (b) with a fresh
-`enlb:shown` localStorage record inside `frequencyDays`, arming does NOT open. Red first, then green.
+`ENLightboxAPI.getInstance()` after the configured delay (fake timers) and **not** before; (b) with a
+fresh `enlb:shown` localStorage record inside `frequencyDays`, arming does **not** open. Red first,
+then green.
 
 ## Gotchas
-
-- **B1 backfill is folded here.** The wave-0 backfill (stream-b) was scaffolded but not implemented.
-  `config.ts` still has `triggers?: unknown` — replace with `TriggersConfigBase` (empty interface +
-  field). Declaration merging *adds* members; it cannot narrow `unknown` (Risk R1). Prove with
-  `tsc --noEmit`.
-- **`declare module '../config'` specifier.** From `src/triggers/config.ts`, the relative specifier
-  to `src/config.ts` is `'../config'`, not `'./config'`. Get this wrong and the augmentation silently
-  targets nothing.
-- **`verbatimModuleSyntax: true`.** Use `import type` for type-only imports; the augmentation
-  `declare module` block is ambient and does not need a runtime import of `'../config'`.
-- **Frequency-capped dismissal uses `localStorage`, not `sessionStorage`.** This stream's JIT brief
-  supersedes the ROADMAP's session-discipline design. Key: `enlb:shown:${pathname}`. Stamp on show,
-  refresh on dismiss (same key, same operation).
-- **Storage unavailable → fail OPEN.** Safari private mode can throw on `localStorage` writes. Wrap
-  in try/catch; treat unavailable as eligible (never throw, never block the host page).
-- **`enlb:dismiss` is additive on the core.** `Lightbox.close()` dispatches a `CustomEvent` on
-  `document`; the dismissal listener in `index.ts` catches it and refreshes the stamp. Core→feature
-  decoupling via events, never direct imports from `src/triggers/` into `src/core/`.
-- **`src/index.ts` is spec-exempt but holds no logic.** The dispatcher, normalizer, and dismissal
-  logic live in governed `src/triggers/` modules. `index.ts` is a thin call-through (Decision D8).
-- **CI does NOT run the vitest suite.** Run `npm test`, `npm run typecheck`, `npm run lint`,
-  `npm run build` GREEN locally before the PR. CI runs the 4 SDD gates only.
-- **`exit-intent` on touch = no-op.** No mouse events on touch; the trigger simply won't fire. No
-  special handling needed.
-- **Passive listeners.** Scroll/mousemove listeners use `{ passive: true }` (N3 non-intrusive NFR).
-- **Single dependency-free artifact.** Everything compiles into `dist/en-lightbox.js`; zero runtime
-  deps (the `no-runtime-deps` contract asserts `package.json` `dependencies` is empty/absent).
+- **Open the singleton via the API — never `new Lightbox()`.** Auto-init already created it and does
+  NOT open (wave-0 flag #2).
+- **Frequency:** localStorage + per-`pathname` key; default 7 days; `frequencyDays` configurable;
+  stamp-on-show (refresh on dismiss); `Date.now()` is fine at runtime; **fail open** if storage throws;
+  never throw on the host page. localStorage is functional storage (low consent risk) — document it.
+- **Config typing:** augment `TriggersConfigBase` from `src/triggers/` via `declare module '../config'`
+  (the proven B1 seam); don't widen the base-interface body in `config.ts`. If a brand-new top-level
+  field is unavoidable, that edit lands in `config.ts` (carry `[no-spec: additive config field for
+  wave-1]`) — prefer augmenting the base interface.
+- **spec-coupling:** `src/triggers/**` is owned by THIS spec (rule added as the first commit). The
+  `src/core/lightbox.ts` change (the `enlb:dismiss` signal) is owned by `wave-0/stream-a.md` → carry
+  `[no-spec: additive dismiss signal for wave-1]` or add a backfill-style amendment note there.
+  `src/index.ts` is exempt.
+- **Defer everything:** add document listeners/timers only on `armTriggers`; remove on fire/disarm so a
+  fired/ineligible lightbox leaves no live listeners (non-intrusive NFR).
+- **exit-intent is desktop-only** (`mouseout` toward the top); document the touch fallback rather than
+  faking it.
+- **Contracts:** `registry.json`/`budgets.json` changes are reviewed as CI config (owner reviews
+  gate-arming files, Q11). Keep `bundle-size` gzip-gated with a committed budget.
+- **jsdom limits:** mock `localStorage` + use fake timers/controlled `Date`; assert behavior/DOM/events,
+  not layout. Real cross-browser exit-intent/scroll QA is the committed cross-browser mini-stream.

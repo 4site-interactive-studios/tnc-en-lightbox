@@ -1,6 +1,6 @@
 {
   "bundleSize": {
-    "_doc": "Gzip-size budget for dist/en-lightbox.js. The bundle-size contract (check_size.mjs) fails if the gzip size exceeds maxGzipBytes. Baseline: 1809B gzip (wave-0). Wave-1 measured: 2768B gzip. Re-baseline after wave-2 themes (Decision D-size).",
-    "maxGzipBytes": 2800
+    "_doc": "Gzip-size budget for dist/en-lightbox.js. The bundle-size contract (check_size.mjs) fails if the gzip size exceeds maxGzipBytes. Baseline: 1809B gzip (wave-0 core). After wave-0 backfill (a11y slice): ~2300B. Wave-1 (triggers + dismissal): 3058B gzip. Budget set to 3100B with headroom. Re-baseline after wave-2 themes (Decision D-size).",
+    "maxGzipBytes": 3100
   }
 }

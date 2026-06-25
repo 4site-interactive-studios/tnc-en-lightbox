@@ -4,7 +4,9 @@ import { normalizeConfig } from '../config'
 
 afterEach(() => {
   document.body.innerHTML = ''
+  document.body.style.overflow = ''
   document.head.querySelectorAll('style[data-enlb]').forEach((el) => el.remove())
+  window.scrollTo = () => undefined
 })
 
 describe('Lightbox', () => {

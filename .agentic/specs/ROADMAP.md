@@ -26,13 +26,24 @@ The eleven open questions from the gap audit are resolved as below by the projec
 - **Q2 — wave-4 (release/packaging):** Optional and kept separate; decided when the first release is cut. Cross-browser QA (N5) does **not** depend on it (Decision D3).
 - **Q3 — placement of committed a11y + cross-browser work:** The B5 core a11y/UX slice lands in the **wave-0 backfill**. `cross-browser-smoke` is its own **committed mini-stream placed immediately before wave-2**.
 - **Q4 — theming approach:** Preset + token-override model accepted; starting presets `light`/`dark`/`brand` (the `brand` palette confirmed at wave-2 entry). **`customCss` is deferred out of the first theming cut** — it ships only after token theming lands and passes the wave-2 security review (Risk R2).
-- **Q5 — EN detection source:** Deferred to a **wave-3 entry spike** against a live TNC EN page; the named source is committed in the wave-3 brief before `ENPageContext` is frozen (D19). **Fail-safe fallback:** a page is treated as *not* eligible until detection succeeds (don't show on unknown pages).
+- **Q5 — EN detection source:** **RESOLVED — no detection needed.** EN targeting is by-hand: the page editor places `window.ENLightbox` only on the pages where the lightbox should appear. The library does not detect page-type/page-ID; wave-3 EN narrows to CTA semantics + non-interference + editor docs (see Amendments). No spike; `ENPageContext`/`ENPageType`/include-exclude dropped.
 - **Q6 — bundle-size budget:** gzip is the gating metric; initial ceiling derived from the **1809 B gzip baseline + a per-wave allowance** (≈2.5–3 KB gzip through wave-1), **re-baselined after wave-2 themes**; each retro records the per-wave size delta (D-size).
 - **Q7 — CTA `submit` action:** Deferred — `submit` ships only if wave-3 commits the concrete EN-form contract (D5b); wave-3 ships `redirect` + `close`.
 - **Q8 — `dist/` commit policy:** Keep committing `dist/en-lightbox.js` **per PR** (status quo; CI verifies freshness; `dist/` is the hosted artifact).
 - **Q9 — rich-text body:** Deferred — body stays plain-text (`textContent`); `bodyHtml?` is additively recoverable later (BACKLOG U16).
 - **Q10 — secondary / decline CTA:** **Included** — reclassified from deferred **into wave-2/stream-a scope**. The config schema gains `secondaryCta?: { label; action?; href? }` and/or `dismissLabel?`; the button-row layout, focus-trap order, and token surface are owned by wave-2/a. (Supersedes the U17 "deferred" entry below.)
 - **Q11 — gate-file review ownership:** The project owner is the **required reviewer** for changes to `ownership.json`, `.agentic/contracts/registry.json`, and `sdd.config.json` (they arm/disarm the gates; `registry.json` `check` commands run `shell=True` in CI). To be codified in `WORKFLOW.md`/`AGENTS.md` (D13).
+
+---
+
+## Amendments — wave-1 entry (2026-06-25)
+
+Owner-directed refinements made entering wave-1. **Authoritative** — supersedes conflicting body text below (the wave-1 stream-a description, the config schema's dismissal fields, Decisions D15/D16, NFR row N4, and the dismissal entries in "Out of scope").
+
+- **`canArm()` hook (D16) — DROPPED.** EN targeting is by-hand (the page editor places `window.ENLightbox` per page), so there is no EN eligibility predicate to register. Opening is decided by config-present + within-frequency + trigger-fired. Re-add additively only if a real need appears.
+- **Dismissal is a persistent, configurable frequency cap (replaces per-session).** Use **localStorage** (not sessionStorage), keyed per `location.pathname`, with a page-editor field **`frequencyDays?: number` (default 7; `0` = every load)** — "show at most once per `frequencyDays` on a page." Eligible iff no stored timestamp or `Date.now() - stored ≥ frequencyDays·86 400 000`; stamp on show (refresh on dismiss); localStorage unavailable ⇒ fail open, never throw. This **promotes the BACKLOG "cross-session / cross-page dismissal suppression" item INTO wave-1** and revises NFR N4 from "per-page, per-session" to "per-page, persistent, configurable cooldown (default 7d)". The `enlb:dismiss`/storage sub-contract (D15) becomes a per-`pathname` timestamp in localStorage (functional storage; low consent risk). Owned by wave-1/stream-a.
+- **wave-3 EN scope REDUCED; Q5 resolved.** No page-type/page-ID detection, `ENPageType` enum, `includePageIds`/`excludePageIds`, `ENPageContext`, or detection spike. wave-3 EN = CTA semantics (redirect/close/submit) + provable non-interference with EN forms + editor/advanced README. `en?` stays a minimal placeholder.
+- **wave-0 backfill retro:** stream-b (config seam + 3 contracts + a11y slice) landed clean — adversarial pre-verification (5 lenses) + independent review both passed; the B1 declaration-merge seam compiles under strict (R1 proven). No process issues.
 
 ---
 
