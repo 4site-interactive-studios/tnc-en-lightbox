@@ -9,7 +9,14 @@ describe('normalizeConfig', () => {
     expect(c.hideImageOnMobile).toBe(true)
     expect(c.triggers).toEqual({})
     expect(c.theme).toEqual({})
-    expect(c.layout).toEqual({})
+    expect(c.layout).toEqual({
+      variant: 'two-column',
+      imagePosition: 'left',
+      imageRatio: '40%',
+      hideImageOnMobile: true,
+      stackBreakpoint: 640,
+      closeButton: 'inside',
+    })
     expect(c.en).toEqual({})
   })
 

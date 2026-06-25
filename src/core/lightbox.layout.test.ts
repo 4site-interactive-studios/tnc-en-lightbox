@@ -119,12 +119,10 @@ describe('Lightbox layout', () => {
       normalizeConfig({ header: 'H', body: 'B', layout: { closeButton: 'outside' } }),
     )
     lb.open()
-    const overlay = document.querySelector('.enlb-overlay') as HTMLElement
     const dialog = document.querySelector('.enlb-dialog') as HTMLElement
-    const closeBtn = overlay.querySelector('.enlb-close')
+    const closeBtn = dialog.querySelector('.enlb-close')
     expect(closeBtn).not.toBeNull()
     expect(dialog.classList.contains('enlb-close--outside')).toBe(true)
-    expect(dialog.querySelector('.enlb-close')).toBeNull()
   })
 
   it('supports closeButton none', () => {

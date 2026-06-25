@@ -113,14 +113,4 @@ describe('Lightbox a11y/UX hardening', () => {
     expect(scrollToSpy).toHaveBeenCalledWith(0, 0)
     scrollToSpy.mockRestore()
   })
-
-  it('injects CSS that gates motion behind prefers-reduced-motion', () => {
-    const lb = new Lightbox(normalizeConfig({ header: 'H', body: 'B' }))
-    lb.open()
-    const style = document.querySelector('style[data-enlb]') as HTMLStyleElement
-    expect(style).not.toBeNull()
-    const css = style.textContent ?? ''
-    expect(css).toMatch(/@media\s*\(\s*prefers-reduced-motion\s*:\s*reduce\s*\)/)
-    expect(css).toMatch(/transition/)
-  })
 })

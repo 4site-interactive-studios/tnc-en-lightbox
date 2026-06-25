@@ -11,6 +11,12 @@ export interface ENLightboxCta {
   href?: string
 }
 
+export interface ENLightboxSecondaryCta {
+  label: string
+  href?: string
+  action?: 'close'
+}
+
 export interface TriggersConfigBase {}
 
 export interface ThemeConfigBase {}
@@ -24,6 +30,8 @@ export interface ENLightboxConfig {
   body?: string
   image?: ENLightboxImage
   cta?: ENLightboxCta
+  secondaryCta?: ENLightboxSecondaryCta
+  dismissLabel?: string
   closeOnOverlay?: boolean
   closeOnEsc?: boolean
   hideImageOnMobile?: boolean
@@ -38,6 +46,8 @@ export interface NormalizedConfig {
   body: string
   image?: ENLightboxImage
   cta?: ENLightboxCta
+  secondaryCta?: ENLightboxSecondaryCta
+  dismissLabel?: string
   closeOnOverlay: boolean
   closeOnEsc: boolean
   hideImageOnMobile: boolean
@@ -55,6 +65,8 @@ export function normalizeConfig(input?: Partial<ENLightboxConfig>): NormalizedCo
     body: src.body ?? '',
     image: src.image,
     cta: src.cta,
+    secondaryCta: src.secondaryCta,
+    dismissLabel: src.dismissLabel,
     closeOnOverlay: src.closeOnOverlay ?? true,
     closeOnEsc: src.closeOnEsc ?? true,
     hideImageOnMobile: topLevelHideImageOnMobile,

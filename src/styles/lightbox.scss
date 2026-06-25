@@ -1,6 +1,23 @@
-// tnc-en-lightbox baseline styles — compiled and inlined into the JS bundle.
-// Every selector is prefixed with `enlb-` so the drop-in script cannot collide
-// with the host Engaging Networks page's own styles.
+:root {
+  --enlb-overlay-bg: rgba(0, 0, 0, 0.6);
+  --enlb-surface-bg: #fff;
+  --enlb-text: #1f1f1f;
+  --enlb-title: #1f1f1f;
+  --enlb-cta-bg: #1a73e8;
+  --enlb-cta-text: #fff;
+  --enlb-secondary-cta-bg: transparent;
+  --enlb-secondary-cta-text: #1a73e8;
+  --enlb-border: #e0e0e0;
+  --enlb-radius: 8px;
+  --enlb-spacing-xs: 4px;
+  --enlb-spacing-sm: 8px;
+  --enlb-spacing-md: 16px;
+  --enlb-spacing-lg: 24px;
+  --enlb-max-width: 900px;
+  --enlb-font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --enlb-image-ratio: 40%;
+  --enlb-stack-breakpoint: 640px;
+}
 
 .enlb-overlay {
   position: fixed;
@@ -9,30 +26,43 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--enlb-overlay-bg);
 }
 
 .enlb-dialog {
   position: relative;
   box-sizing: border-box;
-  max-width: 900px;
-  width: calc(100% - 32px);
-  max-height: calc(100% - 32px);
+  max-width: var(--enlb-max-width);
+  width: calc(100% - var(--enlb-spacing-md) * 2);
+  max-height: calc(100% - var(--enlb-spacing-md) * 2);
   overflow: auto;
-  background: #fff;
-  border-radius: 8px;
+  background: var(--enlb-surface-bg);
+  border-radius: var(--enlb-radius);
+  color: var(--enlb-text);
+  font-family: var(--enlb-font-family);
 }
 
 .enlb-close {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  padding: 4px 8px;
+  top: var(--enlb-spacing-xs);
+  right: var(--enlb-spacing-xs);
+  padding: var(--enlb-spacing-xs) var(--enlb-spacing-sm);
   border: 0;
   background: transparent;
+  color: var(--enlb-text);
   font-size: 24px;
   line-height: 1;
   cursor: pointer;
+}
+
+.enlb-dialog.enlb-close--outside {
+  padding-top: calc(24px + var(--enlb-spacing-md));
+}
+
+.enlb-dialog.enlb-close--outside .enlb-close {
+  top: calc(-1 * (24px + var(--enlb-spacing-sm)));
+  right: 0;
+  color: #fff;
 }
 
 .enlb-layout {
@@ -40,8 +70,27 @@
   flex-direction: row;
 }
 
+.enlb-layout--single-column .enlb-content {
+  width: 100%;
+}
+
+.enlb-layout--two-column,
+.enlb-layout--centered,
+.enlb-layout--banner {
+  flex-direction: row;
+}
+
+.enlb-layout--image-top {
+  flex-direction: column;
+}
+
+.enlb-layout--image-top .enlb-image {
+  flex: none;
+  max-height: 200px;
+}
+
 .enlb-image {
-  flex: 0 0 40%;
+  flex: 0 0 var(--enlb-image-ratio);
   overflow: hidden;
 }
 
@@ -54,31 +103,48 @@
 
 .enlb-content {
   box-sizing: border-box;
-  flex: 1 1 60%;
-  padding: 24px;
+  flex: 1 1 calc(100% - var(--enlb-image-ratio));
+  padding: var(--enlb-spacing-lg);
 }
 
 .enlb-title {
-  margin: 0 0 8px;
+  margin: 0 0 var(--enlb-spacing-sm);
+  color: var(--enlb-title);
   font-size: 1.25rem;
 }
 
 .enlb-text {
-  margin: 0 0 16px;
+  margin: 0 0 var(--enlb-spacing-md);
 }
 
-.enlb-cta {
+.enlb-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--enlb-spacing-sm);
+}
+
+.enlb-cta,
+.enlb-cta--secondary {
   display: inline-block;
-  padding: 8px 16px;
-  border-radius: 4px;
-  background: #1a73e8;
-  color: #fff;
+  padding: var(--enlb-spacing-sm) var(--enlb-spacing-md);
+  border: 1px solid transparent;
+  border-radius: var(--enlb-radius);
+  background: var(--enlb-cta-bg);
+  color: var(--enlb-cta-text);
+  font-family: inherit;
+  font-size: 1rem;
   text-decoration: none;
+  cursor: pointer;
 }
 
-// Tablet/mobile: stack the two columns vertically.
+.enlb-cta--secondary {
+  background: var(--enlb-secondary-cta-bg);
+  color: var(--enlb-secondary-cta-text);
+  border-color: var(--enlb-border);
+}
+
 @media (max-width: 640px) {
-  .enlb-layout {
+  .enlb-layout:not(.enlb-layout--image-top) {
     flex-direction: column;
   }
 
@@ -87,8 +153,14 @@
     max-height: 200px;
   }
 
-  // hideImageOnMobile (default on) adds this class to the dialog.
   .enlb-dialog.enlb-hide-image-mobile .enlb-image {
     display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .enlb-overlay,
+  .enlb-dialog {
+    transition: opacity 0.2s ease;
   }
 }
