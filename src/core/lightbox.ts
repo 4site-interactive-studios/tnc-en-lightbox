@@ -3,6 +3,13 @@ import type { NormalizedConfig } from '../config'
 
 const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
+type SavedSibling = {
+  el: Element
+  inert: string | null
+  ariaHidden: string | null
+  tabindex: string | null
+}
+
 export class Lightbox {
   private config: NormalizedConfig
   private overlay: HTMLElement | null = null
@@ -10,6 +17,10 @@ export class Lightbox {
   private styleEl: HTMLStyleElement | null = null
   private prevFocus: Element | null = null
   private titleId: string
+  private savedSiblings: SavedSibling[] = []
+  private bodyOverflow: string | null = null
+  private scrollX = 0
+  private scrollY = 0
 
   private onKeydown = (e: KeyboardEvent): void => {
     if (e.key === 'Escape' && this.config.closeOnEsc) {
@@ -59,16 +70,19 @@ export class Lightbox {
   open(): void {
     if (this.overlay) return
     this.prevFocus = document.activeElement
+    this.scrollX = window.scrollX
+    this.scrollY = window.scrollY
     this.injectStyles()
+    this.lockBackground()
     this.overlay = this.buildDom()
     document.body.appendChild(this.overlay)
+    this.isolateBackground()
     document.addEventListener('keydown', this.onKeydown)
     this.overlay.addEventListener('click', this.onOverlayClick)
     this.dialog?.addEventListener('keydown', this.onDialogKeydown)
     const closeBtn = this.dialog?.querySelector<HTMLElement>('.enlb-close')
     closeBtn?.addEventListener('click', this.onCloseClick)
-    const target = closeBtn ?? this.dialog
-    target?.focus()
+    this.dialog?.focus()
   }
 
   close(): void {
@@ -81,6 +95,7 @@ export class Lightbox {
     this.overlay.remove()
     this.overlay = null
     this.dialog = null
+    this.restoreBackground()
     if (this.prevFocus instanceof HTMLElement) {
       this.prevFocus.focus()
       this.prevFocus = null
@@ -91,6 +106,45 @@ export class Lightbox {
     this.close()
     this.styleEl?.remove()
     this.styleEl = null
+  }
+
+  private lockBackground(): void {
+    this.bodyOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+  }
+
+  private isolateBackground(): void {
+    this.savedSiblings = Array.from(document.body.children)
+      .filter((el) => el !== this.overlay)
+      .map((el) => ({
+        el,
+        inert: el.getAttribute('inert'),
+        ariaHidden: el.getAttribute('aria-hidden'),
+        tabindex: el.getAttribute('tabindex'),
+      }))
+    for (const s of this.savedSiblings) {
+      s.el.setAttribute('inert', '')
+      s.el.setAttribute('aria-hidden', 'true')
+      s.el.setAttribute('tabindex', '-1')
+    }
+  }
+
+  private restoreBackground(): void {
+    document.body.style.overflow = this.bodyOverflow ?? ''
+    if (this.bodyOverflow === null) {
+      document.body.style.overflow = ''
+    }
+    window.scrollTo(this.scrollX, this.scrollY)
+    for (const s of this.savedSiblings) {
+      if (s.inert === null) s.el.removeAttribute('inert')
+      else s.el.setAttribute('inert', s.inert)
+      if (s.ariaHidden === null) s.el.removeAttribute('aria-hidden')
+      else s.el.setAttribute('aria-hidden', s.ariaHidden)
+      if (s.tabindex === null) s.el.removeAttribute('tabindex')
+      else s.el.setAttribute('tabindex', s.tabindex)
+    }
+    this.savedSiblings = []
+    this.bodyOverflow = null
   }
 
   private injectStyles(): void {
@@ -112,6 +166,9 @@ export class Lightbox {
     dialog.setAttribute('aria-modal', 'true')
     dialog.setAttribute('aria-labelledby', this.titleId)
     dialog.setAttribute('tabindex', '-1')
+    if (!this.config.header) {
+      dialog.setAttribute('aria-label', 'Dialog')
+    }
 
     const closeBtn = document.createElement('button')
     closeBtn.type = 'button'
