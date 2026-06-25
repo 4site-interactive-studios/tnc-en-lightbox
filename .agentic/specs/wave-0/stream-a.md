@@ -64,9 +64,9 @@ later wave (triggers, theming, EN integration) builds on.
 - [x] Negative test: a click **inside** the dialog does not close it; with `closeOnOverlay:false`, an
       overlay click does not close.
 - [x] `destroy()` removes all DOM and listeners — opening/closing repeatedly leaks nothing.
-- [ ] `python3 tools/sdd/check_contracts.py` passes with the new `bundle` contract (dist matches src).
+- [x] `python3 tools/sdd/check_contracts.py` passes with the new `bundle` contract (dist matches src).
 - [ ] All SDD gates green in CI; `npm run typecheck` and `npm run lint` clean.
-- [ ] Mutation-verify: break one load-bearing line (e.g. the ESC handler), show the **named** test go
+- [x] Mutation-verify: break one load-bearing line (e.g. the ESC handler), show the **named** test go
       red (cite file:line, before→after), then revert.
 
 ## First action
