@@ -1,0 +1,28 @@
+interface ENLightboxConfig {
+  header?: string | undefined
+  body?: string | undefined
+  image?: ENLightboxImage | undefined
+  cta?: ENLightboxCta | undefined
+  closeOnOverlay?: boolean | undefined
+  closeOnEsc?: boolean | undefined
+  hideImageOnMobile?: boolean | undefined
+  triggers?: TriggersConfigBase | undefined
+  theme?: ThemeConfigBase | undefined
+  layout?: LayoutConfigBase | undefined
+  en?: ENIntegrationConfigBase | undefined
+}
+
+interface NormalizedConfig {
+  header: string  // default src.header ?? ''
+  body: string  // default src.body ?? ''
+  image?: ENLightboxImage | undefined  // default src.image
+  cta?: ENLightboxCta | undefined  // default src.cta
+  closeOnOverlay: boolean  // default src.closeOnOverlay ?? true
+  closeOnEsc: boolean  // default src.closeOnEsc ?? true
+  hideImageOnMobile: boolean  // default src.hideImageOnMobile ?? true
+  triggers: TriggersConfigBase  // default src.triggers ?? {}
+  theme: ThemeConfigBase  // default src.theme ?? {}
+  layout: LayoutConfigBase  // default src.layout ?? {}
+  en: ENIntegrationConfigBase  // default src.en ?? {}
+}
+
