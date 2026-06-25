@@ -43,4 +43,62 @@ describe('trigger dispatcher', () => {
 
     expect(document.querySelector('.enlb-overlay')).toBeNull()
   })
+
+  it('first-to-fire wins: other triggers disarm when one fires', async () => {
+    const mod = await import('../index')
+    mod.init({
+      header: 'Hi',
+      body: 'B',
+      triggers: { time: 3000, inactivity: 5000, frequencyDays: 7 },
+    })
+    mod.armTriggers()
+
+    vi.advanceTimersByTime(3000)
+    expect(document.querySelector('.enlb-overlay')).not.toBeNull()
+
+    vi.advanceTimersByTime(2000)
+    expect(document.querySelectorAll('.enlb-overlay').length).toBe(1)
+  })
+
+  it('open() opens the lightbox manually when eligible and stamps the show', async () => {
+    const mod = await import('../index')
+    mod.init({ header: 'Hi', body: 'B', triggers: { frequencyDays: 7 } })
+    expect(mod.isEligible()).toBe(true)
+
+    mod.open()
+    expect(document.querySelector('.enlb-overlay')).not.toBeNull()
+    expect(mod.isEligible()).toBe(false)
+  })
+
+  it('open() is a no-op when not eligible', async () => {
+    localStorage.setItem('enlb:shown:/', String(Date.now()))
+    const mod = await import('../index')
+    mod.init({ header: 'Hi', body: 'B', triggers: { frequencyDays: 7 } })
+    expect(mod.isEligible()).toBe(false)
+
+    mod.open()
+    expect(document.querySelector('.enlb-overlay')).toBeNull()
+  })
+
+  it('close() closes the lightbox and enlb:dismiss refreshes the stamp', async () => {
+    const mod = await import('../index')
+    mod.init({ header: 'Hi', body: 'B', triggers: { frequencyDays: 7 } })
+    mod.open()
+    expect(document.querySelector('.enlb-overlay')).not.toBeNull()
+
+    mod.close()
+    expect(document.querySelector('.enlb-overlay')).toBeNull()
+    expect(mod.isEligible()).toBe(false)
+  })
+
+  it('disarmTriggers is idempotent and disarms active triggers', async () => {
+    const mod = await import('../index')
+    mod.init({ header: 'Hi', body: 'B', triggers: { time: 5000, frequencyDays: 7 } })
+    mod.armTriggers()
+    expect(() => mod.disarmTriggers()).not.toThrow()
+    expect(() => mod.disarmTriggers()).not.toThrow()
+
+    vi.advanceTimersByTime(10000)
+    expect(document.querySelector('.enlb-overlay')).toBeNull()
+  })
 })
