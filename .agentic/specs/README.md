@@ -13,10 +13,10 @@ prose.
 
 | Wave | Streams | Status |
 |------|---------|--------|
-| [wave-0](./wave-0/README.md) — Foundation | stream-a (build pipeline + core lightbox) | planned |
-| wave-1 — Triggers | time-on-page · scroll-depth · inactivity · exit-intent; dismiss-once-per-session; manual multi-trigger composition | planned |
+| [wave-0](./wave-0/README.md) — Foundation | stream-a (build pipeline + core lightbox) | complete (PR #2) |
+| [wave-1](./wave-1/README.md) — Triggers | time-on-page · scroll-depth · inactivity · exit-intent; dismiss-once-per-session; manual multi-trigger composition | in progress |
 | wave-2 — Theming & layout | 2-col image+content, mobile stacking, hide-image-on-mobile toggle, multiple themes, full UI customization | planned |
 | wave-3 — EN integration | page-type/page-ID detection, CTA redirect vs. close, no form interference, editor + advanced README | planned |
 
-Folders for wave-1+ are created when each wave is scheduled (one wave at a time); the rows above are
-the planned roadmap.
+wave-0 is complete; wave-1 is scheduled (folder created). Later waves' folders are created when each
+is scheduled (one wave at a time); the rows above are the roadmap.
