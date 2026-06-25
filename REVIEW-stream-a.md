@@ -585,3 +585,258 @@ index 1becfe7..f05f9ac 100644
 ## Final Verdict
 
 BLOCKED: `.agentic/WORKFLOW.md` removes the merge-commit/no-squash/no-rebase-after-approval rule out of scope for wave-0 stream-a.
+
+---
+
+# Re-Review — BLOCK Resolution — wave-0 / stream-a — PR #2
+
+Date: 2026-06-25
+
+Verdict: APPROVED
+
+Previous blocked audit commit: `4ecb36b3643873ec08a03bba59768d0e911dd4e2`
+
+Previously reviewed head: `ef5b477017ea7523f552f473148cecf62684a496`
+
+Re-reviewed PR head: `c9baad1cf42166952febf78f276204e3df1813ca`
+
+Review checkout: `/Users/fernando/sites/.worktrees/wave-0-review`
+
+## Setup
+
+PASS: Refreshed refs, checked out the exact new head detached, and reinstalled dependencies.
+
+Command:
+
+```bash
+git checkout --detach c9baad1cf42166952febf78f276204e3df1813ca && git rev-parse HEAD
+```
+
+Output:
+
+```text
+Previous HEAD position was ef5b477 docs(spec): mark CI-green criterion met in stream-a
+HEAD is now at c9baad1 Merge main into feat/wave-0-core: pick up merge-commit policy doc (PR #3)
+c9baad1cf42166952febf78f276204e3df1813ca
+```
+
+Command:
+
+```bash
+npm ci
+```
+
+Output excerpt:
+
+```text
+added 175 packages, and audited 176 packages in 1s
+found 0 vulnerabilities
+```
+
+## Blocked Item Resolution
+
+PASS: `.agentic/WORKFLOW.md` now has no diff against `origin/main` at the new head.
+
+Command:
+
+```bash
+git diff origin/main..HEAD -- .agentic/WORKFLOW.md
+```
+
+Output:
+
+```text
+<no output>
+```
+
+PASS: The merge-commit/no-squash rule is present in `.agentic/WORKFLOW.md`.
+
+Command:
+
+```bash
+grep -n "Merge with a merge commit" .agentic/WORKFLOW.md
+```
+
+Output:
+
+```text
+45:- **Merge with a merge commit** (`gh pr merge --merge`) — never squash. Squash collapses the
+```
+
+PASS: `c9baad1` is a merge commit, not a rebase; its parents are the prior reviewed stream-a head and current main.
+
+Command:
+
+```bash
+git show --no-patch --format='%H%n%P%n%s' c9baad1
+```
+
+Output:
+
+```text
+c9baad1cf42166952febf78f276204e3df1813ca
+ef5b477017ea7523f552f473148cecf62684a496 6fd592a722ba49e9906ca9ec8c175235530335e1
+Merge main into feat/wave-0-core: pick up merge-commit policy doc (PR #3)
+```
+
+## Integration Delta
+
+PASS: The delta from the previously reviewed head to the new head lists only `.agentic/WORKFLOW.md` with four insertions.
+
+Command:
+
+```bash
+git diff ef5b477 c9baad1 --stat
+```
+
+Output:
+
+```text
+ .agentic/WORKFLOW.md | 4 ++++
+ 1 file changed, 4 insertions(+)
+```
+
+PASS: Name-status also lists only `.agentic/WORKFLOW.md`.
+
+Command:
+
+```bash
+git diff --name-status ef5b477 c9baad1
+```
+
+Output:
+
+```text
+M	.agentic/WORKFLOW.md
+```
+
+PASS: Stream-a code/artifacts/config/CI/contract paths are byte-identical between `ef5b477` and `c9baad1`.
+
+Command:
+
+```bash
+git diff ef5b477 c9baad1 -- src/ dist/ vite.config.ts package.json eslint.config.js tsconfig.json .github/ .agentic/contracts/
+```
+
+Output:
+
+```text
+<no output>
+```
+
+## Integrated Head Verification
+
+PASS: Unit suite still passes at `c9baad1`.
+
+Command:
+
+```bash
+npm test
+```
+
+Output:
+
+```text
+Test Files  3 passed (3)
+Tests       20 passed (20)
+```
+
+PASS: Typecheck and lint still exit 0 at `c9baad1`.
+
+Command:
+
+```bash
+npm run typecheck && npm run lint
+```
+
+Output:
+
+```text
+> tnc-en-lightbox@0.0.0 typecheck
+> tsc --noEmit
+
+> tnc-en-lightbox@0.0.0 lint
+> eslint .
+```
+
+PASS: Bundle freshness remains clean at `c9baad1`.
+
+Command:
+
+```bash
+npm run build && git add -AN && git diff --exit-code dist/
+```
+
+Output excerpt:
+
+```text
+dist/en-lightbox.js  4.96 kB │ gzip: 1.80 kB
+✓ built in 293ms
+```
+
+PASS: Contract check still passes at `c9baad1`.
+
+Command:
+
+```bash
+python3 tools/sdd/check_contracts.py
+```
+
+Output:
+
+```text
+dist/en-lightbox.js  4.96 kB │ gzip: 1.80 kB
+✓ built in 76ms
+OK        bundle
+```
+
+PASS: Review checkout clean after reruns.
+
+Command:
+
+```bash
+git status --short
+```
+
+Output:
+
+```text
+<no output>
+```
+
+## GitHub Checks
+
+PASS: PR #2 still points at the re-reviewed head.
+
+Command:
+
+```bash
+gh pr view 2 --json headRefOid
+```
+
+Output:
+
+```json
+{"headRefOid":"c9baad1cf42166952febf78f276204e3df1813ca"}
+```
+
+PASS: All four SDD PR checks are green on the re-reviewed head.
+
+Command:
+
+```bash
+gh pr checks 2
+```
+
+Output:
+
+```text
+contracts-check      pass  12s  https://github.com/4site-interactive-studios/tnc-en-lightbox/actions/runs/28149491339/job/83363730250
+learnings-freshness  pass  4s   https://github.com/4site-interactive-studios/tnc-en-lightbox/actions/runs/28149491339/job/83363730247
+spec-coupling        pass  6s   https://github.com/4site-interactive-studios/tnc-en-lightbox/actions/runs/28149491339/job/83363730267
+test-coupling        pass  4s   https://github.com/4site-interactive-studios/tnc-en-lightbox/actions/runs/28149491339/job/83363730238
+```
+
+## Re-Review Verdict
+
+APPROVED: the previous block is resolved by a real merge from main; the integration delta only restores `.agentic/WORKFLOW.md`, stream-a code/artifacts are unchanged from the previously fully reviewed head, local verification is green, and PR checks are green on `c9baad1cf42166952febf78f276204e3df1813ca`.
