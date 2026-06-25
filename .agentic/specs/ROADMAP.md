@@ -91,7 +91,7 @@ A small, explicitly-sequenced backfill closes gaps the later waves depend on. Ea
 
 **Why separate:** release/packaging is a different category with a different blast radius. It is genuinely optional and gated on cutting a first release; keeping it separate lets it be deferred or dropped. The marginal cost is low because everything is already serialized.
 
-**Out of scope (deferred, per BACKLOG.md, recoverable only via documented revisit triggers):** cross-session/cross-page dismissal suppression; analytics/lifecycle hooks (`onShow`/`onDismiss`/`dataLayer`); A/B variant testing; video-progress trigger. **Newly logged to BACKLOG with revisit triggers** (previously silently absent): rich-text body content (revisit: a campaign needs a second paragraph or inline link in the body — Open Question Q9); secondary/decline CTA (revisit: a campaign requests a "No thanks"/two-action layout — Open Question Q10); optional `campaignKey` dismissal scoping (revisit: EN flows share a pathname or vary by query/pageId — Risk R-N4key); CTA `submit` action (deferred unless wave-3 commits its concrete EN-form contract — Decision D5b).
+**Out of scope (deferred, per BACKLOG.md, recoverable only via documented revisit triggers):** cross-session/cross-page dismissal suppression; analytics/lifecycle hooks (`onShow`/`onDismiss`/`dataLayer`); A/B variant testing; video-progress trigger. **Newly logged to BACKLOG with revisit triggers** (previously silently absent): rich-text body content (revisit: a campaign needs a second paragraph or inline link in the body — Open Question Q9); optional `campaignKey` dismissal scoping (revisit: EN flows share a pathname or vary by query/pageId — Risk R-N4key); CTA `submit` action (deferred unless wave-3 commits its concrete EN-form contract — Decision D5b).
 
 ---
 
@@ -363,7 +363,7 @@ Status legend: COVERED · PARTIAL · OWNED-NOT-YET-BUILT · GAP · DEFERRED.
 - **R-N3/U12 — EN form non-interference** now has a committed concrete test (Decision U12-test), including the submit-action path.
 - **R-N6/N7/N8 — responsive/layout** verified via the cross-browser/viewport tooling (Decision D3), plus a unit test for the N8 class toggle.
 
-**Intentional non-gaps (deferred by decision, recoverable via BACKLOG revisit triggers):** video-progress trigger (U5); cross-session/cross-page dismissal suppression; analytics/lifecycle hooks; A/B testing; rich-text body (U16, Open Q9); secondary/decline CTA (U17, Open Q10); CTA `submit` action unless wave-3 commits its EN-form contract (D5b). These are now logged in BACKLOG with explicit revisit triggers — previously several were *silently* absent.
+**Intentional non-gaps (deferred by decision, recoverable via BACKLOG revisit triggers):** video-progress trigger (U5); cross-session/cross-page dismissal suppression; analytics/lifecycle hooks; A/B testing; rich-text body (U16, Open Q9); CTA `submit` action unless wave-3 commits its EN-form contract (D5b). Secondary/decline CTA is in scope (wave-2/stream-a, owner decision Q10), not deferred. These are now logged in BACKLOG with explicit revisit triggers — previously several were *silently* absent.
 
 ---
 
