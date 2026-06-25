@@ -184,7 +184,9 @@ export class Lightbox {
     dialog.appendChild(closeBtn)
 
     const layout = document.createElement('div')
-    layout.className = 'enlb-layout'
+    layout.className = this.config.image
+      ? 'enlb-layout'
+      : 'enlb-layout enlb-layout--single-column'
 
     if (this.config.image) {
       const imageWrap = document.createElement('div')
