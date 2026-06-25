@@ -206,3 +206,38 @@ The plan’s replacement seam compiles; the rejected `unknown`-narrowing seam do
 3. (Optional) Consider adding `spec-coupling`, `contracts-check`, and `learnings-freshness` to `sdd.config.json` if that file is meant to be the canonical gate list.
 
 After the above, re-run this review focusing on the changed files only.
+
+---
+
+## RE-REVIEW — verify BLOCK fixes (new head f9bfd6b)
+
+**Re-review date:** 2026-06-25  
+**Prior reviewed head:** `84f151184a26474aba238014a923ad0caaf43c3f`  
+**New head:** `f9bfd6bbc83b5fa2ee2c1365ed0bf6cd29fa5946`  
+**Delta scope:** `84f1511..f9bfd6b` touches only `.agentic/BACKLOG.md` and `.agentic/specs/ROADMAP.md`.
+
+### Item 1 — BACKLOG now matches the plan’s claim
+
+**Status: PASS**
+
+- `git diff --name-only 84f1511 f9bfd6b` = `.agentic/BACKLOG.md`, `.agentic/specs/ROADMAP.md`.
+- `.agentic/BACKLOG.md` at `f9bfd6b` contains three new entries:
+  - **Rich-text body content (deferred)** — revisit trigger: a campaign needs more than one paragraph, or an inline link/bold, in the body.
+  - **Refined dismissal scoping (`campaignKey`) (deferred)** — revisit trigger: wave-3 shows `pathname` is the wrong granularity, or a campaign requests campaign-wide dismissal scoping.
+  - **CTA `submit` action (deferred — conditional)** — revisit trigger: wave-3 commits the concrete EN-form contract, or a campaign needs the lightbox CTA to submit the page’s EN form.
+- `grep -ni "secondary\|decline CTA\|No thanks" .agentic/BACKLOG.md` returns no hits, confirming U17 is **not** listed as deferred.
+
+### Item 2 — secondary/decline CTA consistently in scope
+
+**Status: PASS**
+
+- `grep -ni "decline CTA\|secondary" .agentic/specs/ROADMAP.md` at `f9bfd6b` returns three hits, all in-scope:
+  1. Owner-decisions Q10: reclassified into **wave-2/stream-a** scope.
+  2. U17 coverage row: owner **wave-2/stream-a**, status `OWNED-NOT-YET-BUILT`.
+  3. Intentional non-gaps: explicitly states “Secondary/decline CTA is in scope (wave-2/stream-a, owner decision Q10), not deferred.”
+- No hit calls it deferred, a BACKLOG item, or an open question.
+
+### Verdict
+
+**APPROVED** — both blocking items are fixed. The prior PASS findings on coverage, the R1 tsc spike, backward compatibility, sequencing, the four gates, and ground truth carry forward unchanged.
+
