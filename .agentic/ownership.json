@@ -1,0 +1,18 @@
+{
+  "_doc": "Source-bucket glob -> owning-spec path. Longest match wins. A PR changing governed source must also change its owning spec or carry the waiver token with a reason: [no-spec: <reason>]. A bare [no-spec] without a reason is NOT accepted. Grow this map as the tree grows.",
+  "waiver_token": "[no-spec: <reason>]",
+  "_planned": "Longest glob match wins. As later waves land, carve out more specific buckets and point them at their owning spec, then add the rule when that wave's spec is written: src/triggers/** -> wave-1 spec; src/themes/** (+ SCSS theme partials) -> wave-2 spec; src/en/** (EN page detection + CTA routing) -> wave-3 spec. The src/** catch-all below stays; the narrower rules override it for their files.",
+  "rules": {
+    "src/**": ".agentic/specs/wave-0/stream-a.md"
+  },
+  "exemptions": [
+    "**/*.d.ts",
+    "**/*.spec.*",
+    "**/*.stories.*",
+    "**/*.test.*",
+    "**/__generated__/**",
+    "**/generated/**",
+    "**/index.js",
+    "**/index.ts"
+  ]
+}

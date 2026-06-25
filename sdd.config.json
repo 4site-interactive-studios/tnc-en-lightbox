@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "project": {
+    "name": "tnc-en-lightbox",
+    "purpose": "A dependency-free, configurable lightbox library for Engaging Networks pages \u2014 behavior-triggered and customizable per campaign.",
+    "repo": "4site-interactive-studios/tnc-en-lightbox"
+  },
+  "git": {
+    "author_name": "Fernando Santos",
+    "author_email": "fern@ndo.io",
+    "base_branch": "main",
+    "branch_prefix": "feat",
+    "close_keyword": "Closes",
+    "release_tool": "release-please",
+    "delegates": []
+  },
+  "stack": {
+    "languages": ["TypeScript"],
+    "frameworks": ["Vite", "SCSS"],
+    "pkg_manager": "npm",
+    "test_cmd": "npm test",
+    "lint_cmd": "npm run lint",
+    "typecheck_cmd": "npm run typecheck",
+    "ci_system": "github-actions",
+    "nfrs": "Captured from the project brief \u2014 every agent must respect these:\n\n- **Zero runtime dependencies.** The shipped asset must not load any third-party runtime library; dev-only deps (Vite, Vitest, ESLint) are fine.\n- **Single self-contained artifact.** Compiles to one minified JS file with all SCSS/CSS inlined into the JS \u2014 no separate stylesheet, no runtime network fetches.\n- **Non-intrusive.** Must not block page rendering, degrade performance, or interfere with Engaging Networks form submission or existing page behavior.\n- **Session discipline.** Must not re-trigger in the same session after the user dismisses it (scoped per-page, per-session).\n- **Cross-browser.** Latest Chrome, Safari, Edge, Firefox.\n- **Responsive.** Desktop, tablet, mobile; the 2-column (image + content) layout stacks on mobile, with an optional toggle to hide the image on mobile (on by default).\n- **Accessible.** Modal semantics: focus trap, ESC-to-close, focus restored on close, appropriate ARIA roles/labels.\n- **Performance budget.** Keep the bundle small; defer all work until a trigger fires; avoid layout thrash."
+  },
+  "gates": {
+    "migrations": { "enabled": false },
+    "authz": { "enabled": false },
+    "test_coupling": { "enabled": true }
+  },
+  "contracts": [],
+  "memory": { "dynamic_lessons": false },
+  "team": {
+    "concurrent_streams": 1,
+    "reviewers_available": 1
+  },
+  "first_wave": {
+    "id": "wave-0",
+    "name": "Foundation",
+    "goal": "Stand up the project foundation: a Vite build that compiles the TypeScript source plus inlined SCSS into a single, minified, dependency-free JS file (committed to dist/ for hosting), a Vitest + jsdom test harness, npm scripts for test/lint/typecheck, and green SDD gates in CI. On top of that skeleton, ship a minimal but real lightbox walking skeleton that mounts an overlay + 2-column dialog from a global config object and closes via the ESC key, the top-right X button, and an overlay click, with correct focus handling. Landing this unlocks the trigger, theming, and EN-integration waves, since every later feature builds on this build pipeline, test harness, and core open/close lifecycle."
+  }
+}

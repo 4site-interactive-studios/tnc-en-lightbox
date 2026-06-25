@@ -1,0 +1,38 @@
+name: sdd-gates
+on:
+  pull_request:
+jobs:
+  spec-coupling:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.x' }
+      - run: python3 tools/sdd/check_spec_coupling.py --base "origin/${{ github.base_ref }}"
+        env: { PR_BODY: "${{ github.event.pull_request.body }}" }
+  contracts-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.x' }
+      - run: python3 tools/sdd/check_contracts.py
+  test-coupling:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.x' }
+      - run: python3 tools/sdd/check_test_coupling.py --base "origin/${{ github.base_ref }}"
+        env: { PR_BODY: "${{ github.event.pull_request.body }}" }
+  learnings-freshness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.x' }
+      - run: python3 tools/sdd/check_learnings_freshness.py --base "origin/${{ github.base_ref }}"
