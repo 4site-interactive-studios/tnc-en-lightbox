@@ -42,6 +42,10 @@ make expensive failures impossible by construction, not to catch them in review.
 
 ## Merge & cleanup discipline
 
+- **Merge with a merge commit** (`gh pr merge --merge`) — never squash. Squash collapses the
+  red -> green TDD history this workflow requires and the individual conventional commits
+  release-please reads. Never rebase a PR after approval — it invalidates the review (see
+  `REVIEWING.md`).
 - `--force-with-lease` only. Never bypass hooks — fix the cause or stash; don't work around it.
 - Audit branches (the reviewer's `*-review-audit`) are append-only, never force-pushed.
 - **Cleanup is gated on VERIFIED merge state**, never on the merge command having returned. Confirm
