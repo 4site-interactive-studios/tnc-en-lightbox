@@ -8,6 +8,9 @@ export interface ENLightboxCta {
   href?: string
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type -- intentionally empty; populated via declaration merging from src/triggers/config.ts (B1/R1)
+export interface TriggersConfigBase {}
+
 export interface ENLightboxConfig {
   header?: string
   body?: string
@@ -16,7 +19,7 @@ export interface ENLightboxConfig {
   closeOnOverlay?: boolean
   closeOnEsc?: boolean
   hideImageOnMobile?: boolean
-  triggers?: unknown
+  triggers?: TriggersConfigBase
   theme?: unknown
 }
 
