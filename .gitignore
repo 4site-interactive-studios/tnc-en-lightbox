@@ -20,5 +20,9 @@ Thumbs.db
 .env
 .env.local
 
+# Playwright
+playwright-report/
+test-results/
+
 # Node
 node_modules/

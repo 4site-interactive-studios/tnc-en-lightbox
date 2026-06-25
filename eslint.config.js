@@ -12,17 +12,18 @@ export default tseslint.config(
     },
   },
   {
-    files: ['**/*.test.ts'],
+    files: ['**/*.test.ts', '**/*.spec.ts'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
     },
   },
   {
-    files: ['tools/**/*.mjs'],
+    files: ['tools/**/*.mjs', 'e2e/**/*.mjs'],
     languageOptions: {
       globals: {
         console: 'readonly',
         process: 'readonly',
+        URL: 'readonly',
       },
     },
   },
