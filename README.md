@@ -21,4 +21,23 @@ inside the governance defined there.
 - `python3 tools/sdd/check_test_coupling.py --base main`
 - `python3 tools/sdd/check_learnings_freshness.py --base main`
 
+## Development
+
+```bash
+npm install          # install dev dependencies
+npm run build        # emit the single self-contained JS to dist/ (SCSS inlined, no .css)
+npm test             # run the Vitest suite in jsdom
+npm run typecheck    # tsc --noEmit (strict)
+npm run lint         # ESLint
+```
+
+The build compiles `src/` into one minified, dependency-free IIFE at
+`dist/en-lightbox.js` with all SCSS **inlined into the JS** — no separate
+stylesheet is emitted, and styles are injected at runtime via a `<style>` element.
+A page editor sets `window.ENLightbox = { … }` and loads the script; it
+auto-instantiates from that config and exposes `window.ENLightboxAPI`
+(`Lightbox`, `normalizeConfig`, `init`, `getInstance`) for programmatic use.
+Visual and responsive behavior is verified by manual cross-browser QA; the
+automated suite covers DOM/behavior/a11y in jsdom.
+
 Languages: TypeScript. Frameworks: Vite, SCSS. Package manager: npm.

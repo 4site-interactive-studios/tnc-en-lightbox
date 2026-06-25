@@ -2,6 +2,7 @@
 
 **Wave:** 0 · **Branch:** `feat/wave-0-core` · **Depends on:** none ·
 **Required reading:** [`AGENTS.md`](../../AGENTS.md), [`WORKFLOW.md`](../../WORKFLOW.md), the [wave-0 README](./README.md), this brief.
+**Status:** implemented — core open/close lifecycle, a11y, and Vitest suite landed on `feat/wave-0-core`; build, bundle contract, and all SDD gates green in CI (PR #2).
 
 ## Goal
 Stand up the toolchain and ship a walking-skeleton lightbox. After this lands, the repo builds a
@@ -56,16 +57,16 @@ later wave (triggers, theming, EN integration) builds on.
 - A short **Development** section in the root `README.md` (how to build/test).
 
 ## Acceptance criteria
-- [ ] `npm install && npm run build` produces **one** minified JS file in `dist/` with **no** emitted
+- [x] `npm install && npm run build` produces **one** minified JS file in `dist/` with **no** emitted
       `.css` and **no** runtime dependencies (verify: a single JS artifact; styles present inside it).
-- [ ] `npm test` green in jsdom; suite covers render, all three close paths, the inside-click
+- [x] `npm test` green in jsdom; suite covers render, all three close paths, the inside-click
       no-close case, and focus trap + restore.
-- [ ] Negative test: a click **inside** the dialog does not close it; with `closeOnOverlay:false`, an
+- [x] Negative test: a click **inside** the dialog does not close it; with `closeOnOverlay:false`, an
       overlay click does not close.
-- [ ] `destroy()` removes all DOM and listeners — opening/closing repeatedly leaks nothing.
-- [ ] `python3 tools/sdd/check_contracts.py` passes with the new `bundle` contract (dist matches src).
-- [ ] All SDD gates green in CI; `npm run typecheck` and `npm run lint` clean.
-- [ ] Mutation-verify: break one load-bearing line (e.g. the ESC handler), show the **named** test go
+- [x] `destroy()` removes all DOM and listeners — opening/closing repeatedly leaks nothing.
+- [x] `python3 tools/sdd/check_contracts.py` passes with the new `bundle` contract (dist matches src).
+- [x] All SDD gates green in CI; `npm run typecheck` and `npm run lint` clean.
+- [x] Mutation-verify: break one load-bearing line (e.g. the ESC handler), show the **named** test go
       red (cite file:line, before→after), then revert.
 
 ## First action
