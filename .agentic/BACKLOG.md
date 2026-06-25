@@ -15,7 +15,7 @@ re-deriving it — and so "deferred" never quietly means "forgotten."
 ```
 
 ### Cross-session / cross-page dismissal suppression (deferred)
-- **Status:** Deferred — out of scope by decision (dismissal is per-page, per-session only). **Date:** 2026-06-25.
+- **Status:** PROMOTED into wave-1 (no longer deferred) — dismissal is now a persistent, page-editor-configurable per-page frequency cap via localStorage (default once / 7 days). **Date:** 2026-06-25 (promoted same day). The original per-session-only framing below is superseded.
 - **Idea:** Persist a dismissal (cookie / localStorage) so the lightbox stays hidden for N days or across pages of the same campaign, not just the current session.
 - **Why deferred:** The brief's Q&A explicitly scopes dismissal to the current page/session; cross-session suppression is a different product decision and adds storage/consent considerations.
 - **Revisit trigger:** A campaign owner asks for "don't show again for X days" or campaign-wide suppression.
