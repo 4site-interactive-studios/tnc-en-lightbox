@@ -15,8 +15,8 @@ prose.
 |------|---------|--------|
 | [wave-0](./wave-0/README.md) — Foundation | stream-a (core, PR #2) + stream-b (backfill, PR #8) | complete |
 | [wave-1](./wave-1/README.md) — Triggers | time-on-page · scroll-depth · inactivity · exit-intent; frequency-capped dismissal (localStorage, default 7d); manual multi-trigger composition | complete (PR #11) |
-| wave-2 — Theming & layout | 2-col image+content, mobile stacking, hide-image-on-mobile toggle, multiple themes, full UI customization | planned |
-| wave-3 — EN integration | page-type/page-ID detection, CTA redirect vs. close, no form interference, editor + advanced README | planned |
+| [wave-2](./wave-2/README.md) — Theming & layout | stream-a (layout + `--enlb-*` tokens + a11y/motion + secondary-CTA) · stream-b (theme set + customization) | in progress |
+| wave-3 — EN integration | CTA redirect/close/submit semantics · no EN-form interference · editor + advanced README (targeting is by-hand — no page detection; see ROADMAP Amendments) | planned |
 
 wave-0 is complete. The full waves-1–4 **master plan** — decomposition, the holistic config +
 `ENLightboxAPI` contract, the machine-checked contracts, and the NFR/use-case coverage matrix — lives
