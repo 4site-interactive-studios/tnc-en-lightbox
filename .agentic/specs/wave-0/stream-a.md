@@ -90,3 +90,18 @@ make it green.
   keyboard users get dumped to the top of the page.
 - **jsdom limits.** jsdom does not lay out or animate; assert behavior / DOM / attributes / listeners,
   not pixel geometry. Leave visual + responsive verification to manual cross-browser QA.
+
+## Backfill (stream-b) amendments
+
+The wave-0/stream-b backfill makes additive changes to files owned by this brief:
+
+- `src/config.ts` — replaces `triggers?: unknown` / `theme?: unknown` with empty extensible base
+  interfaces (`TriggersConfigBase`, `ThemeConfigBase`) and adds `layout?` / `en?` placeholders
+  (`LayoutConfigBase`, `ENIntegrationConfigBase`) so later waves own their type extensions via
+  declaration merging. Proven with a `tsc --noEmit` fixture.
+- `src/core/lightbox.ts` — adds the B5 a11y/UX slice: non-empty accessible-name fallback when the
+  header is empty, `inert` + `aria-hidden` + `tabindex` isolation of background body siblings with
+  exact restore, body scroll-lock with overflow/scroll-position restore, and initial focus on the
+  dialog root instead of the close button.
+
+These changes are tracked in detail by `.agentic/specs/wave-0/stream-b.md`.
