@@ -7,6 +7,27 @@
       "generate": "npm run build",
       "check": "npm run build && git add -AN && git diff --exit-code dist/",
       "ci": "contracts-check"
+    },
+    {
+      "name": "no-css-emitted",
+      "source": "vite.config.ts build output",
+      "generate": "npm run build",
+      "check": "npm run build && git add -AN && if find dist -name '*.css' -type f | grep -q .; then echo 'ERROR: .css emitted'; exit 1; fi",
+      "ci": "contracts-check"
+    },
+    {
+      "name": "api-surface",
+      "source": "src/index.ts public exports + IIFE global",
+      "generate": "npm run contracts:api-surface",
+      "check": "npm run contracts:api-surface && git add -AN && git diff --exit-code .agentic/contracts/snapshots/api-surface.txt",
+      "ci": "contracts-check"
+    },
+    {
+      "name": "config-schema",
+      "source": "src/config.ts",
+      "generate": "npm run contracts:config-schema",
+      "check": "npm run contracts:config-schema && git add -AN && git diff --exit-code .agentic/contracts/snapshots/config-schema.txt",
+      "ci": "contracts-check"
     }
   ]
 }

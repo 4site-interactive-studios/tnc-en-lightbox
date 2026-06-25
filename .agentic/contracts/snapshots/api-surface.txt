@@ -1,0 +1,5 @@
+ENLightboxAPI
+getInstance : () => Lightbox | null
+init : (config?: Partial<ENLightboxConfig>) => Lightbox
+Lightbox : typeof Lightbox
+normalizeConfig : (input?: Partial<ENLightboxConfig>) => NormalizedConfig

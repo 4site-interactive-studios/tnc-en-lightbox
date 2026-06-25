@@ -8,6 +8,14 @@ export interface ENLightboxCta {
   href?: string
 }
 
+export interface TriggersConfigBase {}
+
+export interface ThemeConfigBase {}
+
+export interface LayoutConfigBase {}
+
+export interface ENIntegrationConfigBase {}
+
 export interface ENLightboxConfig {
   header?: string
   body?: string
@@ -16,8 +24,10 @@ export interface ENLightboxConfig {
   closeOnOverlay?: boolean
   closeOnEsc?: boolean
   hideImageOnMobile?: boolean
-  triggers?: unknown
-  theme?: unknown
+  triggers?: TriggersConfigBase
+  theme?: ThemeConfigBase
+  layout?: LayoutConfigBase
+  en?: ENIntegrationConfigBase
 }
 
 export interface NormalizedConfig {
@@ -28,6 +38,10 @@ export interface NormalizedConfig {
   closeOnOverlay: boolean
   closeOnEsc: boolean
   hideImageOnMobile: boolean
+  triggers: TriggersConfigBase
+  theme: ThemeConfigBase
+  layout: LayoutConfigBase
+  en: ENIntegrationConfigBase
 }
 
 export function normalizeConfig(input?: Partial<ENLightboxConfig>): NormalizedConfig {
@@ -40,5 +54,9 @@ export function normalizeConfig(input?: Partial<ENLightboxConfig>): NormalizedCo
     closeOnOverlay: src.closeOnOverlay ?? true,
     closeOnEsc: src.closeOnEsc ?? true,
     hideImageOnMobile: src.hideImageOnMobile ?? true,
+    triggers: src.triggers ?? {},
+    theme: src.theme ?? {},
+    layout: src.layout ?? {},
+    en: src.en ?? {},
   }
 }
