@@ -1,3 +1,6 @@
+import type { NormalizedLayout } from './themes/config'
+import { normalizeLayout } from './themes/config'
+
 export interface ENLightboxImage {
   src: string
   alt?: string
@@ -40,12 +43,13 @@ export interface NormalizedConfig {
   hideImageOnMobile: boolean
   triggers: TriggersConfigBase
   theme: ThemeConfigBase
-  layout: LayoutConfigBase
+  layout: NormalizedLayout
   en: ENIntegrationConfigBase
 }
 
 export function normalizeConfig(input?: Partial<ENLightboxConfig>): NormalizedConfig {
   const src = input ?? {}
+  const topLevelHideImageOnMobile = src.hideImageOnMobile ?? true
   return {
     header: src.header ?? '',
     body: src.body ?? '',
@@ -53,10 +57,10 @@ export function normalizeConfig(input?: Partial<ENLightboxConfig>): NormalizedCo
     cta: src.cta,
     closeOnOverlay: src.closeOnOverlay ?? true,
     closeOnEsc: src.closeOnEsc ?? true,
-    hideImageOnMobile: src.hideImageOnMobile ?? true,
+    hideImageOnMobile: topLevelHideImageOnMobile,
     triggers: src.triggers ?? {},
     theme: src.theme ?? {},
-    layout: src.layout ?? {},
+    layout: normalizeLayout(src.layout, topLevelHideImageOnMobile),
     en: src.en ?? {},
   }
 }

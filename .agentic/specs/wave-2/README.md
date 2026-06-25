@@ -18,7 +18,7 @@ wave-2 makes the lightbox campaign-ready visually; wave-3 then wires EN CTA sema
 
 | Stream | Brief | Status |
 |--------|-------|--------|
-| stream-a — Layout, responsive contract, token surface & a11y/motion hardening | [stream-a](./stream-a.md) | planned |
+| stream-a — Layout, responsive contract, token surface & a11y/motion hardening | [stream-a](./stream-a.md) | in-progress |
 | stream-b — Theme set + full UI customization | (scaffolded at stream-b entry) | planned |
 
 ## Exit criteria
