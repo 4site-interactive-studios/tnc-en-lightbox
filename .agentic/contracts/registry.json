@@ -7,6 +7,20 @@
       "generate": "npm run build",
       "check": "npm run build && git add -AN && git diff --exit-code dist/",
       "ci": "contracts-check"
+    },
+    {
+      "name": "bundle-size",
+      "source": "dist/en-lightbox.js",
+      "generate": "npm run build",
+      "check": "node tools/sdd/check_size.mjs",
+      "ci": "contracts-check"
+    },
+    {
+      "name": "no-runtime-deps",
+      "source": "package.json",
+      "generate": "",
+      "check": "node tools/sdd/check_no_runtime_deps.mjs",
+      "ci": "contracts-check"
     }
   ]
 }
