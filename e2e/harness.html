@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>EN Lightbox Smoke Harness</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        min-height: 300vh;
+      }
+      #page-heading {
+        margin: 0;
+        padding: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1 id="page-heading">Smoke harness</h1>
+    <button id="page-button" type="button">Page button</button>
+
+    <script>
+      window.ENLightbox = (() => {
+        const params = new URLSearchParams(location.search)
+        const encoded = params.get('cfg')
+        if (encoded) {
+          try {
+            return JSON.parse(atob(encoded))
+          } catch {
+            // fall through to default
+          }
+        }
+        return {
+          header: 'Smoke header',
+          body: 'Smoke body',
+          image: { src: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', alt: '' },
+          cta: { label: 'Smoke CTA', href: '#' },
+          triggers: { time: 50 },
+        }
+      })()
+    </script>
+    <script src="/dist/en-lightbox.js"></script>
+  </body>
+</html>
