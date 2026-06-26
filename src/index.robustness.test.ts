@@ -62,13 +62,22 @@ describe('auto-init robustness', () => {
   it('a second script evaluation is a no-op (no re-init, no destroy, no re-arm)', async () => {
     ENL.ENLightbox = { header: 'first' }
     const mod1 = await import('./index')
-    expect(mod1.getInstance()).toBeInstanceOf(mod1.Lightbox)
+    const firstInstance = mod1.getInstance()
+    expect(firstInstance).toBeInstanceOf(mod1.Lightbox)
     expect(ENL.__ENLightboxLoaded).toBe(true)
 
+    const destroySpy = vi.spyOn(firstInstance!, 'destroy')
+    const armSpy = vi.spyOn(mod1, 'armTriggers')
+
     vi.resetModules()
-    ENL.ENLightbox = { header: 'second' }
+    ENL.ENLightbox = { header: 'second', triggers: { time: 50 } }
     const mod2 = await import('./index')
+
+    expect(ENL.__ENLightboxLoaded).toBe(true)
+    expect(destroySpy).not.toHaveBeenCalled()
+    expect(armSpy).not.toHaveBeenCalled()
     expect(mod2.getInstance()).toBeNull()
+    expect(mod1.getInstance()).toBe(firstInstance)
   })
 
   it('defers auto-init to DOMContentLoaded when loading and no config is set yet', async () => {
