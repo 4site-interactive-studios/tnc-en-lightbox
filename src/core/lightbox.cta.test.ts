@@ -1,6 +1,7 @@
 import { describe, it, expect, afterEach, vi } from 'vitest'
 import { Lightbox } from './lightbox'
 import { normalizeConfig } from '../config'
+import { lightboxHost, sq } from './shadow-test-helpers'
 
 afterEach(() => {
   document.body.innerHTML = ''
@@ -15,7 +16,7 @@ describe('Lightbox CTA', () => {
       normalizeConfig({ header: 'H', body: 'B', cta: { label: 'Go', href: '#go' } }),
     )
     lb.open()
-    const cta = document.querySelector('.enlb-cta')
+    const cta = sq('.enlb-cta')
     expect(cta).not.toBeNull()
     expect(cta!.tagName).toBe('A')
     expect(cta!.getAttribute('href')).toBe('#go')
@@ -32,7 +33,7 @@ describe('Lightbox CTA', () => {
       normalizeConfig({ header: 'H', body: 'B', cta: { label: 'Go', href: '#redirect' } }),
     )
     lb.open()
-    const cta = document.querySelector('.enlb-cta') as HTMLElement
+    const cta = sq('.enlb-cta') as HTMLElement
     cta.click()
     expect(assignSpy).not.toHaveBeenCalled()
   })
@@ -47,7 +48,7 @@ describe('Lightbox CTA', () => {
       }),
     )
     lb.open()
-    const row = document.querySelector('.enlb-cta-row')
+    const row = sq('.enlb-cta-row')
     expect(row).not.toBeNull()
     const ctas = row!.querySelectorAll('.enlb-cta, .enlb-cta--secondary')
     expect(ctas.length).toBe(2)
@@ -68,7 +69,7 @@ describe('Lightbox CTA', () => {
       }),
     )
     lb.open()
-    const secondary = document.querySelector('.enlb-cta--secondary')
+    const secondary = sq('.enlb-cta--secondary')
     expect(secondary).not.toBeNull()
     expect(secondary!.tagName).toBe('BUTTON')
     expect(secondary!.getAttribute('data-enlb-action')).toBe('close')
@@ -84,9 +85,9 @@ describe('Lightbox CTA', () => {
       }),
     )
     lb.open()
-    expect(document.querySelector('.enlb-overlay')).not.toBeNull()
-    ;(document.querySelector('.enlb-cta--secondary') as HTMLElement).click()
-    expect(document.querySelector('.enlb-overlay')).toBeNull()
+    expect(sq('.enlb-overlay')).not.toBeNull()
+    ;(sq('.enlb-cta--secondary') as HTMLElement).click()
+    expect(lightboxHost()).toBeNull()
   })
 
   it('renders a decline CTA when dismissLabel is provided', () => {
@@ -99,7 +100,7 @@ describe('Lightbox CTA', () => {
       }),
     )
     lb.open()
-    const decline = document.querySelector('.enlb-cta--secondary')
+    const decline = sq('.enlb-cta--secondary')
     expect(decline).not.toBeNull()
     expect(decline!.textContent).toBe('No thanks')
   })
@@ -114,7 +115,7 @@ describe('Lightbox CTA', () => {
       }),
     )
     lb.open()
-    const dialog = document.querySelector('.enlb-dialog') as HTMLElement
+    const dialog = sq('.enlb-dialog') as HTMLElement
     const focusable = Array.from(
       dialog.querySelectorAll<HTMLElement>(
         'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
@@ -137,12 +138,12 @@ describe('Lightbox CTA', () => {
       }),
     )
     lb.open()
-    expect(document.querySelector('.enlb-overlay')).not.toBeNull()
+    expect(sq('.enlb-overlay')).not.toBeNull()
 
-    const cta = document.querySelector('.enlb-cta') as HTMLElement
+    const cta = sq('.enlb-cta') as HTMLElement
     cta.click()
 
-    expect(document.querySelector('.enlb-overlay')).toBeNull()
+    expect(lightboxHost()).toBeNull()
     expect(dismissHandler).toHaveBeenCalledOnce()
     expect(dismissHandler).toHaveBeenCalledWith(
       expect.objectContaining({ detail: { pathname: expect.any(String) } }),

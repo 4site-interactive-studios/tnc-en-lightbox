@@ -27,6 +27,18 @@
     </form>
 
     <script>
+      // Simulate a hostile/opinionated host page: inject arbitrary CSS into the
+      // document head BEFORE the lightbox loads. Used by the style-isolation specs.
+      ;(() => {
+        const hostCss = new URLSearchParams(location.search).get('hostcss')
+        if (!hostCss) return
+        const style = document.createElement('style')
+        style.id = 'hostile-host-css'
+        style.textContent = hostCss
+        document.head.appendChild(style)
+      })()
+    </script>
+    <script>
       window.ENLightbox = (() => {
         const params = new URLSearchParams(location.search)
         const encoded = params.get('cfg')

@@ -298,3 +298,95 @@ test('armTriggers with an unknown trigger type does not throw on the host page',
   expect(errors).toEqual([])
 })
 
+// ── Style isolation (Shadow DOM) ────────────────────────────────────────────
+// A hostile host stylesheet must not reach the lightbox. The host page sets an
+// inheritable serif font, a focus border, and content-box sizing; none of these
+// may affect the shadow-rendered dialog. Red against the head-DOM rendering,
+// green once the lightbox renders inside a Shadow DOM with a :host reset.
+const hostileHostCss = [
+  // Inheritable property — bleeds across the shadow boundary unless :host resets it.
+  'html, body { font-family: Georgia, "Times New Roman", serif; }',
+  // Selector rule that hit the old light-DOM <h2> title directly.
+  'h2 { font-family: Georgia, serif !important; }',
+  // The stray focus border seen on the first live render.
+  ':focus { border: 4px solid red !important; outline: 4px solid red !important; }',
+  // Global box model override.
+  '* { box-sizing: content-box !important; }',
+].join('\n')
+
+test('lightbox is style-isolated from a hostile host stylesheet (font, border, box-sizing)', async ({ page }) => {
+  await page.goto(
+    harnessUrl({ ...baseConfig, header: 'Isolated heading', triggers: { time: 50 } }, hostileHostCss),
+  )
+  const dialog = page.locator('.enlb-dialog')
+  const title = page.locator('.enlb-title')
+  await expect(dialog).toBeVisible()
+  await expect(title).toBeVisible()
+
+  // The host's hostile CSS must actually be present on the page (guards the harness).
+  await expect(page.locator('#hostile-host-css')).toHaveCount(1)
+
+  // Font-family: the lightbox's own sans-serif stack, NOT the host's Georgia serif.
+  const titleFont = await title.evaluate((el) => getComputedStyle(el).fontFamily)
+  expect(titleFont).toContain('system-ui')
+  expect(titleFont.toLowerCase()).not.toContain('georgia')
+
+  // The focused dialog must not pick up the host's :focus border.
+  const borderTopWidth = await dialog.evaluate((el) => getComputedStyle(el).borderTopWidth)
+  expect(borderTopWidth).toBe('0px')
+
+  // Box-sizing: the host's `* { box-sizing: content-box }` must not reach the shadow.
+  const boxSizing = await dialog.evaluate((el) => getComputedStyle(el).boxSizing)
+  expect(boxSizing).toBe('border-box')
+})
+
+test('existing .enlb-* locators still resolve through the open shadow root', async ({ page }) => {
+  await page.goto(harnessUrl({ ...baseConfig, triggers: { time: 50 } }, hostileHostCss))
+  await expect(page.locator('.enlb-overlay')).toBeVisible()
+  await expect(page.locator('.enlb-dialog')).toHaveAttribute('role', 'dialog')
+  await expect(page.locator('.enlb-content')).toBeVisible()
+  await expect(page.locator('.enlb-close')).toBeVisible()
+})
+
+// ── Layout polish ───────────────────────────────────────────────────────────
+// A tall (portrait) image must not drive the dialog height. The content should
+// fill the dialog vertically — no large empty void — and the image should cover
+// a bounded box. Red against the `.enlb-img { height: 100% }` rendering.
+const portraitImage =
+  'data:image/svg+xml;utf8,' +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="120" height="1000"><rect width="120" height="1000" fill="#006341"/></svg>',
+  )
+
+test('portrait image does not inflate the dialog height (no empty void)', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === 'Mobile Chrome', 'image column is hidden on mobile by default')
+  await page.goto(
+    harnessUrl({
+      ...baseConfig,
+      header: 'Bounded layout',
+      body: 'The dialog height should be driven by this content, not by the portrait image beside it.',
+      image: { src: portraitImage, alt: '' },
+      triggers: { time: 50 },
+    }),
+  )
+  const dialog = page.locator('.enlb-dialog')
+  const content = page.locator('.enlb-content')
+  const image = page.locator('.enlb-image')
+  await expect(dialog).toBeVisible()
+
+  const dialogBox = await dialog.boundingBox()
+  const contentBox = await content.boundingBox()
+  const imageBox = await image.boundingBox()
+  expect(dialogBox).not.toBeNull()
+  expect(contentBox).not.toBeNull()
+  expect(imageBox).not.toBeNull()
+
+  // The dialog is sized by its content, not inflated/capped by the portrait image.
+  // Buggy rendering pins the dialog to the viewport cap; the fix keeps it compact.
+  expect(dialogBox!.height).toBeLessThan(page.viewportSize()!.height * 0.8)
+  // The image covers a bounded box matching the dialog — it does not drive the height.
+  expect(imageBox!.height).toBeLessThanOrEqual(dialogBox!.height + 1)
+  // Content fills the dialog vertically — no large empty region beside/below it.
+  expect(contentBox!.height).toBeGreaterThanOrEqual(dialogBox!.height * 0.9)
+})
+

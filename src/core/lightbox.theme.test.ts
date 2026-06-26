@@ -2,6 +2,7 @@ import { describe, it, expect, afterEach } from 'vitest'
 import { Lightbox } from './lightbox'
 import { normalizeConfig } from '../config'
 import { normalizeTheme } from '../themes/config'
+import { sq } from './shadow-test-helpers'
 
 afterEach(() => {
   document.body.innerHTML = ''
@@ -16,7 +17,7 @@ describe('Lightbox theme application', () => {
       normalizeConfig({ header: 'H', body: 'B', theme: { preset: 'dark' } }),
     )
     lb.open()
-    const overlay = document.querySelector('.enlb-overlay') as HTMLElement
+    const overlay = sq('.enlb-overlay') as HTMLElement
     expect(overlay).not.toBeNull()
     expect(overlay.classList.contains('enlb-theme-dark')).toBe(true)
   })
@@ -24,7 +25,7 @@ describe('Lightbox theme application', () => {
   it('defaults to the light theme class when no preset is specified', () => {
     const lb = new Lightbox(normalizeConfig({ header: 'H', body: 'B' }))
     lb.open()
-    const overlay = document.querySelector('.enlb-overlay') as HTMLElement
+    const overlay = sq('.enlb-overlay') as HTMLElement
     expect(overlay.classList.contains('enlb-theme-light')).toBe(true)
   })
 
@@ -33,7 +34,7 @@ describe('Lightbox theme application', () => {
       normalizeConfig({ header: 'H', body: 'B', theme: { preset: 'brand' } }),
     )
     lb.open()
-    const overlay = document.querySelector('.enlb-overlay') as HTMLElement
+    const overlay = sq('.enlb-overlay') as HTMLElement
     expect(overlay.classList.contains('enlb-theme-brand')).toBe(true)
   })
 
@@ -46,7 +47,7 @@ describe('Lightbox theme application', () => {
       }),
     )
     lb.open()
-    const overlay = document.querySelector('.enlb-overlay') as HTMLElement
+    const overlay = sq('.enlb-overlay') as HTMLElement
     expect(overlay.classList.contains('enlb-theme-dark')).toBe(true)
     expect(overlay.style.getPropertyValue('--enlb-cta-bg')).toBe('#ff0000')
   })
@@ -60,7 +61,7 @@ describe('Lightbox theme application', () => {
       }),
     )
     lb.open()
-    const overlay = document.querySelector('.enlb-overlay') as HTMLElement
+    const overlay = sq('.enlb-overlay') as HTMLElement
     expect(overlay.style.getPropertyValue('--enlb-cta-bg')).toBe('#ff0000')
     expect(overlay.style.getPropertyValue('--enlb-text')).toBe('#00ff00')
     expect(overlay.classList.contains('enlb-theme-dark')).toBe(true)
@@ -69,7 +70,7 @@ describe('Lightbox theme application', () => {
   it('applyTheme re-applies at runtime via a single style mutation (D17)', () => {
     const lb = new Lightbox(normalizeConfig({ header: 'H', body: 'B' }))
     lb.open()
-    const overlay = document.querySelector('.enlb-overlay') as HTMLElement
+    const overlay = sq('.enlb-overlay') as HTMLElement
 
     const observer = new MutationObserver(() => {})
     observer.observe(overlay, { attributes: true, attributeFilter: ['style'] })
@@ -87,7 +88,7 @@ describe('Lightbox theme application', () => {
   it('applyTheme updates the preset class when the preset changes', () => {
     const lb = new Lightbox(normalizeConfig({ header: 'H', body: 'B' }))
     lb.open()
-    const overlay = document.querySelector('.enlb-overlay') as HTMLElement
+    const overlay = sq('.enlb-overlay') as HTMLElement
     expect(overlay.classList.contains('enlb-theme-light')).toBe(true)
 
     lb.applyTheme(normalizeTheme({ preset: 'dark' }))
@@ -106,7 +107,7 @@ describe('Lightbox theme application', () => {
         }),
       )
       lb.open()
-      const overlay = document.querySelector('.enlb-overlay') as HTMLElement
+      const overlay = sq('.enlb-overlay') as HTMLElement
       expect(overlay.classList.contains('enlb-theme-light')).toBe(true)
     }).not.toThrow()
   })
@@ -116,7 +117,7 @@ describe('Lightbox theme application', () => {
       normalizeConfig({ header: 'H', body: 'B', theme: { radius: '20px' } }),
     )
     lb.open()
-    const overlay = document.querySelector('.enlb-overlay') as HTMLElement
+    const overlay = sq('.enlb-overlay') as HTMLElement
     expect(overlay.style.getPropertyValue('--enlb-radius')).toBe('20px')
     expect(overlay.classList.contains('enlb-theme-light')).toBe(true)
     lb.close()
