@@ -406,6 +406,44 @@ test('portrait image does not inflate the dialog height (no empty void)', async 
   expect(contentBox!.height).toBeGreaterThanOrEqual(dialogBox!.height * 0.9)
 })
 
+// ── Image-top flush (no white band above image with outside close) ────────────
+// When closeButton is 'outside' and imagePosition is 'top', the image must sit
+// flush at the dialog's top edge. Before the :has() override, the outside-close
+// padding-top (40px) pushed the image down creating a white band. This test
+// measures the bounding-box gap between the dialog and the image to catch it.
+test('image-top flush: no white band above image with outside close button', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === 'Mobile Chrome', 'image column is hidden on mobile by default')
+  await page.goto(
+    harnessUrl({
+      header: 'Flush test',
+      body: 'The image top must be flush with the dialog top edge.',
+      image: {
+        src: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
+        alt: '',
+      },
+      cta: { label: 'OK', action: 'close' },
+      layout: { imagePosition: 'top', closeButton: 'outside' },
+      triggers: { time: 50 },
+    }),
+  )
+  const dialog = page.locator('.enlb-dialog')
+  const image = page.locator('.enlb-image')
+  await expect(dialog).toBeVisible()
+  await expect(image).toBeVisible()
+
+  const dialogBox = await dialog.boundingBox()
+  const imageBox = await image.boundingBox()
+  expect(dialogBox).not.toBeNull()
+  expect(imageBox).not.toBeNull()
+
+  // The image sits at the top of the scroll wrapper inside the dialog.
+  // With the :has() fix, padding-top is 0 and the gap is ≈0px (sub-2px
+  // tolerance for scroll-wrapper border-radius clipping).
+  // Without the fix, the gap was ~40px.
+  const gap = imageBox!.y - dialogBox!.y
+  expect(gap).toBeLessThanOrEqual(2)
+})
+
 // ── Outside close button (not clipped by dialog overflow) ─────────────────────
 // The outside close button sits above the dialog (top: -32px). The dialog's
 // overflow must not clip it. Red when the dialog has overflow:auto; green once
