@@ -9,12 +9,13 @@ export interface ENLightboxImage {
 export interface ENLightboxCta {
   label: string
   href?: string
+  action?: 'redirect' | 'close'
 }
 
 export interface ENLightboxSecondaryCta {
   label: string
   href?: string
-  action?: 'close'
+  action?: 'redirect' | 'close'
 }
 
 export interface TriggersConfigBase {}

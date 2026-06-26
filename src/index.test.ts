@@ -53,3 +53,16 @@ describe('setTheme API', () => {
     expect(() => mod.setTheme({ preset: 'dark' })).not.toThrow()
   })
 })
+
+describe('CTA routing', () => {
+  it('does not re-open via API after a close CTA dismisses the lightbox', async () => {
+    const mod = await import('./index')
+    mod.init({ header: 'H', body: 'B', cta: { label: 'Close', action: 'close' } })
+    mod.open()
+    expect(document.querySelector('.enlb-overlay')).not.toBeNull()
+    ;(document.querySelector('.enlb-cta') as HTMLElement).click()
+    expect(document.querySelector('.enlb-overlay')).toBeNull()
+    mod.open()
+    expect(document.querySelector('.enlb-overlay')).toBeNull()
+  })
+})
