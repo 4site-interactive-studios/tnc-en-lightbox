@@ -1,87 +1,65 @@
 # stream-a — EN CTA semantics, no-form-interference & editor docs
 
-**Wave:** 3 · **Branch:** `feat/wave-3-en` · **Depends on:** wave-0/1/2 (all on `main`) ·
-**Required reading:** [`AGENTS.md`](../../AGENTS.md), [`WORKFLOW.md`](../../WORKFLOW.md), the [wave-3 README](./README.md), this brief, [`ROADMAP.md`](../ROADMAP.md) (wave-3/a; the **"Amendments — wave-1 entry"** section: EN targeting is by-hand, **no** page detection; **D5** `cta.action` single source of truth; **D5b** submit-deferred; the **U12** non-interference test), [`LEARNINGS.md`](../../LEARNINGS.md) (navigating-CTA-is-`<a>`).
+**Wave:** 3 · **Branch:** `feat/wave-3-en` · **Depends on:** wave-2 ·
+**Required reading:** [`AGENTS.md`](../../AGENTS.md), [`WORKFLOW.md`](../../WORKFLOW.md), the [wave-3 README](./README.md), this brief.
 
 ## Goal
-Make the lightbox a safe, EN-aware drop-in **without page detection** (the editor places
-`window.ENLightbox` per page): finalize CTA action semantics, **prove non-interference with EN forms**,
-ship the **editor/advanced-customization README**, and **delete the inert `en` config placeholder**.
-The last functional wave.
+
+Finalize the library's behavior on Engaging Networks pages by collapsing CTA routing to a single source of truth (`cta.action`), proving that the lightbox does not interfere with EN forms, and shipping the editor-facing advanced-customization README.
 
 ## In scope
-- **CTA action semantics (D5)** — `cta.action` is the single routing source of truth: `'redirect'`
-  (the existing native `<a href>` nav) and `'close'` (closes the lightbox + records dismissal per the
-  frequency cap). Inferred default: `href` ⇒ `'redirect'`, else `'close'`. `secondaryCta`/decline routes
-  the same way. No competing `en.ctaBehavior`/`redirectUrl`. **`'submit'` is DEFERRED (D5b) — do NOT
-  implement** (no committed EN-form contract).
-- **No-EN-form-interference (U12 — the highest-risk NFR)** — a committed test mounting the lightbox over
-  an EN-shaped form (inputs + submit) proving: form submission/validation/focus proceed (lightbox open
-  *and* closed); `inert`/`aria-hidden`/scroll-lock **fully release** the form on close; focus restores
-  to the prior element on close. Cover the redirect + close CTA paths near the form.
-- **Remove the inert `en` config (simplification)** — delete the unused `export interface
-  ENIntegrationConfigBase {}`, the `en?: ENIntegrationConfigBase` field, the `NormalizedConfig.en`
-  field, and the `en: src.en ?? {}` normalizer line from `src/config.ts` (dead scaffolding from the
-  pre-by-hand plan; never read at runtime). Regenerate the `config-schema` snapshot; update the
-  `config.test.ts` default-assertion. Add a minimal `en?` back **only if** the non-interference work
-  genuinely needs a config knob (e.g. `respectFormFocus`) — **default: ship none**. **No** page-type/ID
-  detection, `ENPageType`, `include`/`exclude`, or `ENPageContext` (they never existed — keep it that way).
-- **Editor + advanced-customization README** — the configuration guide: how to place `window.ENLightbox`
-  on an EN page; the full config schema (content / behavior / triggers / `frequencyDays` / layout /
-  theme / `cta` + `secondaryCta`); examples (basic campaign, themed campaign, multi-trigger); the
-  dismissal-frequency behavior; the `customCss`-not-yet-available note; how to host/load the `dist`.
-  **Editor-facing**, not dev-internal.
+
+- `src/config.ts` — add `action?: "redirect" | "close"` to `ENLightboxCta` and `ENLightboxSecondaryCta`.
+- `src/config.ts` — remove the inert `ENIntegrationConfigBase`, `en?`, and `NormalizedConfig.en` placeholder.
+- `src/core/lightbox.ts` — route CTA clicks by resolved action:
+  - `redirect` (explicit or inferred from `href`) renders as a native `<a href>`.
+  - `close` (explicit or inferred from absent `href`) renders as a `<button>` and calls `Lightbox.close()`.
+  - `secondaryCta` and `dismissLabel` follow the same rules.
+- `src/core/lightbox.en-interference.test.ts` — committed test that mounts the lightbox over an EN-shaped form and verifies:
+  - submission/validation/focus work,
+  - form is isolated (`inert`/`aria-hidden`/`tabindex`) while the lightbox is open,
+  - all isolation attributes and scroll-lock are restored after close,
+  - focus is restored,
+  - both redirect and close CTA paths are covered.
+- `src/config.test.ts` — remove the `en` default assertion.
+- `.agentic/contracts/snapshots/config-schema.txt` — regenerate (the two `en` lines drop).
+- `EDITOR.md` — editor-facing README with the full config schema, examples, dismissal behavior, and the `customCss` not-yet-available note.
 
 ## Out of scope
-- EN page-type/ID detection, `canArm`, `ENPageContext`, include/exclude (dropped — Amendments; they
-  don't exist in code).
-- `cta.action:'submit'` (deferred, D5b — needs a committed EN-form contract).
-- `customCss` injection (security-review-gated, Risk R2).
-- release/packaging (wave-4).
+
+- EN page-type / page-ID detection, `ENPageContext`, `ENPageType`, include/exclude page IDs — dropped per wave-3 amendment.
+- `cta.action: "submit"` — deferred to a later wave (D5b).
+- `theme.customCss` injection — deferred to wave-2 security review / later wave.
+- Release/packaging — wave-4.
+- Creating a `src/en/` directory — no EN-specific code module is needed; the non-interference test lives under `src/core`.
 
 ## Deliverables
-- `src/core/lightbox.ts` — `cta.action` close routing (additive; wave-0-owned → `[no-spec]`).
-- `src/config.ts` — **remove** the inert `en` placeholder (+ regenerate the `config-schema` snapshot;
-  update `config.test.ts`). Carry `[no-spec: remove inert en placeholder / wave-3 CTA routing]`.
-- `README.md` (root) or `docs/` — the editor/advanced-customization guide.
-- `src/en/` + the `src/en/** → wave-3/stream-a.md` ownership carve-out **only if** you actually add EN
-  config/code (likely not — default is no `src/en/`).
-- Tests: `cta.action` routing (redirect/close + inferred default); the non-interference test; refreshed
-  `dist/`; this brief trued-up.
+
+- Modified `src/config.ts`, `src/core/lightbox.ts`, `src/config.test.ts`.
+- New `src/core/lightbox.en-interference.test.ts`.
+- New `EDITOR.md`.
+- New `.agentic/specs/wave-3/README.md` and this brief.
+- Regenerated `config-schema` snapshot.
+- Committed `dist/en-lightbox.js` (rebuilt from source).
 
 ## Acceptance criteria
-- [ ] `cta.action` single-source routing: `'redirect'` (href nav) + `'close'` (closes + records
-      dismissal); inferred default (`href`⇒redirect, else close); `secondaryCta` routes the same way.
-      No competing `ctaBehavior`/`redirectUrl`.
-- [ ] Non-interference: a committed test mounts the lightbox over an EN-shaped form and proves
-      submission/validation/focus proceed (open + closed), `inert`/scroll-lock fully release on close,
-      focus restored — across the redirect + close CTA paths. **Make this real + adversarial.**
-- [ ] The inert `en` placeholder is removed (config-schema snapshot regenerated; `config.test.ts`
-      updated); no page detection; a minimal `en?` exists **only** if `respectFormFocus` was genuinely
-      needed.
-- [ ] Editor/advanced README lets a campaign editor configure + host the lightbox from it alone (full
-      schema + examples + dismissal behavior + `customCss`-deferred note + hosting).
-- [ ] Bundle stays ONE dependency-free file, SCSS inlined; `bundle-size` green (re-baseline only if it
-      moves); all SDD gates + cross-browser smoke green; wave-0/1/2 tests still pass.
-- [ ] Mutation-verify on a load-bearing line (e.g. the `cta.action` close routing), show the **named**
-      test go red (file:line, before→after), revert.
+
+- [ ] `npm test` green; new CTA routing tests and the EN non-interference test pass.
+- [ ] `npm run typecheck` and `npm run lint` clean.
+- [ ] `npm run build` produces a fresh `dist/en-lightbox.js`.
+- [ ] `npm run e2e` green locally.
+- [ ] The `config-schema` contract is green after regenerating the snapshot.
+- [ ] The inert `en` placeholder is removed from `src/config.ts` and the config test.
+- [ ] Mutation-verify: break one load-bearing line in the close-CTA routing and show the named test red.
 
 ## First action
-Write the failing test: a CTA with `action:'close'` (or no `href`) closes the lightbox on click and
-records dismissal (re-arming within the window doesn't re-open). Red first, then green.
+
+Write the failing test `src/core/lightbox.cta.test.ts` asserting that a CTA with `action: "close"` closes the lightbox and records dismissal via the `enlb:dismiss` event. Red first, then green.
 
 ## Gotchas
-- **Routing via `cta.action` only (D5)** — don't reintroduce `en.ctaBehavior`/`redirectUrl`. `redirect`
-  = the native `<a href>` (LEARNINGS: navigating CTA is `<a>`); `close` = a `<button>` that closes.
-- **`'submit'` is DEFERRED** — do not implement (no EN-form contract; D5b).
-- **No page detection** — eligibility is config-present + frequency + trigger (by-hand targeting). Don't
-  add `ENPageType`/`ENPageContext`/include-exclude.
-- **Non-interference is THE risk** — the lightbox must never break the host EN form. Test over an
-  EN-shaped form (open + closed); ensure `inert`/`aria-hidden`/scroll-lock are fully removed on close so
-  the form works; focus restored. This is U12 — make it concrete + adversarial.
-- **Removing `en`** touches `src/config.ts` (wave-0-owned) → carry `[no-spec]`; regenerate the
-  `config-schema` snapshot (its two `en` lines drop) and update `config.test.ts`. Confirm nothing reads
-  `config.en` anywhere first (it doesn't today).
-- **README is EDITOR-facing** (campaign editors, not devs) — full config + examples + how-to-host.
-- Only create `src/en/` (+ its ownership carve-out as the first commit) **if** you add EN config/code;
-  otherwise don't. `src/index.ts` is exempt. Single inlined bundle, zero runtime deps.
+
+- **Navigating CTAs must stay native anchors.** The redirect path must render as `<a href>` and never use `<button>` + `location.assign`. This preserves middle/⌘-click, copy-link, and link role for assistive tech (see `LEARNINGS.md`).
+- **Single source of truth.** `cta.action` is the canonical router; do not add a separate `en.ctaBehavior` or similar config field.
+- **Inert `en` placeholder.** Removing it from `src/config.ts` also requires updating `NormalizedConfig`, the normalizer, and the config-schema snapshot; otherwise the contract check fails.
+- **Re-arming after close.** The lightbox dispatches `enlb:dismiss` on any close path; the API's `open()` path already consults the dismissal guard. The close-CTA test verifies the event is fired; the API test verifies the guard suppresses re-open.
+- **EN form fixture.** The non-interference test should use a real `<form>` with required inputs and a submit handler, and assert the rendered isolation state (not just class names) so regressions in `inert`/`aria-hidden` restore are caught.
