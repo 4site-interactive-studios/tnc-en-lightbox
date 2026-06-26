@@ -1,6 +1,7 @@
 import { Lightbox } from './core/lightbox'
-import { normalizeConfig, type ENLightboxConfig, type TriggersConfigBase } from './config'
+import { normalizeConfig, type ENLightboxConfig, type TriggersConfigBase, type ThemeConfigBase } from './config'
 import { normalizeTriggers, type NormalizedTriggers } from './triggers/config'
+import { normalizeTheme } from './themes/config'
 import { createDispatcher, type Dispatcher } from './triggers/dispatcher'
 import { isEligible as checkEligible, stamp } from './triggers/dismissal'
 
@@ -66,6 +67,11 @@ export function open(): void {
 
 export function close(): void {
   activeInstance?.close()
+}
+
+export function setTheme(theme: ThemeConfigBase): void {
+  if (!activeInstance) return
+  activeInstance.applyTheme(normalizeTheme(theme))
 }
 
 function ensureDismissListener(): void {

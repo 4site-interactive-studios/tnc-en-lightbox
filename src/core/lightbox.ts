@@ -1,5 +1,6 @@
 import lightboxCss from '../styles/lightbox.scss?inline'
 import type { NormalizedConfig } from '../config'
+import type { NormalizedTheme } from '../themes/config'
 
 const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
@@ -148,6 +149,19 @@ export class Lightbox {
     this.styleEl = null
   }
 
+  applyTheme(theme: NormalizedTheme): void {
+    this.config = { ...this.config, theme }
+    if (!this.overlay) return
+    const newClass = this.buildOverlayClasses()
+    if (this.overlay.className !== newClass) {
+      this.overlay.className = newClass
+    }
+    const newStyle = this.composeOverlayStyle()
+    if (this.overlay.getAttribute('style') !== newStyle) {
+      this.overlay.setAttribute('style', newStyle)
+    }
+  }
+
   private lockBackground(): void {
     this.bodyOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
@@ -200,6 +214,18 @@ export class Lightbox {
     if (this.config.layout.hideImageOnMobile) classes.push('enlb-hide-image-mobile')
     if (this.config.layout.closeButton === 'outside') classes.push('enlb-close--outside')
     return classes.join(' ')
+  }
+
+  private buildOverlayClasses(): string {
+    return `enlb-overlay enlb-theme-${this.config.theme.preset}`
+  }
+
+  private composeOverlayStyle(): string {
+    const parts: string[] = [`--enlb-image-ratio: ${this.config.layout.imageRatio}`]
+    for (const [key, value] of Object.entries(this.config.theme.cssVars)) {
+      parts.push(`${key}: ${value}`)
+    }
+    return parts.join('; ')
   }
 
   private buildLayoutClasses(): string {
@@ -265,11 +291,11 @@ export class Lightbox {
 
   private buildDom(): HTMLElement {
     const overlay = document.createElement('div')
-    overlay.className = 'enlb-overlay'
+    overlay.className = this.buildOverlayClasses()
+    overlay.setAttribute('style', this.composeOverlayStyle())
 
     const dialog = document.createElement('div')
     dialog.className = this.buildDialogClasses()
-    dialog.style.setProperty('--enlb-image-ratio', this.config.layout.imageRatio)
     dialog.setAttribute('role', 'dialog')
     dialog.setAttribute('aria-modal', 'true')
     dialog.setAttribute('aria-labelledby', this.titleId)
