@@ -55,3 +55,21 @@ re-deriving it — and so "deferred" never quietly means "forgotten."
 - **Idea:** A `cta.action: 'submit'` that submits the host Engaging Networks form (rather than redirecting or closing), routing through EN's native submit/validation.
 - **Why deferred:** It sits on the highest-risk NFR (no EN form interference); a half-specified submit action is dangerous. It ships only if wave-3 commits which form it targets, that it routes through EN's native submit/validation, and its behavior on non-form pages.
 - **Revisit trigger:** wave-3 commits the concrete EN-form contract, or a campaign needs the lightbox CTA to submit the page's EN form.
+
+### Configurable stack breakpoint (deferred)
+- **Status:** Deferred — wave-2/a ships a fixed 640px stacking breakpoint. **Date:** 2026-06-26.
+- **Idea:** Let the page editor set the responsive stacking breakpoint (the original `layout.stackBreakpoint`).
+- **Why deferred:** A CSS media query can't read a CSS custom property, so the field was inert as first attempted; a real implementation needs a JS-injected `<style>` (or `matchMedia` + class toggle), not worth the bundle/complexity for wave-2/a.
+- **Revisit trigger:** A campaign needs a non-640px stacking breakpoint.
+
+### Centered / banner layout variants (deferred)
+- **Status:** Deferred — wave-2/a ships only the `two-column` variant. **Date:** 2026-06-26.
+- **Idea:** Additional `layout.variant` values (`centered`, `banner`) with their own SCSS.
+- **Why deferred:** They were inert (collapsed to two-column) as first attempted; not needed by current campaigns. Adding one back is additive (a new enum value + SCSS).
+- **Revisit trigger:** A campaign needs a non-two-column layout.
+
+### Secondary/decline CTA redirect should be an anchor (deferred)
+- **Status:** Deferred — minor consistency follow-up flagged in the wave-2/a review. **Date:** 2026-06-26.
+- **Idea:** A secondary/decline CTA configured with a redirect (`href`) currently renders as `<button>` + `location.assign` — the same anti-pattern fixed for the primary CTA; it should be an `<a href>` per the navigating-CTA invariant ([[LEARNINGS]]).
+- **Why deferred:** The secondary CTA is normally a decline/close (not a redirect), so the path is rarely hit; non-blocking.
+- **Revisit trigger:** A campaign uses a redirect secondary CTA, or stream-b touches the CTA row.
