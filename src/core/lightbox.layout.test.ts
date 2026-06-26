@@ -76,7 +76,7 @@ describe('Lightbox layout', () => {
     expect(children[1].classList.contains('enlb-image')).toBe(true)
   })
 
-  it('writes imageRatio as a custom property on the dialog', () => {
+  it('writes imageRatio as a custom property on the overlay root', () => {
     const lb = new Lightbox(
       normalizeConfig({
         header: 'H',
@@ -86,8 +86,8 @@ describe('Lightbox layout', () => {
       }),
     )
     lb.open()
-    const dialog = document.querySelector('.enlb-dialog') as HTMLElement
-    expect(dialog.style.getPropertyValue('--enlb-image-ratio')).toBe('35%')
+    const overlay = document.querySelector('.enlb-overlay') as HTMLElement
+    expect(overlay.style.getPropertyValue('--enlb-image-ratio')).toBe('35%')
   })
 
   it('adds hide-image-on-mobile class from layout.hideImageOnMobile override', () => {

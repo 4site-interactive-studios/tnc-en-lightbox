@@ -18,6 +18,30 @@
   --enlb-image-ratio: 40%;
 }
 
+.enlb-theme-dark {
+  --enlb-overlay-bg: rgba(0, 0, 0, 0.7);
+  --enlb-surface-bg: #1f1f1f;
+  --enlb-text: #e0e0e0;
+  --enlb-title: #ffffff;
+  --enlb-cta-bg: #1a73e8;
+  --enlb-cta-text: #ffffff;
+  --enlb-secondary-cta-bg: transparent;
+  --enlb-secondary-cta-text: #8ab4f8;
+  --enlb-border: #3a3a3a;
+}
+
+.enlb-theme-brand {
+  --enlb-overlay-bg: rgba(0, 20, 10, 0.7);
+  --enlb-surface-bg: #003d24;
+  --enlb-text: #f0f7f3;
+  --enlb-title: #ffffff;
+  --enlb-cta-bg: #00875a;
+  --enlb-cta-text: #ffffff;
+  --enlb-secondary-cta-bg: transparent;
+  --enlb-secondary-cta-text: #6dd5a8;
+  --enlb-border: #1a5c3a;
+}
+
 .enlb-overlay {
   position: fixed;
   inset: 0;

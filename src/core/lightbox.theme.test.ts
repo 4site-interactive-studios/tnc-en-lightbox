@@ -10,29 +10,29 @@ afterEach(() => {
 })
 
 describe('Lightbox theme application', () => {
-  it('preset dark applies the dark theme class to the dialog root', () => {
+  it('preset dark applies the dark theme class to the lightbox root', () => {
     const lb = new Lightbox(
       normalizeConfig({ header: 'H', body: 'B', theme: { preset: 'dark' } }),
     )
     lb.open()
-    const dialog = document.querySelector('.enlb-dialog') as HTMLElement
-    expect(dialog).not.toBeNull()
-    expect(dialog.classList.contains('enlb-dialog--theme-dark')).toBe(true)
+    const overlay = document.querySelector('.enlb-overlay') as HTMLElement
+    expect(overlay).not.toBeNull()
+    expect(overlay.classList.contains('enlb-theme-dark')).toBe(true)
   })
 
   it('defaults to the light theme class when no preset is specified', () => {
     const lb = new Lightbox(normalizeConfig({ header: 'H', body: 'B' }))
     lb.open()
-    const dialog = document.querySelector('.enlb-dialog') as HTMLElement
-    expect(dialog.classList.contains('enlb-dialog--theme-light')).toBe(true)
+    const overlay = document.querySelector('.enlb-overlay') as HTMLElement
+    expect(overlay.classList.contains('enlb-theme-light')).toBe(true)
   })
 
-  it('preset brand applies the brand theme class to the dialog root', () => {
+  it('preset brand applies the brand theme class to the lightbox root', () => {
     const lb = new Lightbox(
       normalizeConfig({ header: 'H', body: 'B', theme: { preset: 'brand' } }),
     )
     lb.open()
-    const dialog = document.querySelector('.enlb-dialog') as HTMLElement
-    expect(dialog.classList.contains('enlb-dialog--theme-brand')).toBe(true)
+    const overlay = document.querySelector('.enlb-overlay') as HTMLElement
+    expect(overlay.classList.contains('enlb-theme-brand')).toBe(true)
   })
 })

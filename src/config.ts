@@ -1,5 +1,5 @@
-import type { NormalizedLayout } from './themes/config'
-import { normalizeLayout } from './themes/config'
+import type { NormalizedLayout, NormalizedTheme } from './themes/config'
+import { normalizeLayout, normalizeTheme } from './themes/config'
 
 export interface ENLightboxImage {
   src: string
@@ -52,7 +52,7 @@ export interface NormalizedConfig {
   closeOnEsc: boolean
   hideImageOnMobile: boolean
   triggers: TriggersConfigBase
-  theme: ThemeConfigBase
+  theme: NormalizedTheme
   layout: NormalizedLayout
   en: ENIntegrationConfigBase
 }
@@ -71,7 +71,7 @@ export function normalizeConfig(input?: Partial<ENLightboxConfig>): NormalizedCo
     closeOnEsc: src.closeOnEsc ?? true,
     hideImageOnMobile: topLevelHideImageOnMobile,
     triggers: src.triggers ?? {},
-    theme: src.theme ?? {},
+    theme: normalizeTheme(src.theme),
     layout: normalizeLayout(src.layout, topLevelHideImageOnMobile),
     en: src.en ?? {},
   }

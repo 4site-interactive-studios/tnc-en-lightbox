@@ -8,7 +8,7 @@ describe('normalizeConfig', () => {
     expect(c.closeOnOverlay).toBe(true)
     expect(c.hideImageOnMobile).toBe(true)
     expect(c.triggers).toEqual({})
-    expect(c.theme).toEqual({})
+    expect(c.theme).toEqual({ preset: 'light', cssVars: {} })
     expect(c.layout).toEqual({
       variant: 'two-column',
       imagePosition: 'left',
