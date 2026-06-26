@@ -2,7 +2,7 @@
 
 ## Goal
 
-Take the functionally-complete library from "all features shipped" to "safe to deploy on live Engaging Networks pages, licensed, versioned, and hosted." A multi-lens release-readiness audit of the merged `main` (2026-06-26) found the build, bundle budget, and QA depth in good shape, but surfaced two classes of gap: (1) the "never break the host form / never throw" guarantee is **documented in EDITOR.md but not enforced in code**, and (2) standard release/packaging is absent (no LICENSE, version `0.0.0`, no tag/release, placeholder host URL). This wave closes both.
+Take the functionally-complete library from "all features shipped" to "safe to deploy on live Engaging Networks pages, licensed, versioned, and hosted." A multi-lens release-readiness audit of the merged `main` (2026-06-26) found the build, bundle budget, and QA depth in good shape, but surfaced two classes of gap: (1) the "never break the host form / never throw" guarantee is **documented in EDITOR.md but not enforced in code**, and (2) standard release/packaging is absent (no LICENSE, version `0.0.0`, no tag/release, placeholder host URL). A **third** gap surfaced on the first live EN render (2026-06-26): with no Shadow DOM, the host page's CSS cascades into the lightbox (serif headings, a stray focus border) and a portrait image drives an unbalanced layout — the asset is neither style-isolated nor professional-looking. This wave closes all three.
 
 ## Dependencies
 
@@ -13,10 +13,11 @@ Take the functionally-complete library from "all features shipped" to "safe to d
 
 | Stream | Brief | Status |
 |--------|-------|--------|
-| stream-a — Production hardening (error isolation, config tolerance, ordering, idempotency) | [stream-a](./stream-a.md) | in progress |
-| stream-b — Release & packaging (LICENSE, versioning, hosting, release automation, CI/QA) | [stream-b](./stream-b.md) | planned (JIT after stream-a; needs owner decisions) |
+| stream-a — Production hardening (error isolation, config tolerance, ordering, idempotency) | [stream-a](./stream-a.md) | merged (PR #28) |
+| stream-c — Style isolation (Shadow DOM) + visual/layout polish | [stream-c](./stream-c.md) | in progress |
+| stream-b — Release & packaging (LICENSE, versioning, hosting, release automation, CI/QA) | [stream-b](./stream-b.md) | planned (JIT after stream-c; needs owner decisions) |
 
-**Sequencing:** stream-a (harden) **then** stream-b (release the hardened artifact). Don't cut a release before the hardening lands.
+**Sequencing:** stream-a (harden) → **stream-c (isolate + polish)** → stream-b (release the hardened, isolated, polished artifact). stream-a and stream-c both rewrite `src/core/lightbox.ts`, so they run sequentially; release goes last so it packages the final artifact.
 
 ## Exit criteria
 
@@ -24,6 +25,9 @@ Take the functionally-complete library from "all features shipped" to "safe to d
 - [ ] `normalizeConfig` degrades wrong-typed fields to defaults instead of throwing.
 - [ ] A re-evaluated script (double injection) is a no-op — no destroy/recreate, no double-armed triggers — via a load-once sentinel, with a test.
 - [ ] Auto-init tolerates reasonable config/script ordering and does not silently no-op; EDITOR.md states the ordering requirement explicitly.
+- [ ] **(stream-c)** The lightbox renders inside a **Shadow DOM** root so host CSS cannot cascade in and lightbox CSS cannot leak out — proven against a hostile host stylesheet (host `h2{}`/`:focus{}` do not affect the dialog); a `:host` reset neutralizes inherited font/color/line-height.
+- [ ] **(stream-c)** Visual/layout defects fixed: dialog height capped (no empty void), image covers a bounded box instead of driving height, content balanced — professional default look.
+- [ ] **(stream-c)** Focus trap, background `inert`/`aria-hidden`, `setTheme`, reduced-motion, and the e2e/a11y suites all work across the shadow boundary; `budgets.json` re-baselined if the isolation code exceeds the gzip ceiling (gate-arming, owner-reviewed).
 - [ ] A LICENSE file exists and `package.json` license/version are real (off `UNLICENSED`/`0.0.0`); distribution terms match the hosted-asset model.
 - [ ] A first version tag + GitHub Release ship `dist/en-lightbox.js` as a versioned, identifiable asset; EDITOR.md gives a concrete (non-placeholder) versioned embed.
 - [ ] `release-please` is either implemented or its dangling reference removed from `sdd.config.json`/`WORKFLOW.md`.
