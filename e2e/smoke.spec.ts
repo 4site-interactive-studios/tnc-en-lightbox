@@ -254,3 +254,23 @@ test('EN form submits and validates after redirect CTA', async ({ page }) => {
   await assertFormSubmitsAndValidates(page)
 })
 
+test('a malformed config never throws on the host page and the EN form stays interactive', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', (e) => errors.push(e.message))
+  await page.goto(
+    harnessUrl({
+      header: 'Malformed',
+      body: 'B',
+      cta: { label: 'Go', href: '#' },
+      // triggers.list is a non-iterable value; pre-hardening this threw at script-eval time
+      triggers: { list: 123 },
+    }),
+  )
+  expect(errors).toEqual([])
+  const form = page.locator('#en-form')
+  await expect(form).toBeVisible()
+  await form.locator('input[name="email"]').fill('test@example.com')
+  await expect(form.locator('input[name="email"]')).toHaveValue('test@example.com')
+  await expect(page.locator('.enlb-overlay')).toHaveCount(0)
+})
+
