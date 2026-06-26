@@ -71,14 +71,25 @@
 
 .enlb-dialog {
   position: relative;
+  display: flex;
+  flex-direction: column;
   max-width: var(--enlb-max-width);
   width: calc(100% - var(--enlb-spacing-md) * 2);
   max-height: min(var(--enlb-max-height), 90vh);
-  overflow: auto;
+  overflow: visible;
   background: var(--enlb-surface-bg);
   border-radius: var(--enlb-radius);
   color: var(--enlb-text);
   font-family: var(--enlb-font-family);
+}
+
+// Inner scroll wrapper: keeps the bounded max-height scroll for tall content
+// while the dialog itself uses overflow:visible (so the outside close button
+// at top:-32px is not clipped).
+.enlb-scroll {
+  overflow: auto;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .enlb-close {

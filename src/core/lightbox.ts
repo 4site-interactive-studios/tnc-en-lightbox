@@ -161,8 +161,6 @@ export class Lightbox {
 
   destroy(): void {
     this.close()
-    this.styleEl?.remove()
-    this.styleEl = null
   }
 
   applyTheme(theme: NormalizedTheme): void {
@@ -337,9 +335,13 @@ export class Lightbox {
     dialog.className = this.buildDialogClasses()
     dialog.setAttribute('role', 'dialog')
     dialog.setAttribute('aria-modal', 'true')
-    dialog.setAttribute('aria-labelledby', this.titleId)
     dialog.setAttribute('tabindex', '-1')
-    if (!this.config.header) {
+    // Mutually exclusive: aria-labelledby points at the title when it has text;
+    // otherwise aria-label provides a fallback. If both were set, aria-labelledby
+    // would take precedence and point at an empty <h2>, yielding no accessible name.
+    if (this.config.header) {
+      dialog.setAttribute('aria-labelledby', this.titleId)
+    } else {
       dialog.setAttribute('aria-label', 'Dialog')
     }
 
@@ -387,7 +389,13 @@ export class Lightbox {
     const ctaRow = this.buildCtaRow()
     if (ctaRow) content.appendChild(ctaRow)
 
-    dialog.appendChild(layout)
+    // Inner scroll wrapper: the dialog uses overflow:visible so the outside close
+    // button (top: -32px) is not clipped; scroll happens here instead.
+    const scroll = document.createElement('div')
+    scroll.className = 'enlb-scroll'
+    scroll.appendChild(layout)
+
+    dialog.appendChild(scroll)
     overlay.appendChild(dialog)
 
     this.dialog = dialog

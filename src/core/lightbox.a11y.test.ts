@@ -61,14 +61,26 @@ describe('Lightbox a11y/UX hardening', () => {
     expect(sibling.getAttribute('tabindex')).toBe('5')
   })
 
-  it('gives the dialog a non-empty accessible name when the header is empty', () => {
+  it('gives the dialog a non-empty accessible name via aria-label when the header is empty', () => {
     const lb = new Lightbox(normalizeConfig({ header: '', body: 'B' }))
     lb.open()
     const dialog = sq('[role="dialog"]') as HTMLElement
     expect(dialog).not.toBeNull()
+    // aria-label provides the accessible name...
     const label = dialog.getAttribute('aria-label')
     expect(label).toBeTruthy()
     expect(label!.length).toBeGreaterThan(0)
+    // ...and aria-labelledby must NOT be set — it would point at an empty <h2>,
+    // and aria-labelledby takes precedence over aria-label, yielding an empty name.
+    expect(dialog.hasAttribute('aria-labelledby')).toBe(false)
+  })
+
+  it('labels the dialog via aria-labelledby (not aria-label) when the header is non-empty', () => {
+    const lb = new Lightbox(normalizeConfig({ header: 'My title', body: 'B' }))
+    lb.open()
+    const dialog = sq('[role="dialog"]') as HTMLElement
+    expect(dialog.hasAttribute('aria-labelledby')).toBe(true)
+    expect(dialog.hasAttribute('aria-label')).toBe(false)
   })
 
   it('locks body scroll on open and restores overflow on close', () => {
