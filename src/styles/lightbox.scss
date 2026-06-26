@@ -90,6 +90,7 @@
   overflow: auto;
   flex: 1 1 auto;
   min-height: 0;
+  border-radius: var(--enlb-radius);
 }
 
 .enlb-close {
@@ -107,6 +108,10 @@
 
 .enlb-dialog.enlb-close--outside {
   padding-top: calc(24px + var(--enlb-spacing-md));
+}
+
+.enlb-dialog.enlb-close--outside:has(.enlb-layout--image-top) {
+  padding-top: 0;
 }
 
 .enlb-dialog.enlb-close--outside .enlb-close {
@@ -222,4 +227,19 @@
   .enlb-dialog {
     transition: none;
   }
+}
+
+.enlb-dialog:focus {
+  outline: none;
+}
+
+.enlb-cta:focus-visible,
+.enlb-cta--secondary:focus-visible {
+  outline: 2px solid var(--enlb-cta-bg);
+  outline-offset: 2px;
+}
+
+.enlb-close:focus-visible {
+  outline: 2px solid var(--enlb-cta-bg);
+  outline-offset: 2px;
 }
