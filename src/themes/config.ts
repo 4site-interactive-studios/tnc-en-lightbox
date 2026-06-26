@@ -46,22 +46,25 @@ export interface NormalizedTheme {
   cssVars: Record<string, string>
 }
 
+const VALID_PRESETS: ThemePreset[] = ['light', 'dark', 'brand']
+
 export function normalizeTheme(theme: ThemeConfigBase | undefined): NormalizedTheme {
   const src = theme ?? {}
-  const preset: ThemePreset = src.preset ?? 'light'
+  const preset: ThemePreset =
+    src.preset !== undefined && VALID_PRESETS.includes(src.preset) ? src.preset : 'light'
   const cssVars: Record<string, string> = {}
 
   if (src.colors) {
     for (const [key, value] of Object.entries(src.colors)) {
-      if (value !== undefined) {
+      if (typeof value === 'string') {
         const tokenName = COLOR_TOKEN_MAP[key as keyof ThemeColors]
         if (tokenName) cssVars[tokenName] = value
       }
     }
   }
-  if (src.radius) cssVars['--enlb-radius'] = src.radius
-  if (src.maxWidth) cssVars['--enlb-max-width'] = src.maxWidth
-  if (src.fontFamily) cssVars['--enlb-font-family'] = src.fontFamily
+  if (typeof src.radius === 'string') cssVars['--enlb-radius'] = src.radius
+  if (typeof src.maxWidth === 'string') cssVars['--enlb-max-width'] = src.maxWidth
+  if (typeof src.fontFamily === 'string') cssVars['--enlb-font-family'] = src.fontFamily
 
   return { preset, cssVars }
 }
