@@ -14,7 +14,7 @@ On each page where the lightbox should appear, the page editor sets a global con
     cta: { label: "Sign now", href: "#petition", action: "redirect" },
   };
 </script>
-<script src="https://cdn.example.com/en-lightbox.js" async></script>
+<script src="https://en-assets.tnc.org/en-lightbox.js?v=1.0.0" async></script>
 ```
 
 `window.ENLightbox` must be set **before or alongside** the script. The script auto-instantiates from it when it loads. It **does not open automatically** — it waits for the configured trigger (or an explicit `ENLightboxAPI.open()` call).
@@ -179,13 +179,24 @@ The first trigger to fire wins; the others are torn down after opening.
 
 ## Hosting the built artifact
 
-The built file is committed at `dist/en-lightbox.js`. It is a single, self-contained, dependency-free IIFE with all CSS inlined. Load it from your CDN or from the same domain:
+The built file is committed at `dist/en-lightbox.js`. It is a single, self-contained, dependency-free IIFE with all CSS inlined. Distribution follows a two-step process:
+
+1. **GitHub Release** — each tagged release publishes the versioned `dist/en-lightbox.js` as a release asset. This is the source-of-truth artifact.
+2. **Manual upload to the EN asset library** — the editor downloads the versioned `dist/en-lightbox.js` from the latest GitHub Release and uploads it to the Engaging Networks asset library, then references the EN-hosted URL.
+
+### Per-release update workflow
 
 ```html
-<script src="https://your-cdn.example.com/en-lightbox.js" async></script>
+<script src="https://en-assets.example.com/en-lightbox.js?v=1.2.3" async></script>
 ```
 
-Because the artifact is minified and versioned per release, update the URL when you deploy a new release. The library does not fetch any runtime resources, so cache-busting is entirely under the host page's control.
+- Append `?v=VERSION` as a cache-busting query parameter when deploying a new version.
+- The library itself has no runtime resources to cache-bust; the versioned query is solely for the host page's CDN/browser cache.
+- If the EN asset library supports versioned filenames, prefer naming the uploaded file `en-lightbox-v1.2.3.js` and referencing it directly. Otherwise, use `?v=`.
+
+### Updating across pages
+
+Because each EN page embeds the script independently, updating the lightbox version requires editing every page that includes it. Search across your EN pages for `<script src="...en-lightbox.js"` to find all embed locations. When deploying a new release, update each embed to the new EN-hosted URL or query-parameter version.
 
 ## Advanced customization notes
 
