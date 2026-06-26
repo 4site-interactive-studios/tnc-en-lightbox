@@ -47,6 +47,17 @@ Owner-directed refinements made entering wave-1. **Authoritative** — supersede
 
 ---
 
+## Amendments — wave-4 entry (2026-06-26)
+
+Owner-directed refinements made entering wave-4, after a multi-lens release-readiness audit of the merged `main`. **Authoritative** — supersedes conflicting body text below (the Wave 4 description, and the stale dismissal references in the config schema / Decision D15 / NFR N4 body / the `isDismissed()` comment).
+
+- **Wave 4 is CONFIRMED (not dropped) and split into TWO streams (a then b).** Owner decision 2026-06-26: do the full wave. The audit found the "no EN form interference / never throw on the host page" guarantee (EDITOR.md) is **documented but not enforced in code** — there is zero `try/catch` around the auto-init IIFE or `open()`, and `normalizeConfig` does no runtime type validation, so a wrong-typed, hand-authored config on a live EN page can throw and disrupt the host. Hardening that guarantee is now a prerequisite to release.
+  - **wave-4/stream-a — Production hardening (CODE).** Error isolation so the asset can never throw on the host page (wrap auto-init + `open()`); runtime config tolerance (wrong-typed fields degrade to defaults, not throw); auto-init ordering robustness (tolerate reasonable config/script ordering, don't silently no-op); double-injection idempotency (a load-once sentinel so a re-evaluated script does not destroy/re-arm). Behavior-preserving on valid config; **no public API/contract change**.
+  - **wave-4/stream-b — Release & packaging (DOCS + gate-arming CONFIG).** The original wave-4 content (release automation/versioning, hosting/CDN guidance, final-QA supplement) **plus** audit-surfaced items: a LICENSE decision + file (today `UNLICENSED`/`private` blocks redistribution), version off `0.0.0` + first tag + GitHub Release with the `dist` asset, real hosting target + concrete versioned embed, `release-please` reconciliation (implement or drop the dangling reference), and wiring typecheck/lint/unit-tests + release-time QA into CI. Gate-arming (CI/contracts/`sdd.config`) ⇒ owner is a required reviewer (D13).
+- **Dismissal-doc correction (supersedes stale body text).** The **shipped** dismissal mechanism is **localStorage**, key **`enlb:shown:${location.pathname}`**, with a `frequencyDays` cap (default 7) — per the wave-1 amendment above and EDITOR.md, both authoritative. Earlier body references to `sessionStorage` and key `enlb:dismissed:${pathname}` (Decision D15 / NFR N4 / config-schema body / API `isDismissed()` comment) **predate the wave-1 amendment and are SUPERSEDED**; the code and EDITOR.md are correct. Full in-place reconciliation of those stale references is a wave-4/stream-b docs item.
+
+---
+
 ## Governance & enforcement (all four gates)
 
 The repo enforces four CI gates via `.github/workflows/sdd-gates.yml`. This plan must satisfy all four, not the two the prior draft addressed.

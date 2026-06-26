@@ -24,8 +24,8 @@ Make the lightbox a safe, EN-aware drop-in on the small surface that remains aft
 - [ ] An editor-facing README documents the config schema, examples, dismissal behavior, and current customization limits.
 - [ ] `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`, and the e2e smoke suite are green locally.
 
-## Retrospective (complete at wave exit)
+## Retrospective (wave exit — 2026-06-26)
 
-- **What worked:**
-- **What didn't:**
-- **What to change:**
+- **What worked:** Coordinator pre-review verification (a 4-lens adversarial pass over a read-only checkout) caught both MEDIUM gaps before the independent reviewer saw the PR — the non-interference test asserted class presence rather than rendered effect, and the wave-3 spec sections had regressed — so the fix landed in one cycle. Collapsing CTA routing to a single source of truth (`cta.action`) and removing the inert `en` placeholder simplified the config surface with **no production change** to `lightbox.ts`. Real-browser Playwright EN-form cases gave non-jsdom proof that submission/validation/focus proceed.
+- **What didn't:** The first non-interference test was assertion-weak (checked class names, not `event.defaultPrevented` / `checkValidity()` / restore on all three close paths) and needed a fix cycle. Editor-facing and master-plan docs had drifted from shipped reality — the wave-4 readiness audit later found the ROADMAP body still describing dropped EN page-detection and pre-amendment `sessionStorage` dismissal.
+- **What to change:** Assert **rendered effects**, never class/attribute presence, for isolation tests (promoted to `LEARNINGS.md`). Keep the ROADMAP body and EDITOR.md in sync with amendments at each wave exit (the dismissal-storage drift is corrected entering wave-4). Run a **release-readiness audit before declaring "done"** — the wave-4 audit showed "functional scope complete" ≠ "production-ready": the never-throw guarantee was documented but unenforced.
