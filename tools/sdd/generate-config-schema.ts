@@ -8,13 +8,32 @@ const OUT = '.agentic/contracts/snapshots/config-schema.txt'
 const project = new Project({ tsConfigFilePath: 'tsconfig.json' })
 const source = project.getSourceFileOrThrow('src/config.ts')
 
-function renderInterface(name: string): string {
+function renderInterface(project: Project, name: string): string {
   const decl = source.getInterfaceOrThrow(name)
   const props = decl.getProperties().map((p) => {
     const optional = p.hasQuestionToken() ? '?' : ''
     return `  ${p.getName()}${optional}: ${p.getType().getText(p)}`
   })
   return [`interface ${name} {`, ...props, '}'].join('\n')
+}
+
+function renderType(project: Project, name: string): string {
+  for (const sf of project.getSourceFiles()) {
+    const ta = sf.getTypeAlias(name)
+    if (ta) {
+      const text = ta.getType().getText(ta)
+      return `type ${name} = ${text}`
+    }
+    const inf = sf.getInterface(name)
+    if (inf) {
+      const props = inf.getProperties().map((p) => {
+        const optional = p.hasQuestionToken() ? '?' : ''
+        return `  ${p.getName()}${optional}: ${p.getType().getText(p)}`
+      })
+      return [`interface ${name} {`, ...props, '}'].join('\n')
+    }
+  }
+  throw new Error(`type or interface ${name} not found`)
 }
 
 const defaults: Record<string, string> = {}
@@ -47,9 +66,12 @@ function renderWithDefaults(name: string): string {
 }
 
 const out: string[] = []
-out.push(renderInterface('ENLightboxConfig'))
+out.push(renderInterface(project, 'ENLightboxConfig'))
 out.push('')
 out.push(renderWithDefaults('NormalizedConfig'))
+out.push('')
+out.push('// Resolved layout shape from src/themes/config.ts')
+out.push(renderType(project, 'NormalizedLayout'))
 out.push('')
 
 fs.mkdirSync(path.dirname(OUT), { recursive: true })

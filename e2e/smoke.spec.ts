@@ -84,6 +84,46 @@ test('exit-intent trigger opens in desktop browsers', async ({ page }, testInfo)
   await expect(page.locator('.enlb-overlay')).toBeVisible()
 })
 
+test('primary CTA is an anchor and navigates', async ({ page }) => {
+  await page.goto(harnessUrl({ ...baseConfig, triggers: { time: 50 }, cta: { label: 'Smoke CTA', href: '#cta-navigated' } }))
+  const cta = page.locator('.enlb-cta')
+  await expect(cta).toHaveAttribute('href', '#cta-navigated')
+  await cta.click()
+  await expect(page).toHaveURL(/#cta-navigated$/)
+})
+
+test('imagePosition right renders image on the right', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === 'Mobile Chrome', 'desktop layout only')
+  await page.goto(
+    harnessUrl({ ...baseConfig, triggers: { time: 50 }, layout: { imagePosition: 'right' } }),
+  )
+  const image = page.locator('.enlb-image')
+  const content = page.locator('.enlb-content')
+  await expect(image).toBeVisible()
+  await expect(content).toBeVisible()
+  const imageBox = await image.boundingBox()
+  const contentBox = await content.boundingBox()
+  expect(imageBox).not.toBeNull()
+  expect(contentBox).not.toBeNull()
+  expect(imageBox!.x).toBeGreaterThan(contentBox!.x)
+})
+
+test('imagePosition left renders image on the left', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === 'Mobile Chrome', 'desktop layout only')
+  await page.goto(
+    harnessUrl({ ...baseConfig, triggers: { time: 50 }, layout: { imagePosition: 'left' } }),
+  )
+  const image = page.locator('.enlb-image')
+  const content = page.locator('.enlb-content')
+  await expect(image).toBeVisible()
+  await expect(content).toBeVisible()
+  const imageBox = await image.boundingBox()
+  const contentBox = await content.boundingBox()
+  expect(imageBox).not.toBeNull()
+  expect(contentBox).not.toBeNull()
+  expect(imageBox!.x).toBeLessThan(contentBox!.x)
+})
+
 test('scroll-depth trigger opens after scrolling', async ({ page }) => {
   await page.goto(harnessUrl({ ...baseConfig, triggers: { scroll: 50 } }))
   await page.evaluate(() => {
@@ -92,3 +132,4 @@ test('scroll-depth trigger opens after scrolling', async ({ page }) => {
   })
   await expect(page.locator('.enlb-overlay')).toBeVisible()
 })
+

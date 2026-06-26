@@ -40,6 +40,26 @@ export class Lightbox {
     this.close()
   }
 
+  private onCtaClick = (e: MouseEvent): void => {
+    // Primary redirect CTA is a native <a href>; no JS routing needed.
+    e.stopPropagation()
+  }
+
+  private onSecondaryCtaClick = (e: MouseEvent): void => {
+    const target = e.currentTarget as HTMLElement
+    const action = target.getAttribute('data-enlb-action')
+    const href = target.getAttribute('data-enlb-href')
+    if (action === 'close' || (!href && !action)) {
+      e.preventDefault()
+      this.close()
+      return
+    }
+    if (href) {
+      e.preventDefault()
+      location.assign(href)
+    }
+  }
+
   private onDialogKeydown = (e: KeyboardEvent): void => {
     if (e.key !== 'Tab' || !this.dialog) return
     const focusable = Array.from(this.dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR))
@@ -82,6 +102,13 @@ export class Lightbox {
     this.dialog?.addEventListener('keydown', this.onDialogKeydown)
     const closeBtn = this.dialog?.querySelector<HTMLElement>('.enlb-close')
     closeBtn?.addEventListener('click', this.onCloseClick)
+    this.dialog?.querySelectorAll<HTMLElement>('.enlb-cta').forEach((cta) => {
+      if (cta.classList.contains('enlb-cta--secondary')) {
+        cta.addEventListener('click', this.onSecondaryCtaClick)
+      } else {
+        cta.addEventListener('click', this.onCtaClick)
+      }
+    })
     this.dialog?.focus()
   }
 
@@ -92,6 +119,13 @@ export class Lightbox {
     this.dialog?.removeEventListener('keydown', this.onDialogKeydown)
     const closeBtn = this.dialog?.querySelector<HTMLElement>('.enlb-close')
     closeBtn?.removeEventListener('click', this.onCloseClick)
+    this.dialog?.querySelectorAll<HTMLElement>('.enlb-cta').forEach((cta) => {
+      if (cta.classList.contains('enlb-cta--secondary')) {
+        cta.removeEventListener('click', this.onSecondaryCtaClick)
+      } else {
+        cta.removeEventListener('click', this.onCtaClick)
+      }
+    })
     this.overlay.remove()
     this.overlay = null
     this.dialog = null
@@ -161,13 +195,81 @@ export class Lightbox {
     document.head.appendChild(this.styleEl)
   }
 
+  private buildDialogClasses(): string {
+    const classes = ['enlb-dialog']
+    if (this.config.layout.hideImageOnMobile) classes.push('enlb-hide-image-mobile')
+    if (this.config.layout.closeButton === 'outside') classes.push('enlb-close--outside')
+    return classes.join(' ')
+  }
+
+  private buildLayoutClasses(): string {
+    const classes = ['enlb-layout']
+    const hasImage = Boolean(this.config.image)
+    if (hasImage) {
+      classes.push(`enlb-layout--${this.config.layout.variant}`)
+      classes.push(`enlb-layout--image-${this.config.layout.imagePosition}`)
+    } else {
+      classes.push('enlb-layout--single-column')
+    }
+    return classes.join(' ')
+  }
+
+  private buildCloseButton(): HTMLElement | null {
+    if (this.config.layout.closeButton === 'none') return null
+    const closeBtn = document.createElement('button')
+    closeBtn.type = 'button'
+    closeBtn.className = 'enlb-close'
+    closeBtn.setAttribute('aria-label', 'Close')
+    closeBtn.textContent = '×'
+    return closeBtn
+  }
+
+  private buildCtaRow(): HTMLElement | null {
+    const hasPrimary = Boolean(this.config.cta)
+    const hasSecondary = Boolean(this.config.secondaryCta)
+    const hasDecline = Boolean(this.config.dismissLabel)
+    if (!hasPrimary && !hasSecondary && !hasDecline) return null
+
+    const row = document.createElement('div')
+    row.className = 'enlb-cta-row'
+
+    if (hasPrimary) {
+      const cta = document.createElement('a')
+      cta.className = 'enlb-cta'
+      if (this.config.cta!.href) cta.href = this.config.cta!.href
+      cta.textContent = this.config.cta!.label
+      row.appendChild(cta)
+    }
+
+    if (hasSecondary) {
+      const cta = document.createElement('button')
+      cta.type = 'button'
+      cta.className = 'enlb-cta enlb-cta--secondary'
+      if (this.config.secondaryCta!.href) cta.setAttribute('data-enlb-href', this.config.secondaryCta!.href)
+      if (this.config.secondaryCta!.action) cta.setAttribute('data-enlb-action', this.config.secondaryCta!.action)
+      cta.textContent = this.config.secondaryCta!.label
+      row.appendChild(cta)
+    }
+
+    if (hasDecline) {
+      const cta = document.createElement('button')
+      cta.type = 'button'
+      cta.className = 'enlb-cta enlb-cta--secondary'
+      cta.setAttribute('data-enlb-action', 'close')
+      cta.textContent = this.config.dismissLabel!
+      row.appendChild(cta)
+    }
+
+    return row
+  }
+
   private buildDom(): HTMLElement {
     const overlay = document.createElement('div')
     overlay.className = 'enlb-overlay'
 
     const dialog = document.createElement('div')
-    dialog.className = 'enlb-dialog'
-    if (this.config.hideImageOnMobile) dialog.classList.add('enlb-hide-image-mobile')
+    dialog.className = this.buildDialogClasses()
+    dialog.style.setProperty('--enlb-image-ratio', this.config.layout.imageRatio)
     dialog.setAttribute('role', 'dialog')
     dialog.setAttribute('aria-modal', 'true')
     dialog.setAttribute('aria-labelledby', this.titleId)
@@ -176,15 +278,14 @@ export class Lightbox {
       dialog.setAttribute('aria-label', 'Dialog')
     }
 
-    const closeBtn = document.createElement('button')
-    closeBtn.type = 'button'
-    closeBtn.className = 'enlb-close'
-    closeBtn.setAttribute('aria-label', 'Close')
-    closeBtn.textContent = '×'
-    dialog.appendChild(closeBtn)
+    const closeBtn = this.buildCloseButton()
+    if (closeBtn) dialog.appendChild(closeBtn)
 
     const layout = document.createElement('div')
-    layout.className = 'enlb-layout'
+    layout.className = this.buildLayoutClasses()
+
+    const content = document.createElement('div')
+    content.className = 'enlb-content'
 
     if (this.config.image) {
       const imageWrap = document.createElement('div')
@@ -194,11 +295,16 @@ export class Lightbox {
       img.src = this.config.image.src
       img.alt = this.config.image.alt ?? ''
       imageWrap.appendChild(img)
-      layout.appendChild(imageWrap)
+      if (this.config.layout.imagePosition === 'right') {
+        layout.appendChild(content)
+        layout.appendChild(imageWrap)
+      } else {
+        layout.appendChild(imageWrap)
+        layout.appendChild(content)
+      }
+    } else {
+      layout.appendChild(content)
     }
-
-    const content = document.createElement('div')
-    content.className = 'enlb-content'
 
     const title = document.createElement('h2')
     title.className = 'enlb-title'
@@ -213,15 +319,9 @@ export class Lightbox {
       content.appendChild(body)
     }
 
-    if (this.config.cta) {
-      const cta = document.createElement('a')
-      cta.className = 'enlb-cta'
-      if (this.config.cta.href) cta.href = this.config.cta.href
-      cta.textContent = this.config.cta.label
-      content.appendChild(cta)
-    }
+    const ctaRow = this.buildCtaRow()
+    if (ctaRow) content.appendChild(ctaRow)
 
-    layout.appendChild(content)
     dialog.appendChild(layout)
     overlay.appendChild(dialog)
 

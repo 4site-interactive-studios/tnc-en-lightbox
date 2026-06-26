@@ -85,6 +85,24 @@ describe('Lightbox a11y/UX hardening', () => {
     expect(document.activeElement).toBe(dialog)
   })
 
+  it('focuses the dialog root when closeButton is outside', () => {
+    const lb = new Lightbox(
+      normalizeConfig({ header: 'H', body: 'B', layout: { closeButton: 'outside' } }),
+    )
+    lb.open()
+    const dialog = document.querySelector('[role="dialog"]') as HTMLElement
+    expect(document.activeElement).toBe(dialog)
+  })
+
+  it('focuses the dialog root when closeButton is none', () => {
+    const lb = new Lightbox(
+      normalizeConfig({ header: 'H', body: 'B', layout: { closeButton: 'none' } }),
+    )
+    lb.open()
+    const dialog = document.querySelector('[role="dialog"]') as HTMLElement
+    expect(document.activeElement).toBe(dialog)
+  })
+
   it('restores scroll position on close', () => {
     const scrollToSpy = vi.spyOn(window, 'scrollTo').mockImplementation(() => undefined)
 

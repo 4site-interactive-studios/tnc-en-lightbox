@@ -44,6 +44,34 @@
       "ci": "contracts-check"
     },
     {
+      "name": "no-runtime-fetch",
+      "source": "dist/en-lightbox.js",
+      "generate": "npm run build",
+      "check": "npm run build \u0026\u0026 node tools/sdd/check_no_runtime_fetch.mjs",
+      "ci": "contracts-check"
+    },
+    {
+      "name": "dist-single-file",
+      "source": "dist/",
+      "generate": "npm run build",
+      "check": "npm run build \u0026\u0026 node tools/sdd/check_dist_single_file.mjs",
+      "ci": "contracts-check"
+    },
+    {
+      "name": "reduced-motion-guard",
+      "source": "dist/en-lightbox.js inlined CSS",
+      "generate": "npm run build",
+      "check": "npm run build \u0026\u0026 node tools/sdd/check_reduced_motion.mjs",
+      "ci": "contracts-check"
+    },
+    {
+      "name": "a11y-audit",
+      "source": "dist/en-lightbox.js + jsdom fixture",
+      "generate": "npm run build",
+      "check": "npm run build \u0026\u0026 node tools/sdd/check_a11y.mjs",
+      "ci": "contracts-check"
+    },
+    {
       "name": "cross-browser-smoke",
       "source": "e2e/smoke.spec.ts + e2e/harness.html + dist/en-lightbox.js",
       "generate": "npm run build",

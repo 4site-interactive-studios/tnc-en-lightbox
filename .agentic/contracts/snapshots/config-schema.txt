@@ -3,6 +3,8 @@ interface ENLightboxConfig {
   body?: string | undefined
   image?: ENLightboxImage | undefined
   cta?: ENLightboxCta | undefined
+  secondaryCta?: ENLightboxSecondaryCta | undefined
+  dismissLabel?: string | undefined
   closeOnOverlay?: boolean | undefined
   closeOnEsc?: boolean | undefined
   hideImageOnMobile?: boolean | undefined
@@ -17,12 +19,23 @@ interface NormalizedConfig {
   body: string  // default src.body ?? ''
   image?: ENLightboxImage | undefined  // default src.image
   cta?: ENLightboxCta | undefined  // default src.cta
+  secondaryCta?: ENLightboxSecondaryCta | undefined  // default src.secondaryCta
+  dismissLabel?: string | undefined  // default src.dismissLabel
   closeOnOverlay: boolean  // default src.closeOnOverlay ?? true
   closeOnEsc: boolean  // default src.closeOnEsc ?? true
-  hideImageOnMobile: boolean  // default src.hideImageOnMobile ?? true
+  hideImageOnMobile: boolean  // default topLevelHideImageOnMobile
   triggers: TriggersConfigBase  // default src.triggers ?? {}
   theme: ThemeConfigBase  // default src.theme ?? {}
-  layout: LayoutConfigBase  // default src.layout ?? {}
+  layout: NormalizedLayout  // default normalizeLayout(src.layout, topLevelHideImageOnMobile)
   en: ENIntegrationConfigBase  // default src.en ?? {}
+}
+
+// Resolved layout shape from src/themes/config.ts
+interface NormalizedLayout {
+  variant: "two-column"
+  imagePosition: LayoutImagePosition
+  imageRatio: string
+  hideImageOnMobile?: boolean | undefined
+  closeButton: LayoutCloseButton
 }
 
