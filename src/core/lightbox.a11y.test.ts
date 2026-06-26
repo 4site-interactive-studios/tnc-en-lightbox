@@ -1,6 +1,7 @@
 import { describe, it, expect, afterEach, vi } from 'vitest'
 import { Lightbox } from './lightbox'
 import { normalizeConfig } from '../config'
+import { sq, shadowActiveElement } from './shadow-test-helpers'
 
 afterEach(() => {
   document.body.innerHTML = ''
@@ -29,6 +30,21 @@ describe('Lightbox a11y/UX hardening', () => {
     expect(sibling.hasAttribute('tabindex')).toBe(false)
   })
 
+  it('does not inert its own host element (only the host page siblings)', () => {
+    const sibling = document.createElement('div')
+    sibling.id = 'page-content'
+    document.body.appendChild(sibling)
+
+    const lb = new Lightbox(normalizeConfig({ header: 'H', body: 'B' }))
+    lb.open()
+
+    const host = document.querySelector('[data-enlb-root]') as HTMLElement
+    expect(host).not.toBeNull()
+    expect(host.hasAttribute('inert')).toBe(false)
+    expect(host.hasAttribute('aria-hidden')).toBe(false)
+    expect(sibling.hasAttribute('inert')).toBe(true)
+  })
+
   it('restores pre-existing inert/aria-hidden/tabindex values exactly', () => {
     const sibling = document.createElement('div')
     sibling.setAttribute('inert', '')
@@ -45,14 +61,26 @@ describe('Lightbox a11y/UX hardening', () => {
     expect(sibling.getAttribute('tabindex')).toBe('5')
   })
 
-  it('gives the dialog a non-empty accessible name when the header is empty', () => {
+  it('gives the dialog a non-empty accessible name via aria-label when the header is empty', () => {
     const lb = new Lightbox(normalizeConfig({ header: '', body: 'B' }))
     lb.open()
-    const dialog = document.querySelector('[role="dialog"]') as HTMLElement
+    const dialog = sq('[role="dialog"]') as HTMLElement
     expect(dialog).not.toBeNull()
+    // aria-label provides the accessible name...
     const label = dialog.getAttribute('aria-label')
     expect(label).toBeTruthy()
     expect(label!.length).toBeGreaterThan(0)
+    // ...and aria-labelledby must NOT be set — it would point at an empty <h2>,
+    // and aria-labelledby takes precedence over aria-label, yielding an empty name.
+    expect(dialog.hasAttribute('aria-labelledby')).toBe(false)
+  })
+
+  it('labels the dialog via aria-labelledby (not aria-label) when the header is non-empty', () => {
+    const lb = new Lightbox(normalizeConfig({ header: 'My title', body: 'B' }))
+    lb.open()
+    const dialog = sq('[role="dialog"]') as HTMLElement
+    expect(dialog.hasAttribute('aria-labelledby')).toBe(true)
+    expect(dialog.hasAttribute('aria-label')).toBe(false)
   })
 
   it('locks body scroll on open and restores overflow on close', () => {
@@ -81,8 +109,8 @@ describe('Lightbox a11y/UX hardening', () => {
   it('focuses the dialog root (not the close button) on open', () => {
     const lb = new Lightbox(normalizeConfig({ header: 'H', body: 'B' }))
     lb.open()
-    const dialog = document.querySelector('[role="dialog"]') as HTMLElement
-    expect(document.activeElement).toBe(dialog)
+    const dialog = sq('[role="dialog"]') as HTMLElement
+    expect(shadowActiveElement()).toBe(dialog)
   })
 
   it('focuses the dialog root when closeButton is outside', () => {
@@ -90,8 +118,8 @@ describe('Lightbox a11y/UX hardening', () => {
       normalizeConfig({ header: 'H', body: 'B', layout: { closeButton: 'outside' } }),
     )
     lb.open()
-    const dialog = document.querySelector('[role="dialog"]') as HTMLElement
-    expect(document.activeElement).toBe(dialog)
+    const dialog = sq('[role="dialog"]') as HTMLElement
+    expect(shadowActiveElement()).toBe(dialog)
   })
 
   it('focuses the dialog root when closeButton is none', () => {
@@ -99,8 +127,8 @@ describe('Lightbox a11y/UX hardening', () => {
       normalizeConfig({ header: 'H', body: 'B', layout: { closeButton: 'none' } }),
     )
     lb.open()
-    const dialog = document.querySelector('[role="dialog"]') as HTMLElement
-    expect(document.activeElement).toBe(dialog)
+    const dialog = sq('[role="dialog"]') as HTMLElement
+    expect(shadowActiveElement()).toBe(dialog)
   })
 
   it('restores scroll position on close', () => {

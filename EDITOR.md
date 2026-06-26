@@ -189,6 +189,13 @@ Because the artifact is minified and versioned per release, update the URL when 
 
 ## Advanced customization notes
 
+- **Style isolation (Shadow DOM).** The lightbox renders inside an open Shadow DOM
+  root. Host-page CSS cannot cascade into the lightbox and lightbox CSS cannot leak
+  out — the dialog looks correct with zero host CSS. A `:host` reset neutralizes
+  inherited properties (font, color, line-height) so the host page's styles never
+  bleed across the shadow boundary. Customize the look exclusively through the
+  documented theme token surface (`colors`, `radius`, `maxWidth`, `fontFamily`);
+  host-page stylesheets have no effect on the lightbox.
 - **Layout is construct-time only.** Changing `layout` requires re-initializing the lightbox.
 - **Theme is runtime-settable.** `ENLightboxAPI.setTheme({ preset: "dark" })` re-applies the theme to an open lightbox.
 - **Custom CSS injection** (`theme.customCss`) is planned for a future wave and is not yet available. Use the theme token surface (`colors`, `radius`, `maxWidth`, `fontFamily`) for customization now.

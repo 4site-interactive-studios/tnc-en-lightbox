@@ -1,4 +1,12 @@
-:root {
+// :host is the Shadow DOM root. `all: initial` blocks inheritable properties
+// (font, color, line-height, letter-spacing …) from the host page so they cannot
+// bleed across the shadow boundary. Selector rules are already blocked by the
+// shadow; this reset closes the inheritance gap. Token defaults live here too.
+:host {
+  all: initial;
+  display: block;
+  line-height: 1.5;
+
   --enlb-overlay-bg: rgba(0, 0, 0, 0.6);
   --enlb-surface-bg: #fff;
   --enlb-text: #1f1f1f;
@@ -14,8 +22,17 @@
   --enlb-spacing-md: 16px;
   --enlb-spacing-lg: 24px;
   --enlb-max-width: 900px;
+  --enlb-max-height: 640px;
   --enlb-font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --enlb-image-ratio: 40%;
+}
+
+// Deterministic box model inside the shadow — the host's `* { box-sizing }` cannot
+// cross the shadow boundary, but we set our own so the layout never depends on it.
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 .enlb-theme-dark {
@@ -54,15 +71,25 @@
 
 .enlb-dialog {
   position: relative;
-  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
   max-width: var(--enlb-max-width);
   width: calc(100% - var(--enlb-spacing-md) * 2);
-  max-height: calc(100% - var(--enlb-spacing-md) * 2);
-  overflow: auto;
+  max-height: min(var(--enlb-max-height), 90vh);
+  overflow: visible;
   background: var(--enlb-surface-bg);
   border-radius: var(--enlb-radius);
   color: var(--enlb-text);
   font-family: var(--enlb-font-family);
+}
+
+// Inner scroll wrapper: keeps the bounded max-height scroll for tall content
+// while the dialog itself uses overflow:visible (so the outside close button
+// at top:-32px is not clipped).
+.enlb-scroll {
+  overflow: auto;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .enlb-close {
@@ -107,11 +134,16 @@
 
 .enlb-layout--image-top .enlb-image {
   flex: none;
-  max-height: 200px;
+  height: 200px;
 }
 
+// The image covers a bounded box. It is taken out of flow so its intrinsic
+// aspect ratio can never drive the dialog/row height; instead it fills the
+// space the content defines (row) or a fixed cap (image-top / mobile).
 .enlb-image {
   flex: 0 0 var(--enlb-image-ratio);
+  position: relative;
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -120,10 +152,11 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  position: absolute;
+  inset: 0;
 }
 
 .enlb-content {
-  box-sizing: border-box;
   flex: 1 1 calc(100% - var(--enlb-image-ratio));
   padding: var(--enlb-spacing-lg);
 }
@@ -171,7 +204,7 @@
 
   .enlb-image {
     flex: none;
-    max-height: 200px;
+    height: 200px;
   }
 
   .enlb-dialog.enlb-hide-image-mobile .enlb-image {

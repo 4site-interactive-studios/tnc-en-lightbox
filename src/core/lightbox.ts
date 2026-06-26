@@ -13,6 +13,8 @@ type SavedSibling = {
 
 export class Lightbox {
   private config: NormalizedConfig
+  private host: HTMLElement | null = null
+  private shadow: ShadowRoot | null = null
   private overlay: HTMLElement | null = null
   private dialog: HTMLElement | null = null
   private styleEl: HTMLStyleElement | null = null
@@ -64,7 +66,9 @@ export class Lightbox {
     }
     const first = focusable[0]
     const last = focusable[focusable.length - 1]
-    const active = document.activeElement
+    // Inside a shadow root, document.activeElement is the host; the real focused
+    // node is shadowRoot.activeElement. Outer save/restore still uses document.
+    const active = this.shadow?.activeElement ?? null
     if (e.shiftKey) {
       if (active === first || !this.dialog.contains(active)) {
         e.preventDefault()
@@ -82,15 +86,21 @@ export class Lightbox {
   }
 
   open(): void {
-    if (this.overlay) return
+    if (this.host) return
     try {
       this.prevFocus = document.activeElement
       this.scrollX = window.scrollX
       this.scrollY = window.scrollY
+      // Render the whole lightbox inside an open Shadow DOM so host-page CSS can
+      // neither cascade in nor leak out. The host element stays in the light DOM.
+      this.host = document.createElement('div')
+      this.host.setAttribute('data-enlb-root', '')
+      this.shadow = this.host.attachShadow({ mode: 'open' })
       this.injectStyles()
       this.lockBackground()
       this.overlay = this.buildDom()
-      document.body.appendChild(this.overlay)
+      this.shadow.appendChild(this.overlay)
+      document.body.appendChild(this.host)
       this.isolateBackground()
       document.addEventListener('keydown', this.onKeydown)
       this.overlay.addEventListener('click', this.onOverlayClick)
@@ -109,28 +119,33 @@ export class Lightbox {
 
   private abortOpen(): void {
     document.removeEventListener('keydown', this.onKeydown)
-    if (this.overlay) {
-      this.overlay.remove()
-      this.overlay = null
-    }
+    this.host?.remove()
+    this.host = null
+    this.shadow = null
+    this.overlay = null
     this.dialog = null
+    this.styleEl = null
     this.restoreBackground()
     this.prevFocus = null
   }
 
   close(): void {
-    if (!this.overlay) return
+    if (!this.host) return
     document.removeEventListener('keydown', this.onKeydown)
-    this.overlay.removeEventListener('click', this.onOverlayClick)
+    this.overlay?.removeEventListener('click', this.onOverlayClick)
     this.dialog?.removeEventListener('keydown', this.onDialogKeydown)
     const closeBtn = this.dialog?.querySelector<HTMLElement>('.enlb-close')
     closeBtn?.removeEventListener('click', this.onCloseClick)
     this.dialog?.querySelectorAll<HTMLElement>('.enlb-cta').forEach((cta) => {
       cta.removeEventListener('click', this.onCtaClick)
     })
-    this.overlay.remove()
+    // Removing the host tears down the shadow root, the overlay, and the styles.
+    this.host.remove()
+    this.host = null
+    this.shadow = null
     this.overlay = null
     this.dialog = null
+    this.styleEl = null
     this.restoreBackground()
     if (this.prevFocus instanceof HTMLElement) {
       this.prevFocus.focus()
@@ -146,8 +161,6 @@ export class Lightbox {
 
   destroy(): void {
     this.close()
-    this.styleEl?.remove()
-    this.styleEl = null
   }
 
   applyTheme(theme: NormalizedTheme): void {
@@ -169,8 +182,10 @@ export class Lightbox {
   }
 
   private isolateBackground(): void {
+    // Inert the host page's own body children (light DOM). The lightbox host
+    // element itself must NOT be inerted, or the dialog inside it goes inert too.
     this.savedSiblings = Array.from(document.body.children)
-      .filter((el) => el !== this.overlay)
+      .filter((el) => el !== this.host)
       .map((el) => ({
         el,
         inert: el.getAttribute('inert'),
@@ -203,11 +218,11 @@ export class Lightbox {
   }
 
   private injectStyles(): void {
-    if (this.styleEl) return
+    if (!this.shadow) return
     this.styleEl = document.createElement('style')
     this.styleEl.setAttribute('data-enlb', '')
     this.styleEl.textContent = lightboxCss
-    document.head.appendChild(this.styleEl)
+    this.shadow.appendChild(this.styleEl)
   }
 
   private buildDialogClasses(): string {
@@ -320,9 +335,13 @@ export class Lightbox {
     dialog.className = this.buildDialogClasses()
     dialog.setAttribute('role', 'dialog')
     dialog.setAttribute('aria-modal', 'true')
-    dialog.setAttribute('aria-labelledby', this.titleId)
     dialog.setAttribute('tabindex', '-1')
-    if (!this.config.header) {
+    // Mutually exclusive: aria-labelledby points at the title when it has text;
+    // otherwise aria-label provides a fallback. If both were set, aria-labelledby
+    // would take precedence and point at an empty <h2>, yielding no accessible name.
+    if (this.config.header) {
+      dialog.setAttribute('aria-labelledby', this.titleId)
+    } else {
       dialog.setAttribute('aria-label', 'Dialog')
     }
 
@@ -370,7 +389,13 @@ export class Lightbox {
     const ctaRow = this.buildCtaRow()
     if (ctaRow) content.appendChild(ctaRow)
 
-    dialog.appendChild(layout)
+    // Inner scroll wrapper: the dialog uses overflow:visible so the outside close
+    // button (top: -32px) is not clipped; scroll happens here instead.
+    const scroll = document.createElement('div')
+    scroll.className = 'enlb-scroll'
+    scroll.appendChild(layout)
+
+    dialog.appendChild(scroll)
     overlay.appendChild(dialog)
 
     this.dialog = dialog

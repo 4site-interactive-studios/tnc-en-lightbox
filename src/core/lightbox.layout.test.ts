@@ -1,6 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { Lightbox } from './lightbox'
 import { normalizeConfig } from '../config'
+import { sq } from './shadow-test-helpers'
 
 afterEach(() => {
   document.body.innerHTML = ''
@@ -19,8 +20,8 @@ describe('Lightbox layout', () => {
       }),
     )
     lb.open()
-    const dialog = document.querySelector('.enlb-dialog') as HTMLElement
-    const layout = document.querySelector('.enlb-layout') as HTMLElement
+    const dialog = sq('.enlb-dialog') as HTMLElement
+    const layout = sq('.enlb-layout') as HTMLElement
     expect(dialog).not.toBeNull()
     expect(layout).not.toBeNull()
     expect(dialog!.querySelector('.enlb-image')).toBeNull()
@@ -37,7 +38,7 @@ describe('Lightbox layout', () => {
       }),
     )
     lb.open()
-    const layout = document.querySelector('.enlb-layout') as HTMLElement
+    const layout = sq('.enlb-layout') as HTMLElement
     expect(layout.classList.contains('enlb-layout--two-column')).toBe(true)
     expect(layout.classList.contains('enlb-layout--single-column')).toBe(false)
   })
@@ -55,7 +56,7 @@ describe('Lightbox layout', () => {
         }),
       )
       lb.open()
-      const layout = document.querySelector('.enlb-layout') as HTMLElement
+      const layout = sq('.enlb-layout') as HTMLElement
       expect(layout.classList.contains(`enlb-layout--image-${position}`)).toBe(true)
     }
   })
@@ -70,7 +71,7 @@ describe('Lightbox layout', () => {
       }),
     )
     lb.open()
-    const layout = document.querySelector('.enlb-layout') as HTMLElement
+    const layout = sq('.enlb-layout') as HTMLElement
     const children = Array.from(layout.children)
     expect(children[0].classList.contains('enlb-content')).toBe(true)
     expect(children[1].classList.contains('enlb-image')).toBe(true)
@@ -86,7 +87,7 @@ describe('Lightbox layout', () => {
       }),
     )
     lb.open()
-    const overlay = document.querySelector('.enlb-overlay') as HTMLElement
+    const overlay = sq('.enlb-overlay') as HTMLElement
     expect(overlay.style.getPropertyValue('--enlb-image-ratio')).toBe('35%')
   })
 
@@ -101,7 +102,7 @@ describe('Lightbox layout', () => {
       }),
     )
     lb.open()
-    const dialog = document.querySelector('.enlb-dialog') as HTMLElement
+    const dialog = sq('.enlb-dialog') as HTMLElement
     expect(dialog.classList.contains('enlb-hide-image-mobile')).toBe(true)
   })
 
@@ -116,14 +117,14 @@ describe('Lightbox layout', () => {
       }),
     )
     lb.open()
-    const dialog = document.querySelector('.enlb-dialog') as HTMLElement
+    const dialog = sq('.enlb-dialog') as HTMLElement
     expect(dialog.classList.contains('enlb-hide-image-mobile')).toBe(false)
   })
 
   it('places close button inside by default', () => {
     const lb = new Lightbox(normalizeConfig({ header: 'H', body: 'B' }))
     lb.open()
-    const dialog = document.querySelector('.enlb-dialog') as HTMLElement
+    const dialog = sq('.enlb-dialog') as HTMLElement
     const closeBtn = dialog.querySelector('.enlb-close')
     expect(closeBtn).not.toBeNull()
     expect(dialog.classList.contains('enlb-close--outside')).toBe(false)
@@ -134,7 +135,7 @@ describe('Lightbox layout', () => {
       normalizeConfig({ header: 'H', body: 'B', layout: { closeButton: 'outside' } }),
     )
     lb.open()
-    const dialog = document.querySelector('.enlb-dialog') as HTMLElement
+    const dialog = sq('.enlb-dialog') as HTMLElement
     const closeBtn = dialog.querySelector('.enlb-close')
     expect(closeBtn).not.toBeNull()
     expect(dialog.classList.contains('enlb-close--outside')).toBe(true)
@@ -145,6 +146,6 @@ describe('Lightbox layout', () => {
       normalizeConfig({ header: 'H', body: 'B', layout: { closeButton: 'none' } }),
     )
     lb.open()
-    expect(document.querySelector('.enlb-close')).toBeNull()
+    expect(sq('.enlb-close')).toBeNull()
   })
 })

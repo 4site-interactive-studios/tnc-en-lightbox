@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { createDispatcher } from './dispatcher'
 import type { TriggerSpec } from './config'
+import { sqSafe, sqaSafe } from '../core/shadow-test-helpers'
 
 // Unknown trigger types are intentional: they simulate a hand-authored config that TS would
 // reject but the runtime must tolerate. Cast through `unknown` to bypass the type check.
@@ -29,13 +30,13 @@ describe('trigger dispatcher', () => {
     mod.init({ header: 'Hi', body: 'B', triggers: { time: 5000, frequencyDays: 7 } })
     mod.armTriggers()
 
-    expect(document.querySelector('.enlb-overlay')).toBeNull()
+    expect(sqSafe('.enlb-overlay')).toBeNull()
 
     vi.advanceTimersByTime(4999)
-    expect(document.querySelector('.enlb-overlay')).toBeNull()
+    expect(sqSafe('.enlb-overlay')).toBeNull()
 
     vi.advanceTimersByTime(1)
-    expect(document.querySelector('.enlb-overlay')).not.toBeNull()
+    expect(sqSafe('.enlb-overlay')).not.toBeNull()
   })
 
   it('does NOT open when a fresh enlb:shown localStorage record is inside frequencyDays', async () => {
@@ -47,7 +48,7 @@ describe('trigger dispatcher', () => {
 
     vi.advanceTimersByTime(5000)
 
-    expect(document.querySelector('.enlb-overlay')).toBeNull()
+    expect(sqSafe('.enlb-overlay')).toBeNull()
   })
 
   it('first-to-fire wins: other triggers disarm when one fires', async () => {
@@ -60,10 +61,10 @@ describe('trigger dispatcher', () => {
     mod.armTriggers()
 
     vi.advanceTimersByTime(3000)
-    expect(document.querySelector('.enlb-overlay')).not.toBeNull()
+    expect(sqSafe('.enlb-overlay')).not.toBeNull()
 
     vi.advanceTimersByTime(2000)
-    expect(document.querySelectorAll('.enlb-overlay').length).toBe(1)
+    expect(sqaSafe('.enlb-overlay').length).toBe(1)
   })
 
   it('open() opens the lightbox manually when eligible and stamps the show', async () => {
@@ -72,7 +73,7 @@ describe('trigger dispatcher', () => {
     expect(mod.isEligible()).toBe(true)
 
     mod.open()
-    expect(document.querySelector('.enlb-overlay')).not.toBeNull()
+    expect(sqSafe('.enlb-overlay')).not.toBeNull()
     expect(mod.isEligible()).toBe(false)
   })
 
@@ -83,17 +84,17 @@ describe('trigger dispatcher', () => {
     expect(mod.isEligible()).toBe(false)
 
     mod.open()
-    expect(document.querySelector('.enlb-overlay')).toBeNull()
+    expect(sqSafe('.enlb-overlay')).toBeNull()
   })
 
   it('close() closes the lightbox and enlb:dismiss refreshes the stamp', async () => {
     const mod = await import('../index')
     mod.init({ header: 'Hi', body: 'B', triggers: { frequencyDays: 7 } })
     mod.open()
-    expect(document.querySelector('.enlb-overlay')).not.toBeNull()
+    expect(sqSafe('.enlb-overlay')).not.toBeNull()
 
     mod.close()
-    expect(document.querySelector('.enlb-overlay')).toBeNull()
+    expect(sqSafe('.enlb-overlay')).toBeNull()
     expect(mod.isEligible()).toBe(false)
   })
 
@@ -105,7 +106,7 @@ describe('trigger dispatcher', () => {
     expect(() => mod.disarmTriggers()).not.toThrow()
 
     vi.advanceTimersByTime(10000)
-    expect(document.querySelector('.enlb-overlay')).toBeNull()
+    expect(sqSafe('.enlb-overlay')).toBeNull()
   })
 
   it('sync fire from scroll-depth does not leak inactivity listeners/timers after disarm', async () => {
@@ -121,13 +122,13 @@ describe('trigger dispatcher', () => {
     })
     mod.armTriggers()
 
-    expect(document.querySelector('.enlb-overlay')).not.toBeNull()
+    expect(sqSafe('.enlb-overlay')).not.toBeNull()
 
     mod.close()
     mod.disarmTriggers()
 
     vi.advanceTimersByTime(5000)
-    expect(document.querySelector('.enlb-overlay')).toBeNull()
+    expect(sqSafe('.enlb-overlay')).toBeNull()
   })
 
   it('a list with only an unknown trigger type does not throw and leaves the lightbox closed', async () => {
@@ -138,7 +139,7 @@ describe('trigger dispatcher', () => {
     expect(() => mod.armTriggers()).not.toThrow()
     expect(mod.getInstance()).toBeInstanceOf(mod.Lightbox)
     vi.advanceTimersByTime(10000)
-    expect(document.querySelector('.enlb-overlay')).toBeNull()
+    expect(sqSafe('.enlb-overlay')).toBeNull()
   })
 
   it('a mixed list (valid time + unknown type) degrades: no throw and the valid time trigger still arms and opens', async () => {
@@ -149,9 +150,9 @@ describe('trigger dispatcher', () => {
       triggers: { list: [{ type: 'time', delayMs: 1000 }, bogus], frequencyDays: 7 },
     })
     expect(() => mod.armTriggers()).not.toThrow()
-    expect(document.querySelector('.enlb-overlay')).toBeNull()
+    expect(sqSafe('.enlb-overlay')).toBeNull()
     vi.advanceTimersByTime(1000)
-    expect(document.querySelector('.enlb-overlay')).not.toBeNull()
+    expect(sqSafe('.enlb-overlay')).not.toBeNull()
   })
 
   it('a list with a known type missing its required param (time without delayMs) is dropped, not armed', async () => {
@@ -163,7 +164,7 @@ describe('trigger dispatcher', () => {
     })
     expect(() => mod.armTriggers()).not.toThrow()
     vi.advanceTimersByTime(100000)
-    expect(document.querySelector('.enlb-overlay')).toBeNull()
+    expect(sqSafe('.enlb-overlay')).toBeNull()
   })
 
   it('direct ENLightboxAPI.armTriggers({list:[{type:"bogus"}]}) does not throw on the host page', async () => {

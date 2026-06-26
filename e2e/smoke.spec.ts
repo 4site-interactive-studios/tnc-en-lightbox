@@ -298,3 +298,165 @@ test('armTriggers with an unknown trigger type does not throw on the host page',
   expect(errors).toEqual([])
 })
 
+// ── Style isolation (Shadow DOM) ────────────────────────────────────────────
+// A hostile host stylesheet must not reach the lightbox. The host page sets an
+// inheritable serif font, a focus border, and content-box sizing; none of these
+// may affect the shadow-rendered dialog. Red against the head-DOM rendering,
+// green once the lightbox renders inside a Shadow DOM with a :host reset.
+const hostileHostCss = [
+  // Inheritable property — bleeds across the shadow boundary unless :host resets it.
+  'html, body { font-family: Georgia, "Times New Roman", serif; }',
+  // Selector rule that hit the old light-DOM <h2> title directly.
+  'h2 { font-family: Georgia, serif !important; }',
+  // The stray focus border seen on the first live render.
+  ':focus { border: 4px solid red !important; outline: 4px solid red !important; }',
+  // Global box model override.
+  '* { box-sizing: content-box !important; }',
+  // Inheritable properties only `all: initial` on :host can defend against.
+  'body { letter-spacing: 8px; text-transform: uppercase; }',
+  // Host width override — the dialog must keep its own 900px cap.
+  '.enlb-dialog { width: 2000px !important; max-width: 2000px !important; }',
+].join('\n')
+
+test('lightbox is style-isolated from a hostile host stylesheet (font, border, box-sizing)', async ({ page }) => {
+  await page.goto(
+    harnessUrl({ ...baseConfig, header: 'Isolated heading', triggers: { time: 50 } }, hostileHostCss),
+  )
+  const dialog = page.locator('.enlb-dialog')
+  const title = page.locator('.enlb-title')
+  await expect(dialog).toBeVisible()
+  await expect(title).toBeVisible()
+
+  // The host's hostile CSS must actually be present on the page (guards the harness).
+  await expect(page.locator('#hostile-host-css')).toHaveCount(1)
+
+  // Font-family: the lightbox's own sans-serif stack, NOT the host's Georgia serif.
+  const titleFont = await title.evaluate((el) => getComputedStyle(el).fontFamily)
+  expect(titleFont).toContain('system-ui')
+  expect(titleFont.toLowerCase()).not.toContain('georgia')
+
+  // The focused dialog must not pick up the host's :focus border.
+  const borderTopWidth = await dialog.evaluate((el) => getComputedStyle(el).borderTopWidth)
+  expect(borderTopWidth).toBe('0px')
+
+  // Box-sizing: the host's `* { box-sizing: content-box }` must not reach the shadow.
+  const boxSizing = await dialog.evaluate((el) => getComputedStyle(el).boxSizing)
+  expect(boxSizing).toBe('border-box')
+
+  // Inheritable properties only `all: initial` on :host can defend against —
+  // the host's letter-spacing and text-transform must not bleed into the shadow.
+  const letterSpacing = await title.evaluate((el) => getComputedStyle(el).letterSpacing)
+  expect(letterSpacing).toBe('normal')
+  const textTransform = await title.evaluate((el) => getComputedStyle(el).textTransform)
+  expect(textTransform).toBe('none')
+
+  // The host's width/max-width override must not reach the dialog; it keeps its 900px cap.
+  const dialogBox = await dialog.boundingBox()
+  expect(dialogBox).not.toBeNull()
+  expect(dialogBox!.width).toBeLessThanOrEqual(900)
+})
+
+test('existing .enlb-* locators still resolve through the open shadow root', async ({ page }) => {
+  await page.goto(harnessUrl({ ...baseConfig, triggers: { time: 50 } }, hostileHostCss))
+  await expect(page.locator('.enlb-overlay')).toBeVisible()
+  await expect(page.locator('.enlb-dialog')).toHaveAttribute('role', 'dialog')
+  await expect(page.locator('.enlb-content')).toBeVisible()
+  await expect(page.locator('.enlb-close')).toBeVisible()
+})
+
+// ── Layout polish ───────────────────────────────────────────────────────────
+// A tall (portrait) image must not drive the dialog height. The content should
+// fill the dialog vertically — no large empty void — and the image should cover
+// a bounded box. Red against the `.enlb-img { height: 100% }` rendering.
+const portraitImage =
+  'data:image/svg+xml;utf8,' +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="120" height="1000"><rect width="120" height="1000" fill="#006341"/></svg>',
+  )
+
+test('portrait image does not inflate the dialog height (no empty void)', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === 'Mobile Chrome', 'image column is hidden on mobile by default')
+  await page.goto(
+    harnessUrl({
+      ...baseConfig,
+      header: 'Bounded layout',
+      body: 'The dialog height should be driven by this content, not by the portrait image beside it.',
+      image: { src: portraitImage, alt: '' },
+      triggers: { time: 50 },
+    }),
+  )
+  const dialog = page.locator('.enlb-dialog')
+  const content = page.locator('.enlb-content')
+  const image = page.locator('.enlb-image')
+  await expect(dialog).toBeVisible()
+
+  const dialogBox = await dialog.boundingBox()
+  const contentBox = await content.boundingBox()
+  const imageBox = await image.boundingBox()
+  expect(dialogBox).not.toBeNull()
+  expect(contentBox).not.toBeNull()
+  expect(imageBox).not.toBeNull()
+
+  // The dialog is sized by its content, not inflated/capped by the portrait image.
+  // Buggy rendering pins the dialog to the viewport cap; the fix keeps it compact.
+  expect(dialogBox!.height).toBeLessThan(page.viewportSize()!.height * 0.8)
+  // The image covers a bounded box matching the dialog — it does not drive the height.
+  expect(imageBox!.height).toBeLessThanOrEqual(dialogBox!.height + 1)
+  // Content fills the dialog vertically — no large empty region beside/below it.
+  expect(contentBox!.height).toBeGreaterThanOrEqual(dialogBox!.height * 0.9)
+})
+
+// ── Outside close button (not clipped by dialog overflow) ─────────────────────
+// The outside close button sits above the dialog (top: -32px). The dialog's
+// overflow must not clip it. Red when the dialog has overflow:auto; green once
+// scroll moves to an inner wrapper and the dialog uses overflow:visible.
+test('outside close button is visible and clickable (not clipped)', async ({ page }) => {
+  await page.goto(
+    harnessUrl({ ...baseConfig, triggers: { time: 50 }, layout: { closeButton: 'outside' } }),
+  )
+  const overlay = page.locator('.enlb-overlay')
+  const closeBtn = page.locator('.enlb-close')
+  await expect(overlay).toBeVisible()
+  // The button must be visible (not clipped by the dialog's overflow).
+  await expect(closeBtn).toBeVisible()
+  // Clicking it must close the lightbox — fails if the button is clipped/unclickable.
+  await closeBtn.click()
+  await expect(overlay).toHaveCount(0)
+})
+
+// ── Accessible name for empty-header dialog ───────────────────────────────────
+// When the header is empty, aria-label provides the name and aria-labelledby must
+// NOT point at an empty title node (which would yield an empty accessible name).
+test('empty-header dialog has a non-empty accessible name via aria-label', async ({ page }) => {
+  await page.goto(
+    harnessUrl({ ...baseConfig, header: '', triggers: { time: 50 } }),
+  )
+  const dialog = page.locator('.enlb-dialog')
+  await expect(dialog).toBeVisible()
+  // aria-label provides the accessible name...
+  await expect(dialog).toHaveAttribute('aria-label', 'Dialog')
+  // ...and aria-labelledby must NOT be set (it would point at an empty title).
+  const labelledby = await dialog.getAttribute('aria-labelledby')
+  expect(labelledby).toBeNull()
+})
+
+// ── Host --enlb-* custom-property overrides do not affect the theme ───────────
+// Custom properties are inheritable and pierce the shadow boundary, but :host
+// defines every consumed --enlb-* token with a default, so host overrides can't
+// sneak in. This locks that invariant.
+test('host --enlb-* custom-property overrides do not affect the lightbox theme', async ({ page }) => {
+  const tokenHostCss = [
+    ':root {',
+    '  --enlb-overlay-bg: hotpink;',
+    '  --enlb-surface-bg: hotpink;',
+    '  --enlb-text: hotpink;',
+    '  --enlb-cta-bg: hotpink;',
+    '}',
+  ].join('\n')
+  await page.goto(harnessUrl({ ...baseConfig, triggers: { time: 50 } }, tokenHostCss))
+  const dialog = page.locator('.enlb-dialog')
+  const bg = await dialog.evaluate((el) => getComputedStyle(el).backgroundColor)
+  // Light theme surface is #fff = rgb(255,255,255), NOT hotpink.
+  expect(bg).toBe('rgb(255, 255, 255)')
+})
+

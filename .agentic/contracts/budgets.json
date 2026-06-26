@@ -1,6 +1,6 @@
 {
   "bundleSize": {
-    "_doc": "Gzip-size budget for dist/en-lightbox.js. Baseline before wave-2: 3058B gzip. Wave-2 stream-a adds the --enlb-* token surface, layout config/normalizer, responsive classes, CTA <button> change, secondary/decline CTA, and a11y/motion hardening. Measured post-build gzip: 4100B. Budget re-baselined to 4500B with headroom. Wave-2 stream-b adds theme presets (dark/brand SCSS classes), normalizeTheme, applyTheme (single root write), setTheme API, and preset token constants. Measured post-build gzip: 4573B (+473B delta from stream-a). Budget re-baselined to 5000B with headroom for wave-3.",
-    "maxGzipBytes": 5000
+    "_doc": "Gzip-size budget for dist/en-lightbox.js. Baseline before wave-2: 3058B gzip. Wave-2 stream-a adds the --enlb-* token surface, layout config/normalizer, responsive classes, CTA <button> change, secondary/decline CTA, and a11y/motion hardening. Measured post-build gzip: 4100B. Budget re-baselined to 4500B with headroom. Wave-2 stream-b adds theme presets (dark/brand SCSS classes), normalizeTheme, applyTheme (single root write), setTheme API, and preset token constants. Measured post-build gzip: 4573B (+473B delta from stream-a). Budget re-baselined to 5000B with headroom for wave-3. Wave-4 stream-c moves the lightbox into an open Shadow DOM (host element, attachShadow, scoped styles, :host all:initial reset, universal box-sizing, absolute object-fit:cover image box, bounded dialog max-height) for style isolation. Measured post-build gzip: 5019B (+19B delta from wave-3 ceiling). Budget re-baselined to 5200B (GATE-ARMING, Decision D13 — owner-reviewed). Old ceiling 5000B -> new ceiling 5200B; 181B headroom for the remaining wave-4/stream-b release work.",
+    "maxGzipBytes": 5200
   }
 }

@@ -1,6 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { Lightbox } from './lightbox'
 import { normalizeConfig } from '../config'
+import { sq } from './shadow-test-helpers'
 
 afterEach(() => {
   document.body.innerHTML = ''
@@ -139,7 +140,7 @@ describe('EN form non-interference', () => {
     assertFormIsolated(form)
     expect(document.body.style.overflow).toBe('hidden')
 
-    ;(document.querySelector('.enlb-close') as HTMLElement).click()
+    ;(sq('.enlb-close') as HTMLElement).click()
 
     assertFormRestored(form)
     expect(document.body.style.overflow).toBe('')
@@ -161,7 +162,7 @@ describe('EN form non-interference', () => {
 
     assertFormIsolated(form)
 
-    ;(document.querySelector('.enlb-cta') as HTMLElement).click()
+    ;(sq('.enlb-cta') as HTMLElement).click()
 
     assertFormRestored(form)
     expect(document.activeElement).toBe(trigger)
@@ -181,15 +182,15 @@ describe('EN form non-interference', () => {
     openLightboxWithCta({ cta: { label: 'Go', href: '#go', action: 'redirect' } })
 
     assertFormIsolated(form)
-    const cta = document.querySelector('.enlb-cta') as HTMLElement
+    const cta = sq('.enlb-cta') as HTMLElement
     expect(cta.tagName).toBe('A')
     expect(cta.getAttribute('href')).toBe('#go')
     cta.click()
 
-    expect(document.querySelector('.enlb-overlay')).not.toBeNull()
+    expect(sq('.enlb-overlay')).not.toBeNull()
     assertFormIsolated(form)
 
-    ;(document.querySelector('.enlb-close') as HTMLElement).click()
+    ;(sq('.enlb-close') as HTMLElement).click()
 
     assertFormRestored(form)
     expect(document.activeElement).toBe(trigger)
@@ -205,7 +206,7 @@ describe('EN form non-interference', () => {
     openLightboxWithCta({ cta: { label: 'Close', action: 'close' } })
     assertFormIsolated(form)
 
-    ;(document.querySelector('.enlb-close') as HTMLElement).click()
+    ;(sq('.enlb-close') as HTMLElement).click()
 
     assertFormRestored(form)
     assertPreExistingAttributesRestored(form)
