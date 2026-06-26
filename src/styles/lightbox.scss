@@ -86,10 +86,6 @@
   max-height: 200px;
 }
 
-.enlb-layout--image-right {
-  flex-direction: row-reverse;
-}
-
 .enlb-image {
   flex: 0 0 var(--enlb-image-ratio);
   overflow: hidden;
