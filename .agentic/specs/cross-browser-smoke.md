@@ -43,13 +43,13 @@ responsive/visual work a real-browser regression net.
 - This brief trued-up at the end.
 
 ## Acceptance criteria
-- [ ] Playwright config covers chromium + webkit + firefox + a mobile viewport; runs headless in the
+- [x] Playwright config covers chromium + webkit + firefox + a mobile viewport; runs headless in the
       dedicated CI job (which installs browsers).
-- [ ] Smoke specs cover trigger-open, render, the three close paths, focus-in, and frequency
+- [x] Smoke specs cover trigger-open, render, the three close paths, focus-in, and frequency
       suppression — **green across all configured browsers** on the head SHA.
-- [ ] **No `src/` or shipped-bundle-behavior change**; the existing four SDD gates + the 65 unit tests
+- [x] **No `src/` or shipped-bundle-behavior change**; the existing four SDD gates + the 65 unit tests
       still pass; zero runtime deps unchanged (Playwright is dev-only).
-- [ ] The cross-browser CI job is green; if a `cross-browser-smoke` registry entry is added, its check
+- [x] The cross-browser CI job is green; if a `cross-browser-smoke` registry entry is added, its check
       is wired to that job.
 
 ## First action

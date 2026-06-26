@@ -11,7 +11,7 @@ Captured from the project brief — every agent must respect these:
 - **Zero runtime dependencies.** The shipped asset must not load any third-party runtime library; dev-only deps (Vite, Vitest, ESLint) are fine.
 - **Single self-contained artifact.** Compiles to one minified JS file with all SCSS/CSS inlined into the JS — no separate stylesheet, no runtime network fetches.
 - **Non-intrusive.** Must not block page rendering, degrade performance, or interfere with Engaging Networks form submission or existing page behavior.
-- **Session discipline.** Must not re-trigger in the same session after the user dismisses it (scoped per-page, per-session).
+- **Session discipline.** Must not re-trigger within the configured frequency window after the user dismisses it (scoped per-page, persistent via localStorage).
 - **Cross-browser.** Latest Chrome, Safari, Edge, Firefox.
 - **Responsive.** Desktop, tablet, mobile; the 2-column (image + content) layout stacks on mobile, with an optional toggle to hide the image on mobile (on by default).
 - **Accessible.** Modal semantics: focus trap, ESC-to-close, focus restored on close, appropriate ARIA roles/labels.
