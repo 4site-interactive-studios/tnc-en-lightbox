@@ -14,8 +14,8 @@ Take the functionally-complete library from "all features shipped" to "safe to d
 | Stream | Brief | Status |
 |--------|-------|--------|
 | stream-a — Production hardening (error isolation, config tolerance, ordering, idempotency) | [stream-a](./stream-a.md) | merged (PR #28) |
-| stream-c — Style isolation (Shadow DOM) + visual/layout polish | [stream-c](./stream-c.md) | in progress |
-| stream-b — Release & packaging (LICENSE, versioning, hosting, release automation, CI/QA) | [stream-b](./stream-b.md) | planned (JIT after stream-c; needs owner decisions) |
+| stream-c — Style isolation (Shadow DOM) + visual/layout polish | [stream-c](./stream-c.md) | merged (PR #32) |
+| stream-b — Release & packaging (MIT, versioning, EN hosting, release-please, CI/QA) | [stream-b](./stream-b.md) | in progress (decisions resolved: MIT · manual EN upload · implement release-please) |
 
 **Sequencing:** stream-a (harden) → **stream-c (isolate + polish)** → stream-b (release the hardened, isolated, polished artifact). stream-a and stream-c both rewrite `src/core/lightbox.ts`, so they run sequentially; release goes last so it packages the final artifact.
 
