@@ -32,7 +32,7 @@ export function normalizeTriggers(config?: TriggersConfigBase): NormalizedTrigge
   if (src.scroll != null) triggers.push({ type: 'scroll', percent: src.scroll })
   if (src.inactivity != null) triggers.push({ type: 'inactivity', idleMs: src.inactivity })
   if (src.exitIntent) triggers.push({ type: 'exit-intent' })
-  if (src.list) triggers.push(...src.list)
+  if (Array.isArray(src.list)) triggers.push(...src.list)
 
   return { frequencyDays, triggers }
 }
