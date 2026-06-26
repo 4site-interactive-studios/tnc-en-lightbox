@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 import { harnessUrl } from './helpers'
 
 const baseConfig = {
@@ -166,5 +166,91 @@ test('brand theme applies brand surface color to dialog', async ({ page }) => {
   const dialog = page.locator('.enlb-dialog')
   const bg = await dialog.evaluate((el) => getComputedStyle(el).backgroundColor)
   expect(bg).toBe('rgb(0, 61, 36)')
+})
+
+const enFormConfig = {
+  ...baseConfig,
+  triggers: { time: 50 },
+  cta: { label: 'Close', action: 'close' },
+}
+
+async function assertFormIsolated(page: Page): Promise<void> {
+  const form = page.locator('#en-form')
+  await expect(form).toHaveAttribute('inert', '')
+  await expect(form).toHaveAttribute('aria-hidden', 'true')
+  await expect(form).toHaveAttribute('tabindex', '-1')
+}
+
+async function assertFormSubmitsAndValidates(page: Page): Promise<void> {
+  const form = page.locator('#en-form')
+  const email = form.locator('input[name="email"]')
+  const name = form.locator('input[name="name"]')
+
+  await email.fill('')
+  await name.fill('')
+  const invalid = await form.evaluate((el) => (el as HTMLFormElement).checkValidity())
+  expect(invalid).toBe(false)
+
+  await email.fill('test@example.com')
+  await name.fill('Test')
+  const valid = await form.evaluate((el) => (el as HTMLFormElement).checkValidity())
+  expect(valid).toBe(true)
+
+  await email.focus()
+  await expect(email).toBeFocused()
+
+  const submitFired = await form.evaluate((el) => {
+    let fired = false
+    let defaultPrevented = true
+    const handler = (e: Event) => {
+      fired = true
+      defaultPrevented = e.defaultPrevented
+    }
+    el.addEventListener('submit', handler, { once: true })
+    el.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }))
+    return { fired, defaultPrevented }
+  })
+  expect(submitFired.fired).toBe(true)
+  expect(submitFired.defaultPrevented).toBe(false)
+}
+
+test('EN form is isolated while lightbox is open', async ({ page }) => {
+  await page.goto(harnessUrl(enFormConfig))
+  await expect(page.locator('.enlb-overlay')).toBeVisible()
+  await assertFormIsolated(page)
+})
+
+test('EN form submits and validates after close via X button', async ({ page }) => {
+  await page.goto(harnessUrl(enFormConfig))
+  await expect(page.locator('.enlb-overlay')).toBeVisible()
+  await page.locator('.enlb-close').click()
+  await expect(page.locator('.enlb-overlay')).toHaveCount(0)
+  await assertFormSubmitsAndValidates(page)
+})
+
+test('EN form submits and validates after close via close CTA', async ({ page }) => {
+  await page.goto(harnessUrl(enFormConfig))
+  await expect(page.locator('.enlb-overlay')).toBeVisible()
+  await page.locator('.enlb-cta').click()
+  await expect(page.locator('.enlb-overlay')).toHaveCount(0)
+  await assertFormSubmitsAndValidates(page)
+})
+
+test('EN form submits and validates after redirect CTA', async ({ page }) => {
+  await page.goto(
+    harnessUrl({
+      ...baseConfig,
+      triggers: { time: 50 },
+      cta: { label: 'Go', href: '#en-form', action: 'redirect' },
+    }),
+  )
+  await expect(page.locator('.enlb-overlay')).toBeVisible()
+  await assertFormIsolated(page)
+  await page.locator('.enlb-cta').click()
+  await expect(page.locator('.enlb-overlay')).toBeVisible()
+  await assertFormIsolated(page)
+  await page.locator('.enlb-close').click()
+  await expect(page.locator('.enlb-overlay')).toHaveCount(0)
+  await assertFormSubmitsAndValidates(page)
 })
 

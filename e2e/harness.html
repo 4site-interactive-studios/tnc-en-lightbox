@@ -20,6 +20,12 @@
     <h1 id="page-heading">Smoke harness</h1>
     <button id="page-button" type="button">Page button</button>
 
+    <form id="en-form" class="en-form" data-en-component="form" action="javascript:void(0)">
+      <input type="email" name="email" required />
+      <input type="text" name="name" required />
+      <button type="submit">Submit</button>
+    </form>
+
     <script>
       window.ENLightbox = (() => {
         const params = new URLSearchParams(location.search)
