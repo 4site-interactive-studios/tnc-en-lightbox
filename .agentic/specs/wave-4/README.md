@@ -35,8 +35,8 @@ Take the functionally-complete library from "all features shipped" to "safe to d
 - [ ] Stale `sessionStorage`/`enlb:dismissed:` references in the ROADMAP body are reconciled to the shipped `localStorage`/`enlb:shown:` reality.
 - [ ] `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`, e2e smoke all green; bundle stays within the gzip budget.
 
-## Retrospective (complete at wave exit)
+## Retrospective (wave exit — 2026-06-26, v1.0.0 shipped)
 
-- **What worked:**
-- **What didn't:**
-- **What to change:**
+- **What worked:** Verify-before-review caught a REAL defect in every wave-4 stream — the unknown-`triggers.list`-type throw (stream-a, would have thrown on the host page), the empty-header accessible-name + clipped outside-× (stream-c), and the missing Release asset + the `release-as` bootstrap risk (stream-b) — plus a reported-but-unmade close-ring contrast fix (polish). Adversarial multi-lens verification + mutation-verify + cross-browser e2e repeatedly turned "looks done" into "actually correct." Shadow DOM cleanly eliminated the host-CSS bleed; the owner's live-render screenshots drove the isolation + visual polish the audit alone didn't surface.
+- **What didn't:** Parallel-dispatching stream-b and the polish (both rebuilding `dist`) forced a sequential merge + a re-sync/rebuild. Agents branched off pre-#26 `main` (stale base) → reconciliation churn. Agent reports occasionally overstated reality (close-ring "done" but absent from the code; "+19B" vs the real +111B growth) — caught only by reading the actual diff.
+- **What to change:** Dispatch agents off CURRENT `main` (or `git merge origin/main` first). Serialize streams that rebuild `dist` rather than parallel-dispatching. Always verify a report against the code/diff, never the prose. Run a readiness audit AND a live render before declaring "done" — the isolation/visual gaps only appeared on a real host page.
