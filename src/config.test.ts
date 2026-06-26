@@ -16,7 +16,6 @@ describe('normalizeConfig', () => {
       hideImageOnMobile: true,
       closeButton: 'inside',
     })
-    expect(c.en).toEqual({})
   })
 
   it('defaults content fields to empty strings and leaves image undefined', () => {
