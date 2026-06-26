@@ -17,14 +17,15 @@ Scope: all Markdown documentation files plus the SDD tool README and the contrac
 | File | Status | Notes |
 |------|--------|-------|
 | `README.md` | **current** | Rewritten in this PR; claims trace to `.agentic/specs/ROADMAP.md` (Public contract / NFR matrix), `.agentic/contracts/registry.json`, and `src/**`. |
-| `EDITOR.md` | **pending** | Owned by **wave-3/stream-a** (exit criterion: "editor-facing README documents the config schema, examples, dismissal behavior, and current customization limits"). Do not edit until that stream lands. |
+| `EDITOR.md` | **current** | Contains the current editor config/schema/examples. The "never throw on the host page" guarantee is documented here; wave-4/stream-a is making it true in code. Wave-4/stream-b will replace the placeholder CDN URL with a concrete versioned embed. |
+| `.agentic/AGENTS.md` | **current** | Corrected in this PR: dismissal NFR now matches the persistent localStorage frequency cap. |
 | `.agentic/AGENTS.md` | **stale** | NFR line still says dismissal is "scoped per-page, per-session". Amendment (wave-1 entry) and shipped code (`src/triggers/dismissal.ts`) use **localStorage** with `frequencyDays` (default 7). Fix applied in this PR. |
 | `.agentic/WORKFLOW.md` | **current** | GATES and delivery loop match current practice. |
 | `.agentic/REVIEWING.md` | **current** | Independent-reviewer protocol is unchanged. |
 | `.agentic/LEARNINGS.md` | **current** | Invariants and gotchas reflect wave-2/stream-a and stream-b learnings. |
 | `.agentic/BACKLOG.md` | **current** | Entries correctly record what was promoted into earlier waves and what remains deferred with revisit triggers. |
-| `.agentic/specs/ROADMAP.md` | **stale** (recorded, not edited) | Body contains superseded text that the Amendments override: (1) Public-contract / N4 / Event sections reference `sessionStorage` and key `enlb:dismissed:${pathname}` — shipped code uses **localStorage** and key `enlb:shown:${pathname}`; (2) body describes wave-4 as "optional" — it is confirmed as the release/packaging wave. These are plan-body discrepancies; the Amendments and code govern, so the discrepancies are recorded here rather than silently rewritten. |
-| `.agentic/specs/README.md` | **current** | Wave index correctly lists wave-0 stream-b as merged (PR #8) and complete. (The linked `wave-0/README.md` had the stale "planned" status, fixed separately.) |
+| `.agentic/specs/ROADMAP.md` | **stale** (recorded, not edited) | Body contains superseded text that the Amendments override: references to `sessionStorage` and key `enlb:dismissed:${pathname}` — shipped code uses **localStorage** and key `enlb:shown:${pathname}`. The "Amendments — wave-4 entry" section explicitly records this supersession and makes the in-place reconciliation a **wave-4/stream-b** item. Wave 4 is confirmed (not optional) and split into stream-a (hardening) and stream-b (release). The discrepancies are recorded here rather than silently rewritten. |
+| `.agentic/specs/README.md` | **current** | Wave index correctly lists wave-0 stream-b as merged (PR #8), wave-3 merged, and wave-4 in progress. |
 | `.agentic/specs/AGENT_LAUNCH_PROMPT.md` | **current** | Template matches the current GATES block. |
 | `.agentic/specs/BRIEF_TEMPLATE.md` | **current** | Standard brief template. |
 | `.agentic/specs/cross-browser-smoke.md` | **stale** | Brief still shows unchecked acceptance-criteria boxes, but the committed mini-stream has landed: `e2e/smoke.spec.ts`, `e2e/harness.html`, `playwright.config.ts`, and `.github/workflows/cross-browser.yml` exist and run in CI. Fix applied in this PR. |
@@ -36,8 +37,11 @@ Scope: all Markdown documentation files plus the SDD tool README and the contrac
 | `.agentic/specs/wave-2/README.md` | **current** | Correctly marks stream-a (PR #17) and stream-b (PR #21) as complete. |
 | `.agentic/specs/wave-2/stream-a.md` | **stale** | Acceptance-criteria boxes are unchecked even though the stream is merged (PR #17) and the token surface/layout/a11y changes are in `src/**`. Fix applied in this PR. |
 | `.agentic/specs/wave-2/stream-b.md` | **current** | Acceptance criteria are checked and match shipped code. |
-| `.agentic/specs/wave-3/README.md` | **pending** | Wave is in progress; exit criteria and retro are incomplete by design. |
-| `.agentic/specs/wave-3/stream-a.md` | **pending** | Wave-3/stream-a is in progress; acceptance criteria are unchecked by design. |
+| `.agentic/specs/wave-3/README.md` | **current** | Wave-3 merged (PR #24); retro is filled and reflects the 2026-06-26 exit. |
+| `.agentic/specs/wave-3/stream-a.md` | **current** | Wave-3/stream-a merged with PR #24. Acceptance criteria match shipped code. |
+| `.agentic/specs/wave-4/README.md` | **current** | New from PR #26. Confirms wave-4 is split into stream-a (hardening) and stream-b (release); exit criteria and retros are incomplete by design. |
+| `.agentic/specs/wave-4/stream-a.md` | **current** | New from PR #26. In-flight code stream (PR #28): production hardening of auto-init, config tolerance, ordering, idempotency. |
+| `.agentic/specs/wave-4/stream-b.md` | **current** | New from PR #26. Planned post-stream-a: LICENSE, versioning, hosting, release automation, CI/QA, ROADMAP dismissal reconciliation. |
 | `tools/sdd/README.md` | **current** | Accurately describes the four gates and how to run them. |
 | `.agentic/decisions/0001-record-architecture-decisions.md` | **current** | Accepted ADR template. |
 | `.agentic/decisions/TEMPLATE.md` | **current** | Standard ADR template. |
@@ -49,8 +53,8 @@ Scope: all Markdown documentation files plus the SDD tool README and the contrac
 |-------|--------------|----------------|
 | Hosting, CDN, cache-busting, versioning, license, embed instructions | Out of scope per stream brief; requires release tooling decisions. | `wave-4/stream-b` |
 | Visual appearance, screenshots, Shadow-DOM / isolation internals | The look and isolation approach are still changing. | `wave-4/stream-c` |
-| Full editor config guide and customization limits | Owned by in-flight `wave-3/stream-a`. | `wave-3/stream-a` (updates `EDITOR.md`) |
-| Plan-body cleanup in `ROADMAP.md` | ROADMAP is a historical master plan with explicit Amendments; rewriting its body would erase the record of what changed. The Amendments remain authoritative. | Future wave-entry amendment PR, if desired |
+| Full editor-guide polish (concrete versioned embed, cache-busting + SRI guidance, how-to-update note) | Currently owned by wave-4/stream-b; placeholders in `EDITOR.md` will be replaced after owner decisions on hosting target. | `wave-4/stream-b` |
+| Plan-body cleanup in `ROADMAP.md` | ROADMAP is a historical master plan with explicit amendment sections; rewriting its body would erase the record of what changed. The Amendments remain authoritative. | `wave-4/stream-b` (reconciliation is an explicit exit criterion) |
 
 ## Verification commands run
 
