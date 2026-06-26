@@ -1,7 +1,13 @@
-import { describe, it, expect, afterEach, vi } from 'vitest'
+import { describe, it, expect, afterEach, vi, beforeAll } from 'vitest'
 import { Lightbox } from './lightbox'
 import { normalizeConfig } from '../config'
 import { sq, shadowActiveElement } from './shadow-test-helpers'
+
+beforeAll(() => {
+  const ua = document.createElement('style')
+  ua.textContent = '* { outline: 0px solid }'
+  document.head.appendChild(ua)
+})
 
 afterEach(() => {
   document.body.innerHTML = ''
@@ -66,12 +72,9 @@ describe('Lightbox a11y/UX hardening', () => {
     lb.open()
     const dialog = sq('[role="dialog"]') as HTMLElement
     expect(dialog).not.toBeNull()
-    // aria-label provides the accessible name...
     const label = dialog.getAttribute('aria-label')
     expect(label).toBeTruthy()
     expect(label!.length).toBeGreaterThan(0)
-    // ...and aria-labelledby must NOT be set — it would point at an empty <h2>,
-    // and aria-labelledby takes precedence over aria-label, yielding an empty name.
     expect(dialog.hasAttribute('aria-labelledby')).toBe(false)
   })
 
@@ -140,5 +143,56 @@ describe('Lightbox a11y/UX hardening', () => {
 
     expect(scrollToSpy).toHaveBeenCalledWith(0, 0)
     scrollToSpy.mockRestore()
+  })
+
+  it('suppresses default focus outline on the dialog container (programmatic focus)', () => {
+    const lb = new Lightbox(normalizeConfig({ header: 'H', body: 'B' }))
+    lb.open()
+    const dialog = sq('[role="dialog"]') as HTMLElement
+    dialog.focus()
+    const style = getComputedStyle(dialog)
+    expect(style.outlineStyle).toBe('none')
+  })
+
+  it('dialog has tabindex=-1 so it can receive programmatic focus but not tab focus', () => {
+    const lb = new Lightbox(normalizeConfig({ header: 'H', body: 'B' }))
+    lb.open()
+    const dialog = sq('[role="dialog"]') as HTMLElement
+    expect(dialog.getAttribute('tabindex')).toBe('-1')
+  })
+
+  it('CTA buttons and close button exist as focusable elements inside the dialog', () => {
+    const lb = new Lightbox(
+      normalizeConfig({
+        header: 'H',
+        body: 'B',
+        cta: { label: 'Primary', action: 'close' },
+        secondaryCta: { label: 'Secondary', action: 'close' },
+      }),
+    )
+    lb.open()
+    const dialog = sq('.enlb-dialog') as HTMLElement
+    expect(dialog.querySelector('.enlb-cta')).not.toBeNull()
+    expect(dialog.querySelector('.enlb-cta--secondary')).not.toBeNull()
+    expect(dialog.querySelector('.enlb-close')).not.toBeNull()
+  })
+
+  it('strips visible outline on dialog but keeps focusable interactive elements', () => {
+    const lb = new Lightbox(
+      normalizeConfig({
+        header: 'H',
+        body: 'B',
+        cta: { label: 'Go', action: 'close' },
+      }),
+    )
+    lb.open()
+    const dialog = sq('[role="dialog"]') as HTMLElement
+    const cta = dialog.querySelector('.enlb-cta') as HTMLElement
+    // Dialog itself suppresses its focus outline; interactive elements remain focusable
+    dialog.focus()
+    expect(getComputedStyle(dialog).outlineStyle).toBe('none')
+    // Interactive elements are focusable via keyboard
+    cta.focus()
+    expect(shadowActiveElement()).toBe(cta)
   })
 })

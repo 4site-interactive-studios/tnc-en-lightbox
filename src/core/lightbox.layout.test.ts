@@ -148,4 +148,42 @@ describe('Lightbox layout', () => {
     lb.open()
     expect(sq('.enlb-close')).toBeNull()
   })
+
+  it('image-top with outside close applies both classes on correct elements', () => {
+    const lb = new Lightbox(
+      normalizeConfig({
+        header: 'H',
+        body: 'B',
+        image: { src: 'i.png' },
+        layout: { imagePosition: 'top', closeButton: 'outside' },
+      }),
+    )
+    lb.open()
+    const dialog = sq('.enlb-dialog') as HTMLElement
+    const layout = sq('.enlb-layout') as HTMLElement
+    // Both classes must be present simultaneously — the CSS :has() override
+    // that removes the white band depends on this exact selector match
+    expect(dialog.classList.contains('enlb-close--outside')).toBe(true)
+    expect(layout.classList.contains('enlb-layout--image-top')).toBe(true)
+    // The image sits as the first child of the layout (top position)
+    const children = Array.from(layout.children)
+    expect(children[0].classList.contains('enlb-image')).toBe(true)
+  })
+
+  it('enlb-scroll wrapper wraps the layout element', () => {
+    const lb = new Lightbox(
+      normalizeConfig({
+        header: 'H',
+        body: 'B',
+        image: { src: 'i.png' },
+        layout: { imagePosition: 'top' },
+      }),
+    )
+    lb.open()
+    const scroll = sq('.enlb-scroll') as HTMLElement
+    expect(scroll).not.toBeNull()
+    const layout = sq('.enlb-layout') as HTMLElement
+    // The layout must be inside the scroll wrapper
+    expect(scroll.contains(layout)).toBe(true)
+  })
 })
