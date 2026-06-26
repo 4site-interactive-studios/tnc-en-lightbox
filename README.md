@@ -33,7 +33,7 @@ Add the config and load the built script on any EN page where the lightbox shoul
     triggers: { frequencyDays: 7, time: 5000 },
   };
 </script>
-<script src="https://your-cdn.example.com/en-lightbox.js" async></script>
+<script src="https://en-assets.tnc.org/en-lightbox.js?v=1.0.0" async></script>
 ```
 
 The script auto-instantiates from `window.ENLightbox`, arms the configured trigger, and opens the lightbox when the trigger fires. For the full config schema, examples, dismissal behavior, and customization limits, see [`EDITOR.md`](EDITOR.md).
