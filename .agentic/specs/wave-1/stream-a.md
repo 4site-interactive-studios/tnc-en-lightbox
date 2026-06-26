@@ -114,3 +114,11 @@ then green.
   gate-arming files, Q11). Keep `bundle-size` gzip-gated with a committed budget.
 - **jsdom limits:** mock `localStorage` + use fake timers/controlled `Date`; assert behavior/DOM/events,
   not layout. Real cross-browser exit-intent/scroll QA is the committed cross-browser mini-stream.
+
+## wave-4 hardening amendments
+
+- `src/triggers/config.ts` — `normalizeTriggers` guards `triggers.list` with `Array.isArray` so a
+  non-iterable `list` (e.g. `{ list: 123 }`) degrades to no list-triggers instead of throwing —
+  `triggers.push(...src.list)` on a non-iterable was the one `init()` path that actually threw
+  pre-hardening. Valid configs are unaffected. Tracked by the wave-4/stream-a dispatch (the wave-4
+  spec directory is authored in stream-b).
