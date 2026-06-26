@@ -44,16 +44,16 @@ wave-2: the lightbox is visually campaign-ready.
 - Tests under `src/**`; refreshed `dist/en-lightbox.js`; this brief trued-up.
 
 ## Acceptance criteria
-- [ ] `preset` `light`/`dark`/`brand` each apply a coherent `--enlb-*` set; per-token overrides
+- [x] `preset` `light`/`dark`/`brand` each apply a coherent `--enlb-*` set; per-token overrides
       (`colors`/`radius`/…) win over the preset.
-- [ ] `ENLightboxAPI.setTheme` re-applies at runtime via a **single** root write (assert one mutation, D17).
-- [ ] every shipped preset passes the `a11y-audit` (axe contrast); reduced-motion respected.
-- [ ] invalid/partial theme degrades gracefully (keeps a functional lightbox), never throws on the host.
-- [ ] bundle stays ONE dependency-free file, SCSS inlined; `bundle-size` green (re-baselined if needed,
-      delta recorded); all SDD gates + cross-browser smoke green; wave-0/1 + stream-a tests still pass.
-- [ ] Mutation-verify on a load-bearing line (e.g. the override-beats-preset resolution), named test
+- [x] `ENLightboxAPI.setTheme` re-applies at runtime via a **single** root write (assert one mutation, D17).
+- [x] every shipped preset passes the `a11y-audit` (axe contrast); reduced-motion respected.
+- [x] invalid/partial theme degrades gracefully (keeps a functional lightbox), never throws on the host.
+- [x] bundle stays ONE dependency-free file, SCSS inlined; `bundle-size` green (re-baselined to 5000B
+      gzip, +473B delta recorded); all SDD gates + cross-browser smoke green; wave-0/1 + stream-a tests still pass.
+- [x] Mutation-verify on a load-bearing line (the override-beats-preset resolution), named test
       reds (file:line, before→after), revert.
-- [ ] `customCss` is **not** implemented (confirm no raw-CSS injection path exists).
+- [x] `customCss` is **not** implemented (confirm no raw-CSS injection path exists).
 
 ## First action
 Write the failing test: `preset:'dark'` applies the dark `--enlb-*` token set to the dialog root

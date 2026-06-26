@@ -99,3 +99,19 @@ Write the failing test: `layout.variant:'two-column'` with **no** image renders 
   record the delta in the PR; keep the bundle byte-identical mac↔linux (oxc).
 - registry/contract changes are reviewed as CI config (Q11). jsdom can't compute layout — assert
   classes/attrs/media-query presence + the contracts; real responsive is the cross-browser net.
+
+## stream-b amendments
+
+stream-b (theme set + full UI customization) builds on stream-a's `--enlb-*` token contract. Files
+under `src/themes/**` (owned by this spec) were extended:
+
+- `src/themes/config.ts` — `ThemeConfigBase` augmented via `declare module` with `preset`, `colors`,
+  `radius`, `maxWidth`, `fontFamily`, `customCss` (placeholder type only). `NormalizedTheme` type and
+  `normalizeTheme` function added (composed into `config.ts`'s normalizer per D8).
+- `src/themes/presets.ts` — `PRESET_TOKENS` constant: the single source of truth for preset `--enlb-*`
+  values, used by the contrast test. The SCSS classes (`.enlb-theme-dark`, `.enlb-theme-brand`) hold
+  the same values for the browser.
+
+The theme class + inline CSS var overrides are applied to the **overlay root** (not the dialog) so
+that `--enlb-overlay-bg` is also themed. `applyTheme` does a single style write (D17). These changes
+are tracked in detail by `.agentic/specs/wave-2/stream-b.md`.
