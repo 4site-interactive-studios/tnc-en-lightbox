@@ -6,7 +6,7 @@ Make the lightbox a safe, EN-aware drop-in on the small surface that remains aft
 
 ## Dependencies
 
-- **Depends on:** wave-2 (theming, layout, a11y/motion hardening, secondary CTA element shape).
+- **Depends on:** wave-0 (core lightbox, build pipeline, contracts), wave-1 (triggers, dismissal), and wave-2 (theming, layout, a11y/motion hardening, secondary CTA element shape).
 - **Unlocks:** a library that campaigns can safely drop onto EN pages without breaking forms, with documented editor config.
 
 ## Streams
@@ -23,3 +23,9 @@ Make the lightbox a safe, EN-aware drop-in on the small surface that remains aft
 - [ ] The inert `en` placeholder is removed from `src/config.ts` and `NormalizedConfig`; the `config-schema` snapshot is regenerated.
 - [ ] An editor-facing README documents the config schema, examples, dismissal behavior, and current customization limits.
 - [ ] `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`, and the e2e smoke suite are green locally.
+
+## Retrospective (complete at wave exit)
+
+- **What worked:**
+- **What didn't:**
+- **What to change:**

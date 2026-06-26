@@ -56,10 +56,21 @@ Finalize the library's behavior on Engaging Networks pages by collapsing CTA rou
 
 Write the failing test `src/core/lightbox.cta.test.ts` asserting that a CTA with `action: "close"` closes the lightbox and records dismissal via the `enlb:dismiss` event. Red first, then green.
 
+## Guardrails
+
+- **Do not create a `src/en/` directory or ownership carve-out.** Wave-3 ships no EN-specific code module; the non-interference proof is a test under `src/core/` and CTA routing is config-driven.
+- **Do not add EN page-type / page-ID detection.** `ENPageContext`, `ENPageType`, include/exclude lists, and detection spikes are out of scope per the wave-3 amendment.
+- **Do not add `cta.action: "submit"`.** It is deferred to a later wave (D5b); only `"redirect"` and `"close"` are in this stream.
+- **Do not widen `src/triggers/**` or `src/themes/**`.** This stream is allowed to touch `src/core/lightbox.ts` and `src/config.ts` only for the CTA routing and the `en` placeholder removal.
+- **Keep the bundle under the wave-2 budget.** The rebuilt `dist/en-lightbox.js` must stay within the gzip ceiling enforced by the `bundle-size` contract.
+- **No production change in `lightbox.ts` is expected.** The verification found no code defect; the only code changes are test/docs/spec files.
+
 ## Gotchas
 
 - **Navigating CTAs must stay native anchors.** The redirect path must render as `<a href>` and never use `<button>` + `location.assign`. This preserves middle/⌘-click, copy-link, and link role for assistive tech (see `LEARNINGS.md`).
 - **Single source of truth.** `cta.action` is the canonical router; do not add a separate `en.ctaBehavior` or similar config field.
 - **Inert `en` placeholder.** Removing it from `src/config.ts` also requires updating `NormalizedConfig`, the normalizer, and the config-schema snapshot; otherwise the contract check fails.
 - **Re-arming after close.** The lightbox dispatches `enlb:dismiss` on any close path; the API's `open()` path already consults the dismissal guard. The close-CTA test verifies the event is fired; the API test verifies the guard suppresses re-open.
-- **EN form fixture.** The non-interference test should use a real `<form>` with required inputs and a submit handler, and assert the rendered isolation state (not just class names) so regressions in `inert`/`aria-hidden` restore are caught.
+- **EN form fixture.** The non-interference test must use a real `<form>` with required inputs and a submit handler, and assert the rendered isolation state (not just class names) so regressions in `inert`/`aria-hidden` restore are caught.
+- **jsdom ignores `inert`.** A real-browser e2e test in Playwright is required to prove the form is non-interactive while the lightbox is open; jsdom-only assertions of isolation are necessary but not sufficient.
+- **Pre-existing attributes.** The lightbox saves and restores `inert`, `aria-hidden`, and `tabindex` on body siblings; the EN non-interference test must include a case where the form pre-sets these attributes and confirm the original values are restored after close.
