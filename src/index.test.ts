@@ -1,4 +1,5 @@
 import { describe, it, expect, afterEach, vi } from 'vitest'
+import { lightboxHost, sq } from './core/shadow-test-helpers'
 
 afterEach(() => {
   document.body.innerHTML = ''
@@ -28,7 +29,7 @@ describe('setTheme API', () => {
     const mod = await import('./index')
     const lb = mod.init({ header: 'H', body: 'B' })
     lb.open()
-    const overlay = document.querySelector('.enlb-overlay') as HTMLElement
+    const overlay = sq('.enlb-overlay') as HTMLElement
     expect(overlay.classList.contains('enlb-theme-light')).toBe(true)
 
     mod.setTheme({ preset: 'dark' })
@@ -43,7 +44,7 @@ describe('setTheme API', () => {
     const lb = mod.init({ header: 'H', body: 'B' })
     lb.open()
     mod.setTheme({ colors: { ctaBg: '#ff0000' } })
-    const overlay = document.querySelector('.enlb-overlay') as HTMLElement
+    const overlay = sq('.enlb-overlay') as HTMLElement
     expect(overlay.style.getPropertyValue('--enlb-cta-bg')).toBe('#ff0000')
     lb.close()
   })
@@ -59,10 +60,10 @@ describe('CTA routing', () => {
     const mod = await import('./index')
     mod.init({ header: 'H', body: 'B', cta: { label: 'Close', action: 'close' } })
     mod.open()
-    expect(document.querySelector('.enlb-overlay')).not.toBeNull()
-    ;(document.querySelector('.enlb-cta') as HTMLElement).click()
-    expect(document.querySelector('.enlb-overlay')).toBeNull()
+    expect(sq('.enlb-overlay')).not.toBeNull()
+    ;(sq('.enlb-cta') as HTMLElement).click()
+    expect(lightboxHost()).toBeNull()
     mod.open()
-    expect(document.querySelector('.enlb-overlay')).toBeNull()
+    expect(lightboxHost()).toBeNull()
   })
 })

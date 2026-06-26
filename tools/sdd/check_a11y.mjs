@@ -33,7 +33,22 @@ const { default: axe } = await import('axe-core')
 
 window.ENLightboxAPI.open()
 
-const results = await axe.run(window.document)
+// The lightbox renders inside an open Shadow DOM on a [data-enlb-root] host.
+// Point axe at the host so it traverses into the shadow and inspects the dialog.
+const host = window.document.querySelector('[data-enlb-root]')
+if (!host || !host.shadowRoot) {
+  console.error('a11y-audit FAIL: lightbox shadow root not found after open()')
+  process.exit(1)
+}
+
+// Guard against vacuous passes: confirm the dialog is actually inside the shadow
+// before running axe, so a silent rendering failure cannot pass the audit.
+if (!host.shadowRoot.querySelector('[role="dialog"]')) {
+  console.error('a11y-audit FAIL: dialog not found inside the shadow root')
+  process.exit(1)
+}
+
+const results = await axe.run(host)
 
 if (results.violations.length > 0) {
   console.error('a11y-audit FAIL: axe violations found')

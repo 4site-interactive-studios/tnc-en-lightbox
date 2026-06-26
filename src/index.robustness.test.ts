@@ -1,4 +1,5 @@
 import { describe, it, expect, afterEach, vi } from 'vitest'
+import { sq } from './core/shadow-test-helpers'
 
 const ENL = globalThis as typeof globalThis & {
   ENLightbox?: unknown
@@ -29,7 +30,7 @@ describe('auto-init robustness', () => {
     const lb = mod.getInstance()
     expect(lb).toBeInstanceOf(mod.Lightbox)
     lb!.open()
-    expect(document.querySelector('.enlb-overlay')?.classList.contains('enlb-theme-light')).toBe(true)
+    expect(sq('.enlb-overlay')?.classList.contains('enlb-theme-light')).toBe(true)
     lb!.close()
   })
 
@@ -39,7 +40,7 @@ describe('auto-init robustness', () => {
     const lb = mod.getInstance()
     expect(lb).toBeInstanceOf(mod.Lightbox)
     lb!.open()
-    expect(document.querySelector('.enlb-overlay')?.classList.contains('enlb-theme-light')).toBe(true)
+    expect(sq('.enlb-overlay')?.classList.contains('enlb-theme-light')).toBe(true)
     lb!.close()
   })
 
@@ -91,7 +92,7 @@ describe('auto-init robustness', () => {
     const lb = mod.getInstance()
     expect(lb).toBeInstanceOf(mod.Lightbox)
     lb!.open()
-    expect(document.querySelector('.enlb-overlay')).not.toBeNull()
+    expect(sq('.enlb-overlay')).not.toBeNull()
     lb!.close()
     readySpy.mockRestore()
   })

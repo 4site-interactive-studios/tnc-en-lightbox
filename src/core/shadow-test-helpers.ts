@@ -30,6 +30,17 @@ export function sqa<E extends Element = Element>(selector: string): E[] {
   return Array.from(shadowRoot().querySelectorAll<E>(selector))
 }
 
+/** Like sq, but returns null (instead of throwing) when the lightbox is closed. */
+export function sqSafe<E extends Element = Element>(selector: string): E | null {
+  return lightboxHost()?.shadowRoot?.querySelector<E>(selector) ?? null
+}
+
+/** Like sqa, but returns [] (instead of throwing) when the lightbox is closed. */
+export function sqaSafe<E extends Element = Element>(selector: string): E[] {
+  const root = lightboxHost()?.shadowRoot
+  return root ? Array.from(root.querySelectorAll<E>(selector)) : []
+}
+
 /** The element currently focused inside the shadow root (not the host), or null. */
 export function shadowActiveElement(): Element | null {
   return shadowRoot().activeElement
