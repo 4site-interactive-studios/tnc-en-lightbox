@@ -14,7 +14,6 @@ describe('normalizeConfig', () => {
       imagePosition: 'left',
       imageRatio: '40%',
       hideImageOnMobile: true,
-      stackBreakpoint: 640,
       closeButton: 'inside',
     })
     expect(c.en).toEqual({})

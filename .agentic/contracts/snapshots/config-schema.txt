@@ -30,3 +30,12 @@ interface NormalizedConfig {
   en: ENIntegrationConfigBase  // default src.en ?? {}
 }
 
+// Resolved layout shape from src/themes/config.ts
+interface NormalizedLayout {
+  variant: "two-column"
+  imagePosition: LayoutImagePosition
+  imageRatio: string
+  hideImageOnMobile?: boolean | undefined
+  closeButton: LayoutCloseButton
+}
+

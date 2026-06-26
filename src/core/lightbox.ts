@@ -41,12 +41,8 @@ export class Lightbox {
   }
 
   private onCtaClick = (e: MouseEvent): void => {
-    const target = e.currentTarget as HTMLElement
-    const href = target.getAttribute('data-enlb-href')
-    if (href) {
-      e.preventDefault()
-      location.assign(href)
-    }
+    // Primary redirect CTA is a native <a href>; no JS routing needed.
+    e.stopPropagation()
   }
 
   private onSecondaryCtaClick = (e: MouseEvent): void => {
@@ -238,10 +234,9 @@ export class Lightbox {
     row.className = 'enlb-cta-row'
 
     if (hasPrimary) {
-      const cta = document.createElement('button')
-      cta.type = 'button'
+      const cta = document.createElement('a')
       cta.className = 'enlb-cta'
-      if (this.config.cta!.href) cta.setAttribute('data-enlb-href', this.config.cta!.href)
+      if (this.config.cta!.href) cta.href = this.config.cta!.href
       cta.textContent = this.config.cta!.label
       row.appendChild(cta)
     }
@@ -275,7 +270,6 @@ export class Lightbox {
     const dialog = document.createElement('div')
     dialog.className = this.buildDialogClasses()
     dialog.style.setProperty('--enlb-image-ratio', this.config.layout.imageRatio)
-    dialog.style.setProperty('--enlb-stack-breakpoint', `${this.config.layout.stackBreakpoint}px`)
     dialog.setAttribute('role', 'dialog')
     dialog.setAttribute('aria-modal', 'true')
     dialog.setAttribute('aria-labelledby', this.titleId)
@@ -290,6 +284,9 @@ export class Lightbox {
     const layout = document.createElement('div')
     layout.className = this.buildLayoutClasses()
 
+    const content = document.createElement('div')
+    content.className = 'enlb-content'
+
     if (this.config.image) {
       const imageWrap = document.createElement('div')
       imageWrap.className = 'enlb-image'
@@ -298,11 +295,16 @@ export class Lightbox {
       img.src = this.config.image.src
       img.alt = this.config.image.alt ?? ''
       imageWrap.appendChild(img)
-      layout.appendChild(imageWrap)
+      if (this.config.layout.imagePosition === 'right') {
+        layout.appendChild(content)
+        layout.appendChild(imageWrap)
+      } else {
+        layout.appendChild(imageWrap)
+        layout.appendChild(content)
+      }
+    } else {
+      layout.appendChild(content)
     }
-
-    const content = document.createElement('div')
-    content.className = 'enlb-content'
 
     const title = document.createElement('h2')
     title.className = 'enlb-title'
@@ -320,7 +322,6 @@ export class Lightbox {
     const ctaRow = this.buildCtaRow()
     if (ctaRow) content.appendChild(ctaRow)
 
-    layout.appendChild(content)
     dialog.appendChild(layout)
     overlay.appendChild(dialog)
 

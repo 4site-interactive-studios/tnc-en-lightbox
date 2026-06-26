@@ -1,6 +1,6 @@
 import type { LayoutConfigBase } from '../config'
 
-export type LayoutVariant = 'two-column' | 'centered' | 'banner'
+export type LayoutVariant = 'two-column'
 export type LayoutImagePosition = 'left' | 'right' | 'top'
 export type LayoutCloseButton = 'inside' | 'outside' | 'none'
 
@@ -9,7 +9,6 @@ export interface NormalizedLayout {
   imagePosition: LayoutImagePosition
   imageRatio: string
   hideImageOnMobile?: boolean
-  stackBreakpoint: number
   closeButton: LayoutCloseButton
 }
 
@@ -19,7 +18,6 @@ declare module '../config' {
     imagePosition?: LayoutImagePosition
     imageRatio?: string
     hideImageOnMobile?: boolean
-    stackBreakpoint?: number
     closeButton?: LayoutCloseButton
   }
 }
@@ -34,7 +32,6 @@ export function normalizeLayout(
     imagePosition: src.imagePosition ?? 'left',
     imageRatio: src.imageRatio ?? '40%',
     hideImageOnMobile: src.hideImageOnMobile ?? topLevelHideImageOnMobile,
-    stackBreakpoint: src.stackBreakpoint ?? 640,
     closeButton: src.closeButton ?? 'inside',
   }
 }

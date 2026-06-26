@@ -10,17 +10,18 @@ afterEach(() => {
 })
 
 describe('Lightbox CTA', () => {
-  it('renders the primary CTA as a button element', () => {
+  it('renders the redirect CTA as an anchor with href', () => {
     const lb = new Lightbox(
       normalizeConfig({ header: 'H', body: 'B', cta: { label: 'Go', href: '#go' } }),
     )
     lb.open()
     const cta = document.querySelector('.enlb-cta')
     expect(cta).not.toBeNull()
-    expect(cta!.tagName).toBe('BUTTON')
+    expect(cta!.tagName).toBe('A')
+    expect(cta!.getAttribute('href')).toBe('#go')
   })
 
-  it('redirects via href when the primary CTA is clicked', () => {
+  it('does not call location.assign on primary CTA click', () => {
     const assignSpy = vi.fn()
     Object.defineProperty(window, 'location', {
       value: { ...window.location, assign: assignSpy },
@@ -33,7 +34,7 @@ describe('Lightbox CTA', () => {
     lb.open()
     const cta = document.querySelector('.enlb-cta') as HTMLElement
     cta.click()
-    expect(assignSpy).toHaveBeenCalledWith('#redirect')
+    expect(assignSpy).not.toHaveBeenCalled()
   })
 
   it('renders a secondary CTA next to the primary', () => {
@@ -48,10 +49,12 @@ describe('Lightbox CTA', () => {
     lb.open()
     const row = document.querySelector('.enlb-cta-row')
     expect(row).not.toBeNull()
-    const buttons = row!.querySelectorAll('button')
-    expect(buttons.length).toBe(2)
-    expect(buttons[0].textContent).toBe('Yes')
-    expect(buttons[1].textContent).toBe('Learn more')
+    const ctas = row!.querySelectorAll('.enlb-cta, .enlb-cta--secondary')
+    expect(ctas.length).toBe(2)
+    expect(ctas[0].tagName).toBe('A')
+    expect(ctas[0].textContent).toBe('Yes')
+    expect(ctas[1].tagName).toBe('BUTTON')
+    expect(ctas[1].textContent).toBe('Learn more')
   })
 
   it('renders a decline CTA when dismissLabel is provided', () => {

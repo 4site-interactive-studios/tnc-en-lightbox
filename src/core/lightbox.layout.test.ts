@@ -60,19 +60,34 @@ describe('Lightbox layout', () => {
     }
   })
 
-  it('writes imageRatio and stackBreakpoint as custom properties on the dialog', () => {
+  it('imagePosition right places the image after content in DOM order', () => {
     const lb = new Lightbox(
       normalizeConfig({
         header: 'H',
         body: 'B',
         image: { src: 'i.png' },
-        layout: { imageRatio: '35%', stackBreakpoint: 768 },
+        layout: { imagePosition: 'right' },
+      }),
+    )
+    lb.open()
+    const layout = document.querySelector('.enlb-layout') as HTMLElement
+    const children = Array.from(layout.children)
+    expect(children[0].classList.contains('enlb-content')).toBe(true)
+    expect(children[1].classList.contains('enlb-image')).toBe(true)
+  })
+
+  it('writes imageRatio as a custom property on the dialog', () => {
+    const lb = new Lightbox(
+      normalizeConfig({
+        header: 'H',
+        body: 'B',
+        image: { src: 'i.png' },
+        layout: { imageRatio: '35%' },
       }),
     )
     lb.open()
     const dialog = document.querySelector('.enlb-dialog') as HTMLElement
     expect(dialog.style.getPropertyValue('--enlb-image-ratio')).toBe('35%')
-    expect(dialog.style.getPropertyValue('--enlb-stack-breakpoint')).toBe('768px')
   })
 
   it('adds hide-image-on-mobile class from layout.hideImageOnMobile override', () => {

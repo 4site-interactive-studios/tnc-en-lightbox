@@ -8,7 +8,6 @@ describe('normalizeLayout', () => {
     expect(l.imagePosition).toBe('left')
     expect(l.imageRatio).toBe('40%')
     expect(l.hideImageOnMobile).toBe(true)
-    expect(l.stackBreakpoint).toBe(640)
     expect(l.closeButton).toBe('inside')
   })
 

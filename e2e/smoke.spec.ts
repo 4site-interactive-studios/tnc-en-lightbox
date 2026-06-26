@@ -84,6 +84,14 @@ test('exit-intent trigger opens in desktop browsers', async ({ page }, testInfo)
   await expect(page.locator('.enlb-overlay')).toBeVisible()
 })
 
+test('primary CTA is an anchor and navigates', async ({ page }) => {
+  await page.goto(harnessUrl({ ...baseConfig, triggers: { time: 50 }, cta: { label: 'Smoke CTA', href: '#cta-navigated' } }))
+  const cta = page.locator('.enlb-cta')
+  await expect(cta).toHaveAttribute('href', '#cta-navigated')
+  await cta.click()
+  await expect(page).toHaveURL(/#cta-navigated$/)
+})
+
 test('scroll-depth trigger opens after scrolling', async ({ page }) => {
   await page.goto(harnessUrl({ ...baseConfig, triggers: { scroll: 50 } }))
   await page.evaluate(() => {
@@ -92,3 +100,4 @@ test('scroll-depth trigger opens after scrolling', async ({ page }) => {
   })
   await expect(page.locator('.enlb-overlay')).toBeVisible()
 })
+
