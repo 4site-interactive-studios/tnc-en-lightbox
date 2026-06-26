@@ -169,13 +169,15 @@ interface ThemeConfig {
   customCss?: string  // '' — appended into <style data-enlb>, enlb-scoped, trusted-only (Risk R2)
 }
 interface LayoutConfig {
-  variant?: 'two-column' | 'centered' | 'banner' // default 'two-column' (image-absent ⇒ single-col, D18)
+  variant?: 'two-column'                         // default 'two-column' (image-absent ⇒ single-col, D18)
   imagePosition?: 'left' | 'right' | 'top'       // default 'left'
   imageRatio?: string                            // default '40%'
   hideImageOnMobile?: boolean                    // overrides top-level when set (D4)
-  stackBreakpoint?: number                       // default 640 (px)
   closeButton?: 'inside' | 'outside' | 'none'    // default 'inside' (initial-focus stays on dialog, N18)
 }
+// wave-2/a closeout (PR #17): 'centered'/'banner' variants and a configurable stackBreakpoint were
+// DEFERRED (BACKLOG) — they were inert as shipped; the stacking breakpoint is fixed at 640px. The
+// redirect CTA is a native <a href> (not a <button>), superseding D6's all-button framing (see LEARNINGS).
 // LayoutConfig is construct-time-only: no runtime setLayout (Decision D10). Changing layout
 // requires init() re-instantiation. setTheme exists (runtime); setLayout does not.
 

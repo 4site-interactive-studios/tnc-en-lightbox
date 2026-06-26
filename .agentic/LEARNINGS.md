@@ -18,12 +18,20 @@ surfaces the silent rot of uncaptured lessons.
 
 ## Invariants (NEVER violate)
 
-_None yet — this project hasn't earned its first invariant. Add them as concurrency/correctness
-rules are discovered, each with a file:line anchor and the failure it prevents._
+- **Navigating CTAs are native anchors, never `<button>` + `location.assign`.** A redirect/navigating
+  CTA renders as `<a href>` (`src/core/lightbox.ts` `buildCtaRow`); `<button>` is reserved for
+  non-navigating actions (close / submit / decline). A `<button>` + `location.assign` redirect loses
+  native open-in-new-tab (middle/⌘-click), copy-link, and the link role for assistive tech.
+  (wave-2/stream-a, PR #17.)
 
 ## Gotchas (have bitten us)
 
-_None yet._
+- **Don't double-reverse a flex layout, and test the RENDERED effect — not DOM order or class presence.**
+  Flip image/content with EITHER DOM order OR `flex-direction: row-reverse`, never both: a `row-reverse`
+  on a DOM-swapped layout cancels out, so `imagePosition:'right'` rendered identically to `'left'`. It
+  slipped through two fix attempts because the tests asserted class strings / DOM order — which stayed
+  "correct" while the visual was wrong. Assert the real rendered position (e.g. bounding-box `x` in a
+  real browser via `e2e/smoke.spec.ts`). (wave-2/stream-a, PR #17.)
 
 ## Historical fixes / non-obvious code
 
