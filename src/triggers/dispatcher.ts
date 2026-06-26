@@ -10,7 +10,7 @@ export interface Dispatcher {
   disarm(): void
 }
 
-function createTrigger(spec: TriggerSpec): Trigger {
+function createTrigger(spec: TriggerSpec): Trigger | null {
   switch (spec.type) {
     case 'time':
       return createTimeOnPageTrigger(spec.delayMs!)
@@ -20,6 +20,8 @@ function createTrigger(spec: TriggerSpec): Trigger {
       return createInactivityTrigger(spec.idleMs!)
     case 'exit-intent':
       return createExitIntentTrigger()
+    default:
+      return null
   }
 }
 
@@ -43,7 +45,7 @@ export function createDispatcher(specs: TriggerSpec[], onFire: () => void): Disp
     arm() {
       if (specs.length === 0) return
       fired = false
-      armed = specs.map((spec) => createTrigger(spec))
+      armed = specs.map((spec) => createTrigger(spec)).filter((t): t is Trigger => t !== null)
       for (const t of armed) {
         if (fired) break
         t.arm(fire)

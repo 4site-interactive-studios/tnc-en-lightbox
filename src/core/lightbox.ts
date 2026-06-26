@@ -83,23 +83,39 @@ export class Lightbox {
 
   open(): void {
     if (this.overlay) return
-    this.prevFocus = document.activeElement
-    this.scrollX = window.scrollX
-    this.scrollY = window.scrollY
-    this.injectStyles()
-    this.lockBackground()
-    this.overlay = this.buildDom()
-    document.body.appendChild(this.overlay)
-    this.isolateBackground()
-    document.addEventListener('keydown', this.onKeydown)
-    this.overlay.addEventListener('click', this.onOverlayClick)
-    this.dialog?.addEventListener('keydown', this.onDialogKeydown)
-    const closeBtn = this.dialog?.querySelector<HTMLElement>('.enlb-close')
-    closeBtn?.addEventListener('click', this.onCloseClick)
-    this.dialog?.querySelectorAll<HTMLElement>('.enlb-cta').forEach((cta) => {
-      cta.addEventListener('click', this.onCtaClick)
-    })
-    this.dialog?.focus()
+    try {
+      this.prevFocus = document.activeElement
+      this.scrollX = window.scrollX
+      this.scrollY = window.scrollY
+      this.injectStyles()
+      this.lockBackground()
+      this.overlay = this.buildDom()
+      document.body.appendChild(this.overlay)
+      this.isolateBackground()
+      document.addEventListener('keydown', this.onKeydown)
+      this.overlay.addEventListener('click', this.onOverlayClick)
+      this.dialog?.addEventListener('keydown', this.onDialogKeydown)
+      const closeBtn = this.dialog?.querySelector<HTMLElement>('.enlb-close')
+      closeBtn?.addEventListener('click', this.onCloseClick)
+      this.dialog?.querySelectorAll<HTMLElement>('.enlb-cta').forEach((cta) => {
+        cta.addEventListener('click', this.onCtaClick)
+      })
+      this.dialog?.focus()
+    } catch (e) {
+      this.abortOpen()
+      console.warn('[ENLightbox] open() failed:', e)
+    }
+  }
+
+  private abortOpen(): void {
+    document.removeEventListener('keydown', this.onKeydown)
+    if (this.overlay) {
+      this.overlay.remove()
+      this.overlay = null
+    }
+    this.dialog = null
+    this.restoreBackground()
+    this.prevFocus = null
   }
 
   close(): void {

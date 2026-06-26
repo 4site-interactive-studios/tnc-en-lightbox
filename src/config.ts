@@ -55,8 +55,12 @@ export interface NormalizedConfig {
 }
 
 export function normalizeConfig(input?: Partial<ENLightboxConfig>): NormalizedConfig {
-  const src = input ?? {}
+  const src = { ...(input ?? {}) } as Partial<ENLightboxConfig>
   const topLevelHideImageOnMobile = src.hideImageOnMobile ?? true
+  if (!isRecord(src.image) || typeof src.image.src !== 'string') src.image = undefined
+  if (!isRecord(src.cta)) src.cta = undefined
+  if (!isRecord(src.secondaryCta)) src.secondaryCta = undefined
+  if (!isRecord(src.triggers)) src.triggers = undefined
   return {
     header: src.header ?? '',
     body: src.body ?? '',
@@ -71,4 +75,8 @@ export function normalizeConfig(input?: Partial<ENLightboxConfig>): NormalizedCo
     theme: normalizeTheme(src.theme),
     layout: normalizeLayout(src.layout, topLevelHideImageOnMobile),
   }
+}
+
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return v !== null && typeof v === 'object' && !Array.isArray(v)
 }

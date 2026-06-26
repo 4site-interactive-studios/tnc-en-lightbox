@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { normalizeConfig } from './config'
+import { normalizeConfig, type ENLightboxConfig } from './config'
 
 describe('normalizeConfig', () => {
   it('applies defaults for the behavior flags the core uses', () => {
@@ -39,5 +39,44 @@ describe('normalizeConfig', () => {
     const c = normalizeConfig({ image, cta })
     expect(c.image).toEqual(image)
     expect(c.cta).toEqual(cta)
+  })
+})
+
+describe('normalizeConfig — wrong-typed fields degrade to defaults', () => {
+  // Wrong-typed inputs are intentional: they simulate a hand-authored config that TS would
+  // reject but the runtime must tolerate. Cast through `unknown` to bypass the type check.
+  const bad = (c: Record<string, unknown>) => normalizeConfig(c as unknown as Partial<ENLightboxConfig>)
+
+  it('degrades a non-object image to undefined', () => {
+    expect(bad({ image: 'not-an-object' }).image).toBeUndefined()
+    expect(bad({ image: 42 }).image).toBeUndefined()
+  })
+
+  it('degrades an image missing a string src to undefined', () => {
+    expect(bad({ image: { alt: 'x' } }).image).toBeUndefined()
+    expect(bad({ image: { src: 123 } }).image).toBeUndefined()
+  })
+
+  it('degrades a non-object cta to undefined', () => {
+    expect(bad({ cta: 'not-an-object' }).cta).toBeUndefined()
+  })
+
+  it('degrades a non-object secondaryCta to undefined', () => {
+    expect(bad({ secondaryCta: 'not-an-object' }).secondaryCta).toBeUndefined()
+  })
+
+  it('degrades a non-object triggers to the default empty object', () => {
+    expect(bad({ triggers: 'not-an-object' }).triggers).toEqual({})
+  })
+
+  it('degrades a non-object theme to the default theme', () => {
+    expect(bad({ theme: 'not-an-object' }).theme).toEqual({ preset: 'light', cssVars: {} })
+  })
+
+  it('degrades non-object theme.colors to the default theme', () => {
+    expect(bad({ theme: { colors: 'not-an-object' } }).theme).toEqual({
+      preset: 'light',
+      cssVars: {},
+    })
   })
 })
