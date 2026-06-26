@@ -65,17 +65,17 @@ This is the substrate the ROADMAP's additive design depends on; landing it unblo
 - Refreshed `dist/en-lightbox.js`.
 
 ## Acceptance criteria
-- [ ] `npm run typecheck` passes with the new seam; the compile-proof fixture shows a feature module
+- [x] `npm run typecheck` passes with the new seam; the compile-proof fixture shows a feature module
       *adding* a member to a base interface resolving; wave-0's 20 tests still pass.
-- [ ] `no-css-emitted`, `api-surface`, `config-schema` contracts present and **green**
+- [x] `no-css-emitted`, `api-surface`, `config-schema` contracts present and **green**
       (`python3 tools/sdd/check_contracts.py` OK); each `git diff` check uses `git add -AN`.
-- [ ] B5 tests prove: non-empty accessible name when `header` is empty; body siblings inert/`aria-hidden`
+- [x] B5 tests prove: non-empty accessible name when `header` is empty; body siblings inert/`aria-hidden`
       on open and **restored** on close; body scroll locked on open and **restored** on close/destroy;
       initial focus on the dialog root. `destroy()` leaves nothing behind.
-- [ ] `npm run build` still emits **one** minified, dependency-free JS file with SCSS inlined; the
+- [x] `npm run build` still emits **one** minified, dependency-free JS file with SCSS inlined; the
       `bundle` contract is green.
-- [ ] All four SDD gates green in CI; `npm run typecheck` and `npm run lint` clean.
-- [ ] Mutation-verify: break one load-bearing line (e.g. the inert-restore or the scroll-restore), show
+- [x] All four SDD gates green in CI; `npm run typecheck` and `npm run lint` clean.
+- [x] Mutation-verify: break one load-bearing line (e.g. the inert-restore or the scroll-restore), show
       the **named** test go red (cite file:line, before→after), then revert.
 
 ## First action

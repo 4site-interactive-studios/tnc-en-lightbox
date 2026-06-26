@@ -59,21 +59,21 @@ stream-b to build themes on.
 - Tests under `src/**`; refreshed `dist/en-lightbox.js`; this brief trued-up.
 
 ## Acceptance criteria
-- [ ] `--enlb-*` token surface with documented defaults (baseline = light); overriding a token changes
+- [x] `--enlb-*` token surface with documented defaults (baseline = light); overriding a token changes
       rendering (assert computed style/class).
-- [ ] `layout` config honored (variant/imagePosition/imageRatio/hideImageOnMobile/stackBreakpoint/
+- [x] `layout` config honored (variant/imagePosition/imageRatio/hideImageOnMobile/stackBreakpoint/
       closeButton); image-absent ⇒ single-col; hide-image default on.
-- [ ] CTA is a `<button>` (redirect still works); secondary/decline CTA renders with correct
+- [x] CTA is a `<button>` (redirect still works); secondary/decline CTA renders with correct
       focus-trap order; single-CTA case unbroken.
-- [ ] Motion gated by `prefers-reduced-motion` (`reduced-motion-guard` green); `a11y-audit` (axe) green;
+- [x] Motion gated by `prefers-reduced-motion` (`reduced-motion-guard` green); `a11y-audit` (axe) green;
       initial-focus correct across `closeButton` variants.
-- [ ] `reduced-motion-guard` + `a11y-audit` + `no-runtime-fetch` + `dist-single-file` added & green;
+- [x] `reduced-motion-guard` + `a11y-audit` + `no-runtime-fetch` + `dist-single-file` added & green;
       `bundle-size` re-baselined (delta recorded); bundle still ONE dependency-free file, SCSS inlined;
       the cross-browser smoke still green.
-- [ ] wave-0 + wave-1 tests still green; all four SDD gates green; typecheck/lint clean.
-- [ ] Mutation-verify on a load-bearing line (e.g. the image-absent single-col guard or the
+- [x] wave-0 + wave-1 tests still green; all four SDD gates green; typecheck/lint clean.
+- [x] Mutation-verify on a load-bearing line (e.g. the image-absent single-col guard or the
       stack-breakpoint media query), show the **named** test go red (file:line, before→after), revert.
-- [ ] `src/themes/** → wave-2/stream-a.md` is the first commit.
+- [x] `src/themes/** → wave-2/stream-a.md` is the first commit.
 
 ## First action
 Write the failing test: `layout.variant:'two-column'` with **no** image renders single-column (no
