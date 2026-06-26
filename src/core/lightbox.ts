@@ -42,23 +42,16 @@ export class Lightbox {
   }
 
   private onCtaClick = (e: MouseEvent): void => {
-    // Primary redirect CTA is a native <a href>; no JS routing needed.
-    e.stopPropagation()
-  }
-
-  private onSecondaryCtaClick = (e: MouseEvent): void => {
     const target = e.currentTarget as HTMLElement
     const action = target.getAttribute('data-enlb-action')
-    const href = target.getAttribute('data-enlb-href')
-    if (action === 'close' || (!href && !action)) {
+    if (action === 'close') {
       e.preventDefault()
+      e.stopPropagation()
       this.close()
       return
     }
-    if (href) {
-      e.preventDefault()
-      location.assign(href)
-    }
+    // Redirect: native <a href> handles navigation; just stop bubbling inside the dialog.
+    e.stopPropagation()
   }
 
   private onDialogKeydown = (e: KeyboardEvent): void => {
@@ -104,11 +97,7 @@ export class Lightbox {
     const closeBtn = this.dialog?.querySelector<HTMLElement>('.enlb-close')
     closeBtn?.addEventListener('click', this.onCloseClick)
     this.dialog?.querySelectorAll<HTMLElement>('.enlb-cta').forEach((cta) => {
-      if (cta.classList.contains('enlb-cta--secondary')) {
-        cta.addEventListener('click', this.onSecondaryCtaClick)
-      } else {
-        cta.addEventListener('click', this.onCtaClick)
-      }
+      cta.addEventListener('click', this.onCtaClick)
     })
     this.dialog?.focus()
   }
@@ -121,11 +110,7 @@ export class Lightbox {
     const closeBtn = this.dialog?.querySelector<HTMLElement>('.enlb-close')
     closeBtn?.removeEventListener('click', this.onCloseClick)
     this.dialog?.querySelectorAll<HTMLElement>('.enlb-cta').forEach((cta) => {
-      if (cta.classList.contains('enlb-cta--secondary')) {
-        cta.removeEventListener('click', this.onSecondaryCtaClick)
-      } else {
-        cta.removeEventListener('click', this.onCtaClick)
-      }
+      cta.removeEventListener('click', this.onCtaClick)
     })
     this.overlay.remove()
     this.overlay = null
@@ -250,6 +235,38 @@ export class Lightbox {
     return closeBtn
   }
 
+  private resolveCtaAction(
+    action: 'redirect' | 'close' | undefined,
+    href?: string,
+  ): 'redirect' | 'close' {
+    if (action === 'redirect') return 'redirect'
+    if (action === 'close') return 'close'
+    return href ? 'redirect' : 'close'
+  }
+
+  private buildCtaElement(
+    label: string,
+    className: string,
+    action?: 'redirect' | 'close',
+    href?: string,
+  ): HTMLElement {
+    const resolved = this.resolveCtaAction(action, href)
+    if (resolved === 'redirect') {
+      const el = document.createElement('a')
+      el.className = className
+      if (href) el.href = href
+      el.setAttribute('data-enlb-action', 'redirect')
+      el.textContent = label
+      return el
+    }
+    const el = document.createElement('button')
+    el.type = 'button'
+    el.className = className
+    el.setAttribute('data-enlb-action', 'close')
+    el.textContent = label
+    return el
+  }
+
   private buildCtaRow(): HTMLElement | null {
     const hasPrimary = Boolean(this.config.cta)
     const hasSecondary = Boolean(this.config.secondaryCta)
@@ -260,30 +277,19 @@ export class Lightbox {
     row.className = 'enlb-cta-row'
 
     if (hasPrimary) {
-      const cta = document.createElement('a')
-      cta.className = 'enlb-cta'
-      if (this.config.cta!.href) cta.href = this.config.cta!.href
-      cta.textContent = this.config.cta!.label
-      row.appendChild(cta)
+      const { label, action, href } = this.config.cta!
+      row.appendChild(this.buildCtaElement(label, 'enlb-cta', action, href))
     }
 
     if (hasSecondary) {
-      const cta = document.createElement('button')
-      cta.type = 'button'
-      cta.className = 'enlb-cta enlb-cta--secondary'
-      if (this.config.secondaryCta!.href) cta.setAttribute('data-enlb-href', this.config.secondaryCta!.href)
-      if (this.config.secondaryCta!.action) cta.setAttribute('data-enlb-action', this.config.secondaryCta!.action)
-      cta.textContent = this.config.secondaryCta!.label
-      row.appendChild(cta)
+      const { label, action, href } = this.config.secondaryCta!
+      row.appendChild(this.buildCtaElement(label, 'enlb-cta enlb-cta--secondary', action, href))
     }
 
     if (hasDecline) {
-      const cta = document.createElement('button')
-      cta.type = 'button'
-      cta.className = 'enlb-cta enlb-cta--secondary'
-      cta.setAttribute('data-enlb-action', 'close')
-      cta.textContent = this.config.dismissLabel!
-      row.appendChild(cta)
+      row.appendChild(
+        this.buildCtaElement(this.config.dismissLabel!, 'enlb-cta enlb-cta--secondary', 'close'),
+      )
     }
 
     return row
