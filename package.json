@@ -1,6 +1,6 @@
 {
   "name": "tnc-en-lightbox",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "A dependency-free, configurable lightbox library for Engaging Networks pages.",
   "type": "module",
   "main": "dist/en-lightbox.js",
@@ -19,7 +19,7 @@
     "contracts:generate": "npm run contracts:api-surface && npm run contracts:config-schema"
   },
   "private": true,
-  "license": "UNLICENSED",
+  "license": "MIT",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.61.1",
