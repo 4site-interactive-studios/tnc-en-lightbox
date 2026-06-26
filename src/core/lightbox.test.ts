@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach } from 'vitest'
+import { describe, it, expect, afterEach, vi } from 'vitest'
 import { Lightbox } from './lightbox'
 import { normalizeConfig } from '../config'
 
@@ -171,5 +171,24 @@ describe('Lightbox', () => {
     lb.open()
     expect(document.querySelectorAll('.enlb-overlay').length).toBe(1)
     expect(document.querySelectorAll('[role="dialog"]').length).toBe(1)
+  })
+
+  it('open() fails closed when DOM construction throws, instead of propagating into a host handler', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const lb = new Lightbox(normalizeConfig({ header: 'H', body: 'B' }))
+    const createSpy = vi.spyOn(document, 'createElement').mockImplementationOnce(() => {
+      throw new Error('dom construction failed')
+    })
+
+    expect(() => lb.open()).not.toThrow()
+    expect(document.querySelector('.enlb-overlay')).toBeNull()
+    expect(document.body.style.overflow).not.toBe('hidden')
+
+    createSpy.mockRestore()
+    warnSpy.mockRestore()
+
+    lb.open()
+    expect(document.querySelector('.enlb-overlay')).not.toBeNull()
+    lb.close()
   })
 })

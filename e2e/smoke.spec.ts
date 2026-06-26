@@ -254,3 +254,47 @@ test('EN form submits and validates after redirect CTA', async ({ page }) => {
   await assertFormSubmitsAndValidates(page)
 })
 
+test('a malformed config degrades: valid trigger still opens, no page error, EN form isolated', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', (e) => errors.push(e.message))
+  page.on('console', (msg) => {
+    if (msg.type() === 'error') errors.push(msg.text())
+  })
+  await page.goto(
+    harnessUrl({
+      header: 'Malformed',
+      body: 'B',
+      cta: { label: 'Go', href: '#' },
+      // triggers.list is non-iterable (dropped); triggers.time is valid (arms + opens)
+      triggers: { list: 123, time: 50 },
+    }),
+  )
+  expect(errors).toEqual([])
+  // Degrade, not swallow: the valid time trigger still opens the default-themed lightbox
+  const overlay = page.locator('.enlb-overlay')
+  await expect(overlay).toBeVisible()
+  await expect(overlay).toHaveClass(/enlb-theme-light/)
+  // The host EN form is isolated while the lightbox is open (host page not disrupted)
+  await expect(page.locator('#en-form')).toHaveAttribute('inert', '')
+  // Close and verify the form is interactive again
+  await page.locator('.enlb-close').click()
+  await expect(overlay).toHaveCount(0)
+  const form = page.locator('#en-form')
+  await form.locator('input[name="email"]').fill('test@example.com')
+  await expect(form.locator('input[name="email"]')).toHaveValue('test@example.com')
+})
+
+test('armTriggers with an unknown trigger type does not throw on the host page', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', (e) => errors.push(e.message))
+  page.on('console', (msg) => {
+    if (msg.type() === 'error') errors.push(msg.text())
+  })
+  await page.goto(harnessUrl({ header: 'H', body: 'B' }))
+  await expect(page.locator('.enlb-overlay')).toHaveCount(0)
+  await page.evaluate(() => {
+    ;(window as unknown as { ENLightboxAPI: { armTriggers: (c: unknown) => void } }).ENLightboxAPI.armTriggers({ list: [{ type: 'bogus' }] })
+  })
+  expect(errors).toEqual([])
+})
+

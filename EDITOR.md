@@ -17,7 +17,13 @@ On each page where the lightbox should appear, the page editor sets a global con
 <script src="https://cdn.example.com/en-lightbox.js" async></script>
 ```
 
-The script auto-instantiates from `window.ENLightbox` when it loads. It **does not open automatically** — it waits for the configured trigger (or an explicit `ENLightboxAPI.open()` call).
+`window.ENLightbox` must be set **before or alongside** the script. The script auto-instantiates from it when it loads. It **does not open automatically** — it waits for the configured trigger (or an explicit `ENLightboxAPI.open()` call).
+
+### Loading order and deferred init
+
+If the script runs while the document is still parsing (`document.readyState === "loading"`) and `window.ENLightbox` has not been set yet, auto-init is deferred **once** until the `DOMContentLoaded` event, at which point `window.ENLightbox` is re-read. This means placing the script in `<head>` ahead of the config still works — there is no polling loop, and a config declared later in the page is picked up.
+
+The script is **load-once**: a sentinel (`globalThis.__ENLightboxLoaded`) ensures that if the script is evaluated a second time (e.g. accidentally included twice), it is a no-op — no re-init, no destroy, no re-arm of triggers.
 
 For programmatic control, the library exposes `window.ENLightboxAPI`:
 
@@ -29,7 +35,7 @@ ENLightboxAPI.getInstance() // the current Lightbox instance, or null
 
 ## Config schema
 
-Every field is optional. Defaults are applied during normalization, so partial or invalid configs degrade gracefully and never throw on the host page.
+Every field is optional. Defaults are applied during normalization, so partial or invalid configs degrade gracefully and never throw on the host page. A wrong-typed field (e.g. `image` set to a string, `cta` set to a number, `triggers` set to a non-object, or `image.src` missing/non-string) degrades to its default rather than throwing, so a hand-authored config with a typo cannot disrupt the host page (including any Engaging Networks donation form). If a render error does occur while opening, the lightbox fails closed (never opens a broken overlay) and a later valid `open()` still works.
 
 ```ts
 interface ENLightboxConfig {

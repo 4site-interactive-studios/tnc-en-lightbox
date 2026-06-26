@@ -105,3 +105,19 @@ The wave-0/stream-b backfill makes additive changes to files owned by this brief
   dialog root instead of the close button.
 
 These changes are tracked in detail by `.agentic/specs/wave-0/stream-b.md`.
+
+## wave-4 hardening amendments
+
+The wave-4/stream-a production-hardening pass makes additive, behavior-preserving-on-valid-config
+changes to files owned by this brief (the wave-4 spec directory is authored in stream-b):
+
+- `src/config.ts` — `normalizeConfig` now shallow-copies its input and degrades wrong-typed fields to
+  defaults instead of passing them through: non-object `image` (or an `image.src` that is not a
+  string), and non-object `cta` / `secondaryCta` / `triggers`. Valid configs are unaffected and the
+  caller's object is never mutated. The `config-schema` snapshot stays byte-identical because the
+  coercion runs before the unchanged return-property initializers.
+- `src/core/lightbox.ts` — `open()` is wrapped in a try/catch so a render throw **fails closed**
+  (`abortOpen` tears down any partial overlay / background-isolation state and restores body
+  overflow + scroll) instead of propagating into a host Engaging Networks handler. The injected
+  `<style>` is left in place (idempotent) so a later valid `open()` still works — no latched broken
+  state.

@@ -82,12 +82,35 @@ function ensureDismissListener(): void {
   document.addEventListener('enlb:dismiss', dismissListener)
 }
 
-;(() => {
-  const cfg = (globalThis as { ENLightbox?: Partial<ENLightboxConfig> }).ENLightbox
+function autoInit(cfg: unknown): void {
   if (cfg && typeof cfg === 'object' && !('Lightbox' in cfg) && !('getInstance' in cfg)) {
-    init(cfg)
-    if (cfg.triggers) {
-      armTriggers()
+    init(cfg as Partial<ENLightboxConfig>)
+    if ((cfg as { triggers?: unknown }).triggers) armTriggers()
+  }
+}
+
+;(() => {
+  const g = globalThis as { __ENLightboxLoaded?: boolean; ENLightbox?: Partial<ENLightboxConfig> }
+  if (g.__ENLightboxLoaded) return
+  g.__ENLightboxLoaded = true
+  try {
+    const cfg = g.ENLightbox
+    if (cfg) {
+      autoInit(cfg)
+    } else if (document.readyState === 'loading') {
+      document.addEventListener(
+        'DOMContentLoaded',
+        () => {
+          try {
+            autoInit(g.ENLightbox)
+          } catch (e) {
+            console.warn('[ENLightbox] auto-init failed:', e)
+          }
+        },
+        { once: true },
+      )
     }
+  } catch (e) {
+    console.warn('[ENLightbox] auto-init failed:', e)
   }
 })()

@@ -1,5 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { createDispatcher } from './dispatcher'
+import type { TriggerSpec } from './config'
+
+// Unknown trigger types are intentional: they simulate a hand-authored config that TS would
+// reject but the runtime must tolerate. Cast through `unknown` to bypass the type check.
+const bogus = { type: 'bogus' } as unknown as TriggerSpec
 
 describe('trigger dispatcher', () => {
   beforeEach(() => {
@@ -123,6 +128,49 @@ describe('trigger dispatcher', () => {
 
     vi.advanceTimersByTime(5000)
     expect(document.querySelector('.enlb-overlay')).toBeNull()
+  })
+
+  it('a list with only an unknown trigger type does not throw and leaves the lightbox closed', async () => {
+    const mod = await import('../index')
+    expect(() =>
+      mod.init({ header: 'Hi', body: 'B', triggers: { list: [bogus], frequencyDays: 7 } }),
+    ).not.toThrow()
+    expect(() => mod.armTriggers()).not.toThrow()
+    expect(mod.getInstance()).toBeInstanceOf(mod.Lightbox)
+    vi.advanceTimersByTime(10000)
+    expect(document.querySelector('.enlb-overlay')).toBeNull()
+  })
+
+  it('a mixed list (valid time + unknown type) degrades: no throw and the valid time trigger still arms and opens', async () => {
+    const mod = await import('../index')
+    mod.init({
+      header: 'Hi',
+      body: 'B',
+      triggers: { list: [{ type: 'time', delayMs: 1000 }, bogus], frequencyDays: 7 },
+    })
+    expect(() => mod.armTriggers()).not.toThrow()
+    expect(document.querySelector('.enlb-overlay')).toBeNull()
+    vi.advanceTimersByTime(1000)
+    expect(document.querySelector('.enlb-overlay')).not.toBeNull()
+  })
+
+  it('a list with a known type missing its required param (time without delayMs) is dropped, not armed', async () => {
+    const mod = await import('../index')
+    mod.init({
+      header: 'Hi',
+      body: 'B',
+      triggers: { list: [{ type: 'time' }], frequencyDays: 7 },
+    })
+    expect(() => mod.armTriggers()).not.toThrow()
+    vi.advanceTimersByTime(100000)
+    expect(document.querySelector('.enlb-overlay')).toBeNull()
+  })
+
+  it('direct ENLightboxAPI.armTriggers({list:[{type:"bogus"}]}) does not throw on the host page', async () => {
+    const mod = await import('../index')
+    mod.init({ header: 'Hi', body: 'B', triggers: { frequencyDays: 7 } })
+    expect(() => mod.armTriggers({ list: [bogus] })).not.toThrow()
+    expect(mod.getInstance()).toBeInstanceOf(mod.Lightbox)
   })
 })
 
