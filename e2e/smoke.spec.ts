@@ -133,3 +133,38 @@ test('scroll-depth trigger opens after scrolling', async ({ page }) => {
   await expect(page.locator('.enlb-overlay')).toBeVisible()
 })
 
+test('dark theme applies dark surface color to dialog', async ({ page }) => {
+  await page.goto(
+    harnessUrl({ ...baseConfig, triggers: { time: 50 }, theme: { preset: 'dark' } }),
+  )
+  const overlay = page.locator('.enlb-overlay')
+  await expect(overlay).toHaveClass(/enlb-theme-dark/)
+  const dialog = page.locator('.enlb-dialog')
+  const bg = await dialog.evaluate((el) => getComputedStyle(el).backgroundColor)
+  expect(bg).toBe('rgb(31, 31, 31)')
+})
+
+test('per-token color override beats preset in computed style', async ({ page }) => {
+  await page.goto(
+    harnessUrl({
+      ...baseConfig,
+      triggers: { time: 50 },
+      theme: { preset: 'dark', colors: { ctaBg: '#ff0000' } },
+    }),
+  )
+  const cta = page.locator('.enlb-cta')
+  const bg = await cta.evaluate((el) => getComputedStyle(el).backgroundColor)
+  expect(bg).toBe('rgb(255, 0, 0)')
+})
+
+test('brand theme applies brand surface color to dialog', async ({ page }) => {
+  await page.goto(
+    harnessUrl({ ...baseConfig, triggers: { time: 50 }, theme: { preset: 'brand' } }),
+  )
+  const overlay = page.locator('.enlb-overlay')
+  await expect(overlay).toHaveClass(/enlb-theme-brand/)
+  const dialog = page.locator('.enlb-dialog')
+  const bg = await dialog.evaluate((el) => getComputedStyle(el).backgroundColor)
+  expect(bg).toBe('rgb(0, 61, 36)')
+})
+

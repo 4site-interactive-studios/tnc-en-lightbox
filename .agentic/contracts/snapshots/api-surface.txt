@@ -8,3 +8,4 @@ isEligible : () => boolean
 Lightbox : typeof Lightbox
 normalizeConfig : (input?: Partial<ENLightboxConfig>) => NormalizedConfig
 open : () => void
+setTheme : (theme: ThemeConfigBase) => void

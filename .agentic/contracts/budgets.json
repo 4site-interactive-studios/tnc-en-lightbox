@@ -1,6 +1,6 @@
 {
   "bundleSize": {
-    "_doc": "Gzip-size budget for dist/en-lightbox.js. Baseline before wave-2: 3058B gzip. Wave-2 stream-a adds the --enlb-* token surface, layout config/normalizer, responsive classes, CTA <button> change, secondary/decline CTA, and a11y/motion hardening. Measured post-build gzip: 4100B. Budget re-baselined to 4500B with headroom.",
-    "maxGzipBytes": 4500
+    "_doc": "Gzip-size budget for dist/en-lightbox.js. Baseline before wave-2: 3058B gzip. Wave-2 stream-a adds the --enlb-* token surface, layout config/normalizer, responsive classes, CTA <button> change, secondary/decline CTA, and a11y/motion hardening. Measured post-build gzip: 4100B. Budget re-baselined to 4500B with headroom. Wave-2 stream-b adds theme presets (dark/brand SCSS classes), normalizeTheme, applyTheme (single root write), setTheme API, and preset token constants. Measured post-build gzip: 4573B (+473B delta from stream-a). Budget re-baselined to 5000B with headroom for wave-3.",
+    "maxGzipBytes": 5000
   }
 }

@@ -25,7 +25,7 @@ interface NormalizedConfig {
   closeOnEsc: boolean  // default src.closeOnEsc ?? true
   hideImageOnMobile: boolean  // default topLevelHideImageOnMobile
   triggers: TriggersConfigBase  // default src.triggers ?? {}
-  theme: ThemeConfigBase  // default src.theme ?? {}
+  theme: NormalizedTheme  // default normalizeTheme(src.theme)
   layout: NormalizedLayout  // default normalizeLayout(src.layout, topLevelHideImageOnMobile)
   en: ENIntegrationConfigBase  // default src.en ?? {}
 }

@@ -1,6 +1,8 @@
 import { describe, it, expect, afterEach, vi } from 'vitest'
 
 afterEach(() => {
+  document.body.innerHTML = ''
+  document.head.querySelectorAll('style[data-enlb]').forEach((el) => el.remove())
   delete (globalThis as { ENLightbox?: unknown }).ENLightbox
   delete (globalThis as { ENLightboxAPI?: unknown }).ENLightboxAPI
   vi.resetModules()
@@ -18,5 +20,36 @@ describe('index auto-init', () => {
     const lb = mod.init({ header: 'Hi' })
     expect(lb).toBeInstanceOf(mod.Lightbox)
     expect(mod.getInstance()).toBe(lb)
+  })
+})
+
+describe('setTheme API', () => {
+  it('re-applies a new preset at runtime via applyTheme', async () => {
+    const mod = await import('./index')
+    const lb = mod.init({ header: 'H', body: 'B' })
+    lb.open()
+    const overlay = document.querySelector('.enlb-overlay') as HTMLElement
+    expect(overlay.classList.contains('enlb-theme-light')).toBe(true)
+
+    mod.setTheme({ preset: 'dark' })
+
+    expect(overlay.classList.contains('enlb-theme-dark')).toBe(true)
+    expect(overlay.classList.contains('enlb-theme-light')).toBe(false)
+    lb.close()
+  })
+
+  it('applies per-token color overrides at runtime', async () => {
+    const mod = await import('./index')
+    const lb = mod.init({ header: 'H', body: 'B' })
+    lb.open()
+    mod.setTheme({ colors: { ctaBg: '#ff0000' } })
+    const overlay = document.querySelector('.enlb-overlay') as HTMLElement
+    expect(overlay.style.getPropertyValue('--enlb-cta-bg')).toBe('#ff0000')
+    lb.close()
+  })
+
+  it('is a no-op when no instance is active', async () => {
+    const mod = await import('./index')
+    expect(() => mod.setTheme({ preset: 'dark' })).not.toThrow()
   })
 })
