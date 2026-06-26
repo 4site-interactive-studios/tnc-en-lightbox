@@ -1,0 +1,189 @@
+# tnc-en-lightbox — Editor & advanced-customization guide
+
+This guide is for the page editor or campaign developer who configures the lightbox on an Engaging Networks page. It is the companion to the developer README at [`README.md`](./README.md).
+
+## How the lightbox is loaded
+
+On each page where the lightbox should appear, the page editor sets a global config object and then loads the built script:
+
+```html
+<script>
+  window.ENLightbox = {
+    header: "Join the fight",
+    body: "Add your voice to protect the lands and waters we all rely on.",
+    cta: { label: "Sign now", href: "#petition", action: "redirect" },
+  };
+</script>
+<script src="https://cdn.example.com/en-lightbox.js" async></script>
+```
+
+The script auto-instantiates from `window.ENLightbox` when it loads. It **does not open automatically** — it waits for the configured trigger (or an explicit `ENLightboxAPI.open()` call).
+
+For programmatic control, the library exposes `window.ENLightboxAPI`:
+
+```js
+ENLightboxAPI.open()   // open manually (honors the dismissal frequency cap)
+ENLightboxAPI.close()  // close manually
+ENLightboxAPI.getInstance() // the current Lightbox instance, or null
+```
+
+## Config schema
+
+Every field is optional. Defaults are applied during normalization, so partial or invalid configs degrade gracefully and never throw on the host page.
+
+```ts
+interface ENLightboxConfig {
+  // ── CONTENT ─────────────────────────────────────
+  header?: string          // Dialog title (default: '')
+  body?: string            // Plain text body (default: '')
+  image?: { src: string; alt?: string } // Omit for a single-column layout
+  cta?: {                  // Primary call to action
+    label: string
+    href?: string          // Destination URL for redirect CTAs
+    action?: "redirect" | "close" // default: href ? "redirect" : "close"
+  }
+  secondaryCta?: {         // Secondary / decline-style CTA
+    label: string
+    href?: string
+    action?: "redirect" | "close" // default: href ? "redirect" : "close"
+  }
+  dismissLabel?: string    // Shorthand decline button; always action: "close"
+
+  // ── BEHAVIOR: close paths ───────────────────────
+  closeOnOverlay?: boolean // click the backdrop to close (default: true)
+  closeOnEsc?: boolean     // press Escape to close (default: true)
+  hideImageOnMobile?: boolean // hide the image column on small screens (default: true)
+
+  // ── BEHAVIOR: triggers ──────────────────────────
+  triggers?: {
+    frequencyDays?: number  // days before re-show on the same page (default: 7; 0 = every load)
+    time?: number           // open after N milliseconds
+    scroll?: number         // open after scrolling N% of the page
+    inactivity?: number     // open after N milliseconds of inactivity
+    exitIntent?: boolean    // open on mouse leaving the viewport (desktop only)
+    list?: Array<{          // explicit trigger list; preferred for composition
+      type: "time" | "scroll" | "inactivity" | "exit-intent"
+      delayMs?: number
+      percent?: number
+      idleMs?: number
+    }>
+  }
+
+  // ── PRESENTATION: layout ────────────────────────
+  layout?: {
+    variant?: "two-column" // default: "two-column"; image absent ⇒ single-column
+    imagePosition?: "left" | "right" | "top" // default: "left"
+    imageRatio?: string     // default: "40%"
+    hideImageOnMobile?: boolean // overrides the top-level flag when set
+    closeButton?: "inside" | "outside" | "none" // default: "inside"
+  }
+
+  // ── PRESENTATION: theme ─────────────────────────
+  theme?: {
+    preset?: "light" | "dark" | "brand" // default: "light"
+    colors?: {
+      overlay?: string
+      surface?: string
+      text?: string
+      title?: string
+      ctaBg?: string
+      ctaText?: string
+      secondaryCtaBg?: string
+      secondaryCtaText?: string
+      border?: string
+    }
+    radius?: string         // CSS value for border radius
+    maxWidth?: string       // CSS value for the dialog max-width
+    fontFamily?: string     // CSS value for the font family
+    // customCss is planned for a future wave and is not available yet.
+  }
+}
+```
+
+## CTA routing
+
+`cta.action` is the single source of truth for what happens when a CTA is activated:
+
+- `"redirect"` (or a CTA with an `href` and no explicit action) renders as a native `<a href>` and lets the browser navigate. Middle-click / ⌘-click / copy-link work as expected.
+- `"close"` (or a CTA with no `href` and no explicit action) renders as a `<button>` and closes the lightbox, recording dismissal so the frequency cap applies.
+
+`secondaryCta` follows the same rules. `dismissLabel` is always a close button.
+
+## Dismissal frequency
+
+The lightbox records a timestamp in `localStorage` keyed by `location.pathname` when it is shown or dismissed. It will not re-arm on that page until `frequencyDays` have elapsed.
+
+- `frequencyDays: 7` (default) — show at most once per week on this page.
+- `frequencyDays: 0` — show on every page load.
+
+If `localStorage` is unavailable (e.g., private mode), the library fails open: it treats the page as eligible and never throws.
+
+## Examples
+
+### Basic single-column lightbox
+
+```html
+<script>
+  window.ENLightbox = {
+    header: "Stay in the loop",
+    body: "Get the latest conservation news delivered to your inbox.",
+    cta: { label: "Subscribe", href: "#subscribe", action: "redirect" },
+    dismissLabel: "No thanks",
+  };
+</script>
+```
+
+### Themed two-column lightbox
+
+```html
+<script>
+  window.ENLightbox = {
+    header: "Double your impact",
+    body: "Every dollar donated today is matched through midnight.",
+    image: { src: "/img/match.jpg", alt: "Matching gift" },
+    cta: { label: "Donate now", href: "#donate", action: "redirect" },
+    secondaryCta: { label: "Learn more", href: "/matching-gift", action: "redirect" },
+    theme: { preset: "brand", colors: { ctaBg: "#006341" } },
+    layout: { imagePosition: "left" },
+  };
+</script>
+```
+
+### Multi-trigger behavior
+
+```html
+<script>
+  window.ENLightbox = {
+    header: "Before you go",
+    body: "Will you sign the petition to protect our rivers?",
+    cta: { label: "Sign now", action: "close" },
+    dismissLabel: "Not now",
+    triggers: {
+      frequencyDays: 7,
+      list: [
+        { type: "time", delayMs: 30000 },
+        { type: "exit-intent" },
+      ],
+    },
+  };
+</script>
+```
+
+The first trigger to fire wins; the others are torn down after opening.
+
+## Hosting the built artifact
+
+The built file is committed at `dist/en-lightbox.js`. It is a single, self-contained, dependency-free IIFE with all CSS inlined. Load it from your CDN or from the same domain:
+
+```html
+<script src="https://your-cdn.example.com/en-lightbox.js" async></script>
+```
+
+Because the artifact is minified and versioned per release, update the URL when you deploy a new release. The library does not fetch any runtime resources, so cache-busting is entirely under the host page's control.
+
+## Advanced customization notes
+
+- **Layout is construct-time only.** Changing `layout` requires re-initializing the lightbox.
+- **Theme is runtime-settable.** `ENLightboxAPI.setTheme({ preset: "dark" })` re-applies the theme to an open lightbox.
+- **Custom CSS injection** (`theme.customCss`) is planned for a future wave and is not yet available. Use the theme token surface (`colors`, `radius`, `maxWidth`, `fontFamily`) for customization now.
+- **No page detection.** The library does not detect Engaging Networks page type or page ID. Show the lightbox only on the pages where you place `window.ENLightbox`.

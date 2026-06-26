@@ -53,8 +53,40 @@ describe('Lightbox CTA', () => {
     expect(ctas.length).toBe(2)
     expect(ctas[0].tagName).toBe('A')
     expect(ctas[0].textContent).toBe('Yes')
-    expect(ctas[1].tagName).toBe('BUTTON')
+    expect(ctas[1].tagName).toBe('A')
     expect(ctas[1].textContent).toBe('Learn more')
+    expect(ctas[1].getAttribute('href')).toBe('#more')
+  })
+
+  it('renders a secondary close CTA as a button', () => {
+    const lb = new Lightbox(
+      normalizeConfig({
+        header: 'H',
+        body: 'B',
+        cta: { label: 'Yes', href: '#yes' },
+        secondaryCta: { label: 'No thanks', action: 'close' },
+      }),
+    )
+    lb.open()
+    const secondary = document.querySelector('.enlb-cta--secondary')
+    expect(secondary).not.toBeNull()
+    expect(secondary!.tagName).toBe('BUTTON')
+    expect(secondary!.getAttribute('data-enlb-action')).toBe('close')
+  })
+
+  it('closes the lightbox when a secondary close CTA is clicked', () => {
+    const lb = new Lightbox(
+      normalizeConfig({
+        header: 'H',
+        body: 'B',
+        cta: { label: 'Yes', href: '#yes' },
+        secondaryCta: { label: 'No thanks', action: 'close' },
+      }),
+    )
+    lb.open()
+    expect(document.querySelector('.enlb-overlay')).not.toBeNull()
+    ;(document.querySelector('.enlb-cta--secondary') as HTMLElement).click()
+    expect(document.querySelector('.enlb-overlay')).toBeNull()
   })
 
   it('renders a decline CTA when dismissLabel is provided', () => {
@@ -91,5 +123,31 @@ describe('Lightbox CTA', () => {
     expect(focusable[0].classList.contains('enlb-close')).toBe(true)
     expect(focusable[1].classList.contains('enlb-cta')).toBe(true)
     expect(focusable[2].classList.contains('enlb-cta--secondary')).toBe(true)
+  })
+
+  it('closes the lightbox and records dismissal when a CTA with action:"close" is clicked', () => {
+    const dismissHandler = vi.fn()
+    document.addEventListener('enlb:dismiss', dismissHandler)
+
+    const lb = new Lightbox(
+      normalizeConfig({
+        header: 'H',
+        body: 'B',
+        cta: { label: 'Close', action: 'close' },
+      }),
+    )
+    lb.open()
+    expect(document.querySelector('.enlb-overlay')).not.toBeNull()
+
+    const cta = document.querySelector('.enlb-cta') as HTMLElement
+    cta.click()
+
+    expect(document.querySelector('.enlb-overlay')).toBeNull()
+    expect(dismissHandler).toHaveBeenCalledOnce()
+    expect(dismissHandler).toHaveBeenCalledWith(
+      expect.objectContaining({ detail: { pathname: expect.any(String) } }),
+    )
+
+    document.removeEventListener('enlb:dismiss', dismissHandler)
   })
 })

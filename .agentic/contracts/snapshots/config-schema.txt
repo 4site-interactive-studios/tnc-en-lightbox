@@ -11,7 +11,6 @@ interface ENLightboxConfig {
   triggers?: TriggersConfigBase | undefined
   theme?: ThemeConfigBase | undefined
   layout?: LayoutConfigBase | undefined
-  en?: ENIntegrationConfigBase | undefined
 }
 
 interface NormalizedConfig {
@@ -27,7 +26,6 @@ interface NormalizedConfig {
   triggers: TriggersConfigBase  // default src.triggers ?? {}
   theme: NormalizedTheme  // default normalizeTheme(src.theme)
   layout: NormalizedLayout  // default normalizeLayout(src.layout, topLevelHideImageOnMobile)
-  en: ENIntegrationConfigBase  // default src.en ?? {}
 }
 
 // Resolved layout shape from src/themes/config.ts

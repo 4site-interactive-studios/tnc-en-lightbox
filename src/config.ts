@@ -9,12 +9,13 @@ export interface ENLightboxImage {
 export interface ENLightboxCta {
   label: string
   href?: string
+  action?: 'redirect' | 'close'
 }
 
 export interface ENLightboxSecondaryCta {
   label: string
   href?: string
-  action?: 'close'
+  action?: 'redirect' | 'close'
 }
 
 export interface TriggersConfigBase {}
@@ -22,8 +23,6 @@ export interface TriggersConfigBase {}
 export interface ThemeConfigBase {}
 
 export interface LayoutConfigBase {}
-
-export interface ENIntegrationConfigBase {}
 
 export interface ENLightboxConfig {
   header?: string
@@ -38,7 +37,6 @@ export interface ENLightboxConfig {
   triggers?: TriggersConfigBase
   theme?: ThemeConfigBase
   layout?: LayoutConfigBase
-  en?: ENIntegrationConfigBase
 }
 
 export interface NormalizedConfig {
@@ -54,7 +52,6 @@ export interface NormalizedConfig {
   triggers: TriggersConfigBase
   theme: NormalizedTheme
   layout: NormalizedLayout
-  en: ENIntegrationConfigBase
 }
 
 export function normalizeConfig(input?: Partial<ENLightboxConfig>): NormalizedConfig {
@@ -73,6 +70,5 @@ export function normalizeConfig(input?: Partial<ENLightboxConfig>): NormalizedCo
     triggers: src.triggers ?? {},
     theme: normalizeTheme(src.theme),
     layout: normalizeLayout(src.layout, topLevelHideImageOnMobile),
-    en: src.en ?? {},
   }
 }
