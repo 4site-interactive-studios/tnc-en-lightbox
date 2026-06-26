@@ -108,6 +108,7 @@ export class Lightbox {
   }
 
   private abortOpen(): void {
+    document.removeEventListener('keydown', this.onKeydown)
     if (this.overlay) {
       this.overlay.remove()
       this.overlay = null
