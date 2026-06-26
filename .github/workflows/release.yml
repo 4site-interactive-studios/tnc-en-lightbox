@@ -42,8 +42,6 @@ jobs:
       - run: npm run e2e
       - run: node tools/sdd/check_a11y.mjs
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: en-lightbox-dist
-          path: dist/en-lightbox.js
-          retention-days: 90
+      - run: gh release upload "${{ needs.release-please.outputs.tag_name }}" dist/en-lightbox.js --clobber
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
