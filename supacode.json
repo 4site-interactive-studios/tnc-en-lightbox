@@ -1,0 +1,10 @@
+{
+  "setupScript": "opencode",
+  "runScript": "pnpm dev",
+  "archiveScript": "docker compose down",
+  "worktreeBaseRef": "origin/main",
+  "openActionID": "zed",
+  "copyUntrackedOnWorktreeCreate": true,
+  "copyIgnoredOnWorktreeCreate": false,
+  "pullRequestMergeStrategy": "merge"
+}
