@@ -545,6 +545,12 @@ test('forest theme applies the forest surface color and renders an eyebrow above
   expect(eyebrowBox).not.toBeNull()
   expect(titleBox).not.toBeNull()
   expect(eyebrowBox!.y).toBeLessThan(titleBox!.y)
+
+  // The forest close button has a white backing (white box / green x) so the x
+  // is visible over the green surface and over a photograph.
+  const close = page.locator('.enlb-close')
+  const closeBg = await close.evaluate((el) => getComputedStyle(el).backgroundColor)
+  expect(closeBg).toBe('rgb(255, 255, 255)') // #fff
 })
 
 test('sky theme applies the sky surface color to the dialog', async ({ page }) => {
@@ -556,5 +562,11 @@ test('sky theme applies the sky surface color to the dialog', async ({ page }) =
   const dialog = page.locator('.enlb-dialog')
   const bg = await dialog.evaluate((el) => getComputedStyle(el).backgroundColor)
   expect(bg).toBe('rgb(167, 204, 227)') // #a7cce3
+
+  // The sky close button has a dark backing (dark box / white x), visible over
+  // the light-blue surface.
+  const close = page.locator('.enlb-close')
+  const closeBg = await close.evaluate((el) => getComputedStyle(el).backgroundColor)
+  expect(closeBg).toBe('rgb(22, 24, 29)') // #16181d
 })
 
