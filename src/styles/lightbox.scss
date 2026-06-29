@@ -11,6 +11,7 @@
   --enlb-surface-bg: #fff;
   --enlb-text: #1f1f1f;
   --enlb-title: #1f1f1f;
+  --enlb-eyebrow: var(--enlb-title);
   --enlb-cta-bg: #1a73e8;
   --enlb-cta-text: #fff;
   --enlb-secondary-cta-bg: transparent;
@@ -170,6 +171,15 @@
   margin: 0 0 var(--enlb-spacing-sm);
   color: var(--enlb-title);
   font-size: 1.25rem;
+}
+
+.enlb-eyebrow {
+  margin: 0 0 var(--enlb-spacing-sm);
+  color: var(--enlb-eyebrow);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .enlb-text {

@@ -1,12 +1,8 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { Lightbox } from './lightbox'
 import { normalizeConfig } from '../config'
-import type { ENLightboxConfig } from '../config'
 import { sq } from './shadow-test-helpers'
 
-// In the RED state `eyebrow` is not yet on ENLightboxConfig, so configs that
-// carry it are cast through `unknown` to keep the file type-checking. Once the
-// field lands (GREEN), these casts are removed.
 afterEach(() => {
   document.body.innerHTML = ''
   document.body.style.overflow = ''
@@ -16,12 +12,7 @@ afterEach(() => {
 
 describe('Lightbox eyebrow label', () => {
   it('renders .enlb-eyebrow with the configured text above .enlb-title when present', () => {
-    const cfg = {
-      header: 'Title',
-      body: 'B',
-      eyebrow: 'Example Eyebrow',
-    } as unknown as Partial<ENLightboxConfig>
-    const lb = new Lightbox(normalizeConfig(cfg))
+    const lb = new Lightbox(normalizeConfig({ header: 'Title', body: 'B', eyebrow: 'Example Eyebrow' }))
     lb.open()
 
     const eyebrow = sq('.enlb-content .enlb-eyebrow')
@@ -42,14 +33,13 @@ describe('Lightbox eyebrow label', () => {
   })
 
   it('renders NO .enlb-eyebrow element when eyebrow is an empty string', () => {
-    const cfg = { header: 'Title', body: 'B', eyebrow: '' } as unknown as Partial<ENLightboxConfig>
-    const lb = new Lightbox(normalizeConfig(cfg))
+    const lb = new Lightbox(normalizeConfig({ header: 'Title', body: 'B', eyebrow: '' }))
     lb.open()
     expect(sq('.enlb-eyebrow')).toBeNull()
   })
 
   it('degrades a wrong-typed eyebrow to no element and never throws', () => {
-    const cfg = { header: 'Title', body: 'B', eyebrow: 12345 } as unknown as Partial<ENLightboxConfig>
+    const cfg = { header: 'Title', body: 'B', eyebrow: 12345 } as unknown as Parameters<typeof normalizeConfig>[0]
     expect(() => {
       const lb = new Lightbox(normalizeConfig(cfg))
       lb.open()
@@ -58,12 +48,7 @@ describe('Lightbox eyebrow label', () => {
   })
 
   it('keeps the dialog accessible name from the title (aria-labelledby), not the eyebrow', () => {
-    const cfg = {
-      header: 'Title',
-      body: 'B',
-      eyebrow: 'Example Eyebrow',
-    } as unknown as Partial<ENLightboxConfig>
-    const lb = new Lightbox(normalizeConfig(cfg))
+    const lb = new Lightbox(normalizeConfig({ header: 'Title', body: 'B', eyebrow: 'Example Eyebrow' }))
     lb.open()
     const dialog = sq('[role="dialog"]') as HTMLElement
     expect(dialog.hasAttribute('aria-labelledby')).toBe(true)
