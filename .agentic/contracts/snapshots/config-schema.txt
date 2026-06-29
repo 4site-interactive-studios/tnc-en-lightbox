@@ -1,5 +1,6 @@
 interface ENLightboxConfig {
   header?: string | undefined
+  eyebrow?: string | undefined
   body?: string | undefined
   image?: ENLightboxImage | undefined
   cta?: ENLightboxCta | undefined
@@ -15,6 +16,7 @@ interface ENLightboxConfig {
 
 interface NormalizedConfig {
   header: string  // default src.header ?? ''
+  eyebrow: string  // default typeof src.eyebrow === 'string' ? src.eyebrow : ''
   body: string  // default src.body ?? ''
   image?: ENLightboxImage | undefined  // default src.image
   cta?: ENLightboxCta | undefined  // default src.cta
