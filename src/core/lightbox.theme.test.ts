@@ -38,6 +38,52 @@ describe('Lightbox theme application', () => {
     expect(overlay.classList.contains('enlb-theme-brand')).toBe(true)
   })
 
+  it('preset forest applies the forest theme class to the lightbox root', () => {
+    const lb = new Lightbox(
+      normalizeConfig({
+        header: 'H',
+        body: 'B',
+        theme: { preset: 'forest' as unknown as 'light' },
+      }),
+    )
+    lb.open()
+    const overlay = sq('.enlb-overlay') as HTMLElement
+    expect(overlay.classList.contains('enlb-theme-forest')).toBe(true)
+  })
+
+  it('preset sky applies the sky theme class to the lightbox root', () => {
+    const lb = new Lightbox(
+      normalizeConfig({
+        header: 'H',
+        body: 'B',
+        theme: { preset: 'sky' as unknown as 'light' },
+      }),
+    )
+    lb.open()
+    const overlay = sq('.enlb-overlay') as HTMLElement
+    expect(overlay.classList.contains('enlb-theme-sky')).toBe(true)
+  })
+
+  it('forest preset resolves its token set via normalizeTheme (preset is forest)', () => {
+    const t = normalizeTheme({ preset: 'forest' as unknown as 'light' })
+    expect(t.preset).toBe('forest')
+  })
+
+  it('sky preset resolves its token set via normalizeTheme (preset is sky)', () => {
+    const t = normalizeTheme({ preset: 'sky' as unknown as 'light' })
+    expect(t.preset).toBe('sky')
+  })
+
+  it('applyTheme switches an open lightbox to the forest preset class at runtime', () => {
+    const lb = new Lightbox(normalizeConfig({ header: 'H', body: 'B' }))
+    lb.open()
+    const overlay = sq('.enlb-overlay') as HTMLElement
+    expect(overlay.classList.contains('enlb-theme-light')).toBe(true)
+    lb.applyTheme(normalizeTheme({ preset: 'forest' as unknown as 'light' }))
+    expect(overlay.classList.contains('enlb-theme-forest')).toBe(true)
+    expect(overlay.classList.contains('enlb-theme-light')).toBe(false)
+  })
+
   it('per-token color override is applied as an inline CSS var alongside the preset class', () => {
     const lb = new Lightbox(
       normalizeConfig({
