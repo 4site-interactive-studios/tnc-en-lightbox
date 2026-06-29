@@ -10,35 +10,20 @@ afterEach(() => {
   window.scrollTo = () => undefined
 })
 
-describe('Lightbox close button (accessible size + backing)', () => {
-  it('close button has a >=44x44px tap target', () => {
+// Render + a11y invariants for the close button. The size/backing treatment is
+// CSS-only and cannot be asserted in jsdom (jsdom does not apply the shadow-root
+// stylesheet to computed style); those are verified in e2e/smoke.spec.ts against
+// a real browser (bounding box >=44x44 + non-transparent backing).
+describe('Lightbox close button (render + a11y invariants)', () => {
+  it('renders a close button (default closeButton inside)', () => {
     const lb = new Lightbox(normalizeConfig({ header: 'H', body: 'B' }))
     lb.open()
-    const close = sq('.enlb-close') as HTMLElement
-    const cs = getComputedStyle(close)
-    expect(parseFloat(cs.width)).toBeGreaterThanOrEqual(44)
-    expect(parseFloat(cs.height)).toBeGreaterThanOrEqual(44)
+    const close = sq('.enlb-close')
+    expect(close).not.toBeNull()
+    expect(close!.tagName).toBe('BUTTON')
   })
 
-  it('close button has a contrasting (non-transparent) rounded backing', () => {
-    const lb = new Lightbox(normalizeConfig({ header: 'H', body: 'B' }))
-    lb.open()
-    const close = sq('.enlb-close') as HTMLElement
-    const cs = getComputedStyle(close)
-    // A backing must be present so the x is visible over photos and surfaces.
-    expect(cs.backgroundColor).not.toBe('transparent')
-    expect(cs.backgroundColor).not.toBe('rgba(0, 0, 0, 0)')
-    // Rounded backing (circle).
-    expect(cs.borderRadius).not.toBe('0px')
-  })
-
-  it('close button is rendered when closeButton is inside (default)', () => {
-    const lb = new Lightbox(normalizeConfig({ header: 'H', body: 'B' }))
-    lb.open()
-    expect(sq('.enlb-close')).not.toBeNull()
-  })
-
-  it('close button is rendered when closeButton is outside', () => {
+  it('renders a close button when closeButton is outside', () => {
     const lb = new Lightbox(
       normalizeConfig({ header: 'H', body: 'B', layout: { closeButton: 'outside' } }),
     )
@@ -46,11 +31,17 @@ describe('Lightbox close button (accessible size + backing)', () => {
     expect(sq('.enlb-close')).not.toBeNull()
   })
 
-  it('close button is NOT rendered when closeButton is none', () => {
+  it('renders NO close button when closeButton is none', () => {
     const lb = new Lightbox(
       normalizeConfig({ header: 'H', body: 'B', layout: { closeButton: 'none' } }),
     )
     lb.open()
     expect(sq('.enlb-close')).toBeNull()
+  })
+
+  it('close button exposes an accessible name via aria-label', () => {
+    const lb = new Lightbox(normalizeConfig({ header: 'H', body: 'B' }))
+    lb.open()
+    expect(sq('.enlb-close')!.getAttribute('aria-label')).toBe('Close')
   })
 })

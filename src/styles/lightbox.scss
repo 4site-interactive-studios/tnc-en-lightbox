@@ -17,6 +17,9 @@
   --enlb-secondary-cta-bg: transparent;
   --enlb-secondary-cta-text: #1a73e8;
   --enlb-border: #e0e0e0;
+  --enlb-close-bg: rgba(0, 0, 0, 0.65);
+  --enlb-close-color: #fff;
+  --enlb-focus-ring: var(--enlb-cta-bg);
   --enlb-radius: 8px;
   --enlb-spacing-xs: 4px;
   --enlb-spacing-sm: 8px;
@@ -70,6 +73,9 @@
   --enlb-secondary-cta-bg: transparent;
   --enlb-secondary-cta-text: #ffffff;
   --enlb-border: rgba(255, 255, 255, 0.25);
+  --enlb-close-bg: #ffffff;
+  --enlb-close-color: #0d6b4e;
+  --enlb-focus-ring: #000000;
 }
 
 .enlb-theme-sky {
@@ -82,6 +88,9 @@
   --enlb-secondary-cta-bg: transparent;
   --enlb-secondary-cta-text: #16181d;
   --enlb-border: rgba(0, 0, 0, 0.15);
+  --enlb-close-bg: #16181d;
+  --enlb-close-color: #ffffff;
+  --enlb-focus-ring: #2b6da6;
 }
 
 // Centered content + centered CTA row for the mockup-faithful forest/sky look.
@@ -143,10 +152,16 @@
   position: absolute;
   top: var(--enlb-spacing-xs);
   right: var(--enlb-spacing-xs);
-  padding: var(--enlb-spacing-xs) var(--enlb-spacing-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
   border: 0;
-  background: transparent;
-  color: var(--enlb-text);
+  border-radius: 50%;
+  background: var(--enlb-close-bg);
+  color: var(--enlb-close-color);
   font-size: 24px;
   line-height: 1;
   cursor: pointer;
@@ -163,7 +178,6 @@
 .enlb-dialog.enlb-close--outside .enlb-close {
   top: calc(-1 * (24px + var(--enlb-spacing-sm)));
   right: 0;
-  color: #fff;
 }
 
 .enlb-layout {
@@ -289,12 +303,8 @@
 }
 
 .enlb-cta:focus-visible,
-.enlb-cta--secondary:focus-visible {
-  outline: 2px solid var(--enlb-cta-bg);
-  outline-offset: 2px;
-}
-
+.enlb-cta--secondary:focus-visible,
 .enlb-close:focus-visible {
-  outline: 2px solid var(--enlb-cta-bg);
+  outline: 2px solid var(--enlb-focus-ring);
   outline-offset: 2px;
 }

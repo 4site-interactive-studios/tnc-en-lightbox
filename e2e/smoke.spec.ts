@@ -498,3 +498,63 @@ test('host --enlb-* custom-property overrides do not affect the lightbox theme',
   expect(bg).toBe('rgb(255, 255, 255)')
 })
 
+// ── Accessible close button (>=44x44 tap target + contrasting backing) ─────────
+// jsdom cannot apply the shadow-root stylesheet to computed style, so the size
+// and backing are verified here against a real browser.
+test('close button has a >=44x44 tap target with a non-transparent rounded backing', async ({ page }) => {
+  await page.goto(harnessUrl({ ...baseConfig, triggers: { time: 50 } }))
+  const close = page.locator('.enlb-close')
+  await expect(close).toBeVisible()
+  const box = await close.boundingBox()
+  expect(box).not.toBeNull()
+  expect(box!.width).toBeGreaterThanOrEqual(44)
+  expect(box!.height).toBeGreaterThanOrEqual(44)
+  // A backing must be present so the x is visible over photographs and surfaces.
+  const bg = await close.evaluate((el) => getComputedStyle(el).backgroundColor)
+  expect(bg).not.toBe('rgba(0, 0, 0, 0)')
+  expect(bg).not.toBe('transparent')
+  // Rounded backing (circle).
+  const radius = await close.evaluate((el) => getComputedStyle(el).borderRadius)
+  expect(radius).not.toBe('0px')
+})
+
+// ── Wave-5 design refresh: eyebrow + forest/sky presets ───────────────────────
+test('forest theme applies the forest surface color and renders an eyebrow above the title', async ({ page }) => {
+  await page.goto(
+    harnessUrl({
+      ...baseConfig,
+      header: 'Stay with us',
+      eyebrow: 'Last Chance',
+      triggers: { time: 50 },
+      theme: { preset: 'forest' },
+    }),
+  )
+  const overlay = page.locator('.enlb-overlay')
+  await expect(overlay).toHaveClass(/enlb-theme-forest/)
+  const dialog = page.locator('.enlb-dialog')
+  const bg = await dialog.evaluate((el) => getComputedStyle(el).backgroundColor)
+  expect(bg).toBe('rgb(13, 107, 78)') // #0d6b4e
+
+  // The eyebrow renders above the title.
+  const eyebrow = page.locator('.enlb-eyebrow')
+  await expect(eyebrow).toBeVisible()
+  await expect(eyebrow).toHaveText('Last Chance')
+  const title = page.locator('.enlb-title')
+  const eyebrowBox = await eyebrow.boundingBox()
+  const titleBox = await title.boundingBox()
+  expect(eyebrowBox).not.toBeNull()
+  expect(titleBox).not.toBeNull()
+  expect(eyebrowBox!.y).toBeLessThan(titleBox!.y)
+})
+
+test('sky theme applies the sky surface color to the dialog', async ({ page }) => {
+  await page.goto(
+    harnessUrl({ ...baseConfig, triggers: { time: 50 }, theme: { preset: 'sky' } }),
+  )
+  const overlay = page.locator('.enlb-overlay')
+  await expect(overlay).toHaveClass(/enlb-theme-sky/)
+  const dialog = page.locator('.enlb-dialog')
+  const bg = await dialog.evaluate((el) => getComputedStyle(el).backgroundColor)
+  expect(bg).toBe('rgb(167, 204, 227)') // #a7cce3
+})
+
