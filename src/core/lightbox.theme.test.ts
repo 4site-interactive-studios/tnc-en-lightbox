@@ -40,11 +40,7 @@ describe('Lightbox theme application', () => {
 
   it('preset forest applies the forest theme class to the lightbox root', () => {
     const lb = new Lightbox(
-      normalizeConfig({
-        header: 'H',
-        body: 'B',
-        theme: { preset: 'forest' as unknown as 'light' },
-      }),
+      normalizeConfig({ header: 'H', body: 'B', theme: { preset: 'forest' } }),
     )
     lb.open()
     const overlay = sq('.enlb-overlay') as HTMLElement
@@ -53,11 +49,7 @@ describe('Lightbox theme application', () => {
 
   it('preset sky applies the sky theme class to the lightbox root', () => {
     const lb = new Lightbox(
-      normalizeConfig({
-        header: 'H',
-        body: 'B',
-        theme: { preset: 'sky' as unknown as 'light' },
-      }),
+      normalizeConfig({ header: 'H', body: 'B', theme: { preset: 'sky' } }),
     )
     lb.open()
     const overlay = sq('.enlb-overlay') as HTMLElement
@@ -65,12 +57,12 @@ describe('Lightbox theme application', () => {
   })
 
   it('forest preset resolves its token set via normalizeTheme (preset is forest)', () => {
-    const t = normalizeTheme({ preset: 'forest' as unknown as 'light' })
+    const t = normalizeTheme({ preset: 'forest' })
     expect(t.preset).toBe('forest')
   })
 
   it('sky preset resolves its token set via normalizeTheme (preset is sky)', () => {
-    const t = normalizeTheme({ preset: 'sky' as unknown as 'light' })
+    const t = normalizeTheme({ preset: 'sky' })
     expect(t.preset).toBe('sky')
   })
 
@@ -79,7 +71,7 @@ describe('Lightbox theme application', () => {
     lb.open()
     const overlay = sq('.enlb-overlay') as HTMLElement
     expect(overlay.classList.contains('enlb-theme-light')).toBe(true)
-    lb.applyTheme(normalizeTheme({ preset: 'forest' as unknown as 'light' }))
+    lb.applyTheme(normalizeTheme({ preset: 'forest' }))
     expect(overlay.classList.contains('enlb-theme-forest')).toBe(true)
     expect(overlay.classList.contains('enlb-theme-light')).toBe(false)
   })

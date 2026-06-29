@@ -30,36 +30,27 @@ function contrastRatio(fg: string, bg: string): number {
 const AA_NORMAL_TEXT = 4.5
 const AA_UI_COMPONENT = 3
 
-// While 'forest'/'sky' are not yet on the ThemePreset union, access tokens
-// through a loosely-typed view so the extended loops compile. The GREEN commit
-// adds the presets to the union and removes this cast. Token access is deferred
-// into each `it` so a missing preset fails that test (not the whole file).
-const TOKENS_BY_NAME = PRESET_TOKENS as Record<string, Record<string, string>>
-function tokens(preset: string): Record<string, string> {
-  return TOKENS_BY_NAME[preset]
-}
-
 describe('preset WCAG contrast (axe-relevant)', () => {
   for (const preset of ['light', 'dark', 'brand', 'forest', 'sky'] as const) {
+    const tokens = PRESET_TOKENS[preset]
+    const surface = tokens['--enlb-surface-bg']
+    const ctaBg = tokens['--enlb-cta-bg']
+
     describe(`${preset} preset`, () => {
       it('body text on surface meets WCAG AA (4.5:1)', () => {
-        const t = tokens(preset)
-        expect(contrastRatio(t['--enlb-text'], t['--enlb-surface-bg'])).toBeGreaterThanOrEqual(AA_NORMAL_TEXT)
+        expect(contrastRatio(tokens['--enlb-text'], surface)).toBeGreaterThanOrEqual(AA_NORMAL_TEXT)
       })
 
       it('title text on surface meets WCAG AA (4.5:1)', () => {
-        const t = tokens(preset)
-        expect(contrastRatio(t['--enlb-title'], t['--enlb-surface-bg'])).toBeGreaterThanOrEqual(AA_NORMAL_TEXT)
+        expect(contrastRatio(tokens['--enlb-title'], surface)).toBeGreaterThanOrEqual(AA_NORMAL_TEXT)
       })
 
       it('CTA text on CTA background meets WCAG AA (4.5:1)', () => {
-        const t = tokens(preset)
-        expect(contrastRatio(t['--enlb-cta-text'], t['--enlb-cta-bg'])).toBeGreaterThanOrEqual(AA_NORMAL_TEXT)
+        expect(contrastRatio(tokens['--enlb-cta-text'], ctaBg)).toBeGreaterThanOrEqual(AA_NORMAL_TEXT)
       })
 
       it('secondary CTA text on surface meets WCAG AA (4.5:1)', () => {
-        const t = tokens(preset)
-        expect(contrastRatio(t['--enlb-secondary-cta-text'], t['--enlb-surface-bg'])).toBeGreaterThanOrEqual(AA_NORMAL_TEXT)
+        expect(contrastRatio(tokens['--enlb-secondary-cta-text'], surface)).toBeGreaterThanOrEqual(AA_NORMAL_TEXT)
       })
     })
   }
@@ -74,9 +65,9 @@ describe('preset token completeness', () => {
   ]
   for (const preset of ['light', 'dark', 'brand', 'forest', 'sky'] as const) {
     it(`${preset} preset defines all color tokens`, () => {
-      const t = tokens(preset)
+      const tokens = PRESET_TOKENS[preset]
       for (const key of required) {
-        expect(t[key]).toBeDefined()
+        expect(tokens[key]).toBeDefined()
       }
     })
   }
@@ -86,19 +77,26 @@ describe('preset token completeness', () => {
 // The --enlb-focus-ring and --enlb-close-* tokens are SCSS-only (not ThemeColors,
 // so not in PRESET_TOKENS). These hex values mirror the SCSS .enlb-theme-forest
 // / .enlb-theme-sky classes and the :host defaults — keep them in sync.
+//
+// forest: the white CTA means var(--enlb-cta-bg) is white, so the default focus
+// ring would be invisible on the white close box. forest overrides --enlb-focus-ring
+// to pure black (#000000) — the brief's "near-black #16181d" gives only 2.73:1 on
+// the green surface (fails); pure black gives 3.23:1. sky's dark close box (#16181d)
+// means the default black ring would match the box (1:1), so sky overrides to a
+// medium blue (#2b6da6) that clears 3:1 against both the dark box and the light surface.
 describe('forest/sky focus-ring + close-button contrast (WCAG 1.4.11)', () => {
-  it('forest focus-ring (#16181d) >=3:1 vs surface and the white close-box', () => {
-    const surface = tokens('forest')['--enlb-surface-bg'] // #0d6b4e
+  it('forest focus-ring (#000000) >=3:1 vs surface and the white close-box', () => {
+    const surface = PRESET_TOKENS.forest['--enlb-surface-bg'] // #0d6b4e
     const closeBox = '#ffffff' // forest close backing (white box / green x)
-    const ring = '#16181d' // forest --enlb-focus-ring override
+    const ring = '#000000' // forest --enlb-focus-ring override
     expect(contrastRatio(ring, surface)).toBeGreaterThanOrEqual(AA_UI_COMPONENT)
     expect(contrastRatio(ring, closeBox)).toBeGreaterThanOrEqual(AA_UI_COMPONENT)
   })
 
-  it('sky focus-ring (cta-bg #16181d) >=3:1 vs surface and the dark close-box', () => {
-    const surface = tokens('sky')['--enlb-surface-bg'] // #a7cce3
+  it('sky focus-ring (#2b6da6) >=3:1 vs surface and the dark close-box', () => {
+    const surface = PRESET_TOKENS.sky['--enlb-surface-bg'] // #a7cce3
     const closeBox = '#16181d' // sky close backing (dark box / white x)
-    const ring = tokens('sky')['--enlb-cta-bg'] // sky inherits --enlb-focus-ring: var(--enlb-cta-bg)
+    const ring = '#2b6da6' // sky --enlb-focus-ring override
     expect(contrastRatio(ring, surface)).toBeGreaterThanOrEqual(AA_UI_COMPONENT)
     expect(contrastRatio(ring, closeBox)).toBeGreaterThanOrEqual(AA_UI_COMPONENT)
   })

@@ -60,6 +60,51 @@
   --enlb-border: #1a5c3a;
 }
 
+.enlb-theme-forest {
+  --enlb-overlay-bg: rgba(0, 20, 10, 0.7);
+  --enlb-surface-bg: #0d6b4e;
+  --enlb-text: #ffffff;
+  --enlb-title: #ffffff;
+  --enlb-cta-bg: #ffffff;
+  --enlb-cta-text: #0d6b4e;
+  --enlb-secondary-cta-bg: transparent;
+  --enlb-secondary-cta-text: #ffffff;
+  --enlb-border: rgba(255, 255, 255, 0.25);
+}
+
+.enlb-theme-sky {
+  --enlb-overlay-bg: rgba(0, 0, 0, 0.6);
+  --enlb-surface-bg: #a7cce3;
+  --enlb-text: #16181d;
+  --enlb-title: #16181d;
+  --enlb-cta-bg: #16181d;
+  --enlb-cta-text: #ffffff;
+  --enlb-secondary-cta-bg: transparent;
+  --enlb-secondary-cta-text: #16181d;
+  --enlb-border: rgba(0, 0, 0, 0.15);
+}
+
+// Centered content + centered CTA row for the mockup-faithful forest/sky look.
+// Scoped under the new theme classes so light/dark/brand stay left-aligned.
+.enlb-theme-forest .enlb-content,
+.enlb-theme-sky .enlb-content {
+  text-align: center;
+}
+
+.enlb-theme-forest .enlb-cta-row,
+.enlb-theme-sky .enlb-cta-row {
+  justify-content: center;
+}
+
+// Secondary/dismiss link renders as an underlined italic text link under the
+// new themes (transparent bg). Scoped so existing presets keep their bordered look.
+.enlb-theme-forest .enlb-cta--secondary,
+.enlb-theme-sky .enlb-cta--secondary {
+  font-style: italic;
+  text-decoration: underline;
+  border: 0;
+}
+
 .enlb-overlay {
   position: fixed;
   inset: 0;
