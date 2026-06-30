@@ -4,7 +4,7 @@ export type LayoutVariant = 'two-column'
 export type LayoutImagePosition = 'left' | 'right' | 'top'
 export type LayoutCloseButton = 'inside' | 'outside' | 'none'
 
-export type ThemePreset = 'light' | 'dark' | 'brand'
+export type ThemePreset = 'light' | 'dark' | 'brand' | 'forest' | 'sky'
 
 export interface ThemeColors {
   overlay?: string
@@ -46,7 +46,7 @@ export interface NormalizedTheme {
   cssVars: Record<string, string>
 }
 
-const VALID_PRESETS: ThemePreset[] = ['light', 'dark', 'brand']
+const VALID_PRESETS: ThemePreset[] = ['light', 'dark', 'brand', 'forest', 'sky']
 
 export function normalizeTheme(theme: ThemeConfigBase | undefined): NormalizedTheme {
   const src = theme ?? {}

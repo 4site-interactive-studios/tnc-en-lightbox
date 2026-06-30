@@ -32,6 +32,8 @@ describe('normalizeTheme', () => {
   it('preserves the specified preset', () => {
     expect(normalizeTheme({ preset: 'dark' }).preset).toBe('dark')
     expect(normalizeTheme({ preset: 'brand' }).preset).toBe('brand')
+    expect(normalizeTheme({ preset: 'forest' }).preset).toBe('forest')
+    expect(normalizeTheme({ preset: 'sky' }).preset).toBe('sky')
   })
 
   it('maps color overrides to --enlb-* token names', () => {

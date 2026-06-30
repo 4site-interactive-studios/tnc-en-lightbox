@@ -79,4 +79,20 @@ describe('normalizeConfig — wrong-typed fields degrade to defaults', () => {
       cssVars: {},
     })
   })
+
+  it('defaults eyebrow to an empty string when omitted', () => {
+    expect(normalizeConfig().eyebrow).toBe('')
+    expect(normalizeConfig({ header: 'H' }).eyebrow).toBe('')
+  })
+
+  it('preserves a string eyebrow', () => {
+    expect(normalizeConfig({ eyebrow: 'Last Chance' }).eyebrow).toBe('Last Chance')
+  })
+
+  it('degrades a wrong-typed eyebrow to an empty string', () => {
+    expect(bad({ eyebrow: 12345 }).eyebrow).toBe('')
+    expect(bad({ eyebrow: { x: 1 } }).eyebrow).toBe('')
+    expect(bad({ eyebrow: ['a'] }).eyebrow).toBe('')
+    expect(bad({ eyebrow: null }).eyebrow).toBe('')
+  })
 })

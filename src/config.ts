@@ -26,6 +26,7 @@ export interface LayoutConfigBase {}
 
 export interface ENLightboxConfig {
   header?: string
+  eyebrow?: string
   body?: string
   image?: ENLightboxImage
   cta?: ENLightboxCta
@@ -41,6 +42,7 @@ export interface ENLightboxConfig {
 
 export interface NormalizedConfig {
   header: string
+  eyebrow: string
   body: string
   image?: ENLightboxImage
   cta?: ENLightboxCta
@@ -63,6 +65,7 @@ export function normalizeConfig(input?: Partial<ENLightboxConfig>): NormalizedCo
   if (!isRecord(src.triggers)) src.triggers = undefined
   return {
     header: src.header ?? '',
+    eyebrow: typeof src.eyebrow === 'string' ? src.eyebrow : '',
     body: src.body ?? '',
     image: src.image,
     cta: src.cta,

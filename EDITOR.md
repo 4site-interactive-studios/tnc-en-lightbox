@@ -41,6 +41,7 @@ Every field is optional. Defaults are applied during normalization, so partial o
 interface ENLightboxConfig {
   // ── CONTENT ─────────────────────────────────────
   header?: string          // Dialog title (default: '')
+  eyebrow?: string         // Small uppercase label rendered above the title (default: '')
   body?: string            // Plain text body (default: '')
   image?: { src: string; alt?: string } // Omit for a single-column layout
   cta?: {                  // Primary call to action
@@ -86,7 +87,7 @@ interface ENLightboxConfig {
 
   // ── PRESENTATION: theme ─────────────────────────
   theme?: {
-    preset?: "light" | "dark" | "brand" // default: "light"
+    preset?: "light" | "dark" | "brand" | "forest" | "sky" // default: "light"
     colors?: {
       overlay?: string
       surface?: string
@@ -155,6 +156,35 @@ If `localStorage` is unavailable (e.g., private mode), the library fails open: i
 </script>
 ```
 
+### Eyebrow + forest preset (mockup-faithful look)
+
+The `eyebrow` is a small uppercase label rendered above the title. The `forest`
+and `sky` presets apply the client mockup treatment — a deep-green or light-blue
+surface with a centered content block — from `theme.preset` alone. They pair
+naturally with a specific image side (forest → `imagePosition: "right"`,
+sky → `imagePosition: "left"`), but the image side is a separate `layout`
+choice and is not forced by the theme. The client typically uses a single CTA;
+when a `secondaryCta`/`dismissLabel` is present under `forest`/`sky` it renders
+as an underlined italic text link.
+
+```html
+<script>
+  window.ENLightbox = {
+    eyebrow: "Last chance",
+    header: "Don't go yet",
+    body: "Add your voice while you're here.",
+    image: { src: "/img/forest.jpg", alt: "Forest" },
+    cta: { label: "Sign the petition", href: "#petition", action: "redirect" },
+    theme: { preset: "forest" },
+    layout: { imagePosition: "right" },
+  };
+</script>
+```
+
+`sky` is the same shape with `theme: { preset: "sky" }` and
+`layout: { imagePosition: "left" }`. All preset colors are starting points and
+are fully overridable via `theme.colors`.
+
 ### Multi-trigger behavior
 
 ```html
@@ -208,6 +238,12 @@ Because each EN page embeds the script independently, updating the lightbox vers
   documented theme token surface (`colors`, `radius`, `maxWidth`, `fontFamily`);
   host-page stylesheets have no effect on the lightbox.
 - **Layout is construct-time only.** Changing `layout` requires re-initializing the lightbox.
+- **Close button.** The × is a ≥44×44px rounded button with a contrasting backing
+  so it stays visible over photographs and surface colors across every theme.
+  `layout.closeButton` controls placement: `"inside"` (default, top-right of the
+  dialog), `"outside"` (sits above the dialog, not clipped), or `"none"` (no close
+  button — rely on the CTA, ESC, or overlay click). The backing and focus-ring
+  colors are themed via internal tokens; you do not configure them directly.
 - **Theme is runtime-settable.** `ENLightboxAPI.setTheme({ preset: "dark" })` re-applies the theme to an open lightbox.
 - **Custom CSS injection** (`theme.customCss`) is planned for a future wave and is not yet available. Use the theme token surface (`colors`, `radius`, `maxWidth`, `fontFamily`) for customization now.
 - **No page detection.** The library does not detect Engaging Networks page type or page ID. Show the lightbox only on the pages where you place `window.ENLightbox`.

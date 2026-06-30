@@ -373,6 +373,13 @@ export class Lightbox {
       layout.appendChild(content)
     }
 
+    if (this.config.eyebrow) {
+      const eyebrow = document.createElement('div')
+      eyebrow.className = 'enlb-eyebrow'
+      eyebrow.textContent = this.config.eyebrow
+      content.appendChild(eyebrow)
+    }
+
     const title = document.createElement('h2')
     title.className = 'enlb-title'
     title.id = this.titleId
