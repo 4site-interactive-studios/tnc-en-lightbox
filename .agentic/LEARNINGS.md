@@ -32,7 +32,12 @@ surfaces the silent rot of uncaptured lessons.
   yields NO accessible name. (wave-4/stream-c, PR #32.)
 - **`:host { all: initial }` does NOT reset CSS custom properties.** Inheritable props are reset, but
   `--enlb-*` tokens inherit through the shadow boundary from the host `:root`, so every token the styles
-  consume MUST have a `:host` default — otherwise a host page's `:root { --enlb-* }` bleeds in. (wave-4/stream-c, PR #32.)
+  consume MUST have a `:host` default — otherwise a host page's `:root { --enlb-* }` bleeds in. Later
+  wave additions go in the same `:host` block (`src/styles/lightbox.scss:5-32`); wave-5 added
+  `--enlb-eyebrow` (line 14), `--enlb-close-bg` (line 20), `--enlb-close-color` (line 21),
+  `--enlb-focus-ring` (line 22). Adding a token the styles consume WITHOUT a `:host` default
+  silently breaks for any host page that happens to set that custom property. (wave-4/stream-c, PR #32;
+  wave-5 recurrence, PR #41.)
 - **The asset must never throw on the host page.** Auto-init and `open()` are wrapped (try/catch → one
   `console.warn`, never re-throw); `normalizeConfig`/`normalizeTriggers` degrade wrong-typed or unknown
   input to defaults rather than throwing (e.g. unknown `triggers.list` types are dropped before reaching
@@ -52,12 +57,34 @@ surfaces the silent rot of uncaptured lessons.
   outside × (positioned above the dialog at a negative `top`) isn't clipped; `.enlb-scroll` carries the
   `border-radius` so flush images still get rounded corners. Test it in a real browser (jsdom computes no
   clipping). (wave-4/stream-c + polish, PRs #32/#37.)
-- **The browser's native focus ring renders on the programmatically-focused dialog container.** On open the
-  dialog (`tabindex=-1`) is `.focus()`'d, so the browser draws its default outline around the whole modal
-  (looks like a stray border, in the user's OS focus-ring colour). Suppress it
-  (`.enlb-dialog:focus { outline: none }` — the container is never keyboard-navigated) and give the
-  interactive elements explicit `:focus-visible` rings with a ≥3:1-contrast token (NOT `--enlb-border`
-  #e0e0e0, which fails WCAG 1.4.11 — use `--enlb-cta-bg`). (wave-4 polish, PR #37.)
+- **Focus rings must clear WCAG 1.4.11 (≥3:1) against BOTH the surface AND any element backing the
+  focused control.** The close button sits on its own `--enlb-close-bg` box, so the ring has to clear
+  contrast against TWO backgrounds at once (the dialog surface AND the close-box backing). Reusing
+  `--enlb-cta-bg` as the ring colour breaks when it collides with either — proven in wave-5: `forest`
+  has cta-bg `#fff` AND close-bg `#fff`, so a default ring is invisible on the white close box; only
+  `#000000` clears both the green surface (~3.23:1) and the white box (21:1). `sky` has dark close-bg
+  `#16181d` which equals the default ring at 1:1, so it overrides to `#2b6da6` (3.23:1 surface /
+  3.25:1 box). Use the dedicated `--enlb-focus-ring` token (default `var(--enlb-cta-bg)`, preserving
+  light/dark/brand; `src/styles/lightbox.scss:22`, forest override line 78, sky override line 93) and
+  apply it to EVERY `:focus-visible` rule on `.enlb-cta` / `.enlb-cta--secondary` / `.enlb-close`
+  (`src/styles/lightbox.scss:305-309`). NEVER use `--enlb-border` `#e0e0e0` (fails the 1.4.11 floor).
+  Separately suppress `.enlb-dialog:focus { outline: none }` (scss:301-303) so the programmatically
+  focused container never paints the OS focus ring around the whole modal (the container is not
+  keyboard-navigated). (wave-4 polish base, PR #37; dual-contrast rule and `--enlb-focus-ring`
+  token, wave-5, PR #41.)
+
+- **jsdom does NOT apply the shadow-root stylesheet to `getComputedStyle`.** Calling
+  `getComputedStyle(el)` on an element inside the open Shadow DOM returns UA defaults (e.g.
+  `width: "auto"`, `backgroundColor: "rgba(0, 0, 0, 0)"`), NOT the rules from the injected `<style>`
+  block — so any assertion that reads computed style (size, backing colour, focus-ring colour, etc.)
+  must be verified in a REAL browser via Playwright e2e, not in unit tests. Unit tests cover only
+  what jsdom CAN see: rendered DOM presence/class, aria/labels, and the non-style aspects of the
+  contract. Wave-5 added three e2e assertions in `e2e/smoke.spec.ts` — close button `boundingBox()` ≥
+  44×44, non-transparent rounded `backgroundColor`/`borderRadius`, plus per-theme
+  `getComputedStyle(dialog).backgroundColor` for `forest` (`rgb(13, 107, 78)`) and `sky`
+  (`rgb(167, 204, 227)`) — because no jsdom unit test could prove the shadow stylesheet applied.
+  Don't add a unit test for a styled effect; if jsdom can't read it, e2e is the only honest proof.
+  (wave-5, PR #41.)
 
 ## Historical fixes / non-obvious code
 
