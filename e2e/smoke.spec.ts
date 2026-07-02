@@ -498,6 +498,31 @@ test('outside close button is visible and clickable (not clipped)', async ({ pag
   await expect(overlay).toHaveCount(0)
 })
 
+// ── Outside close leaves no padding band at the top (issue #49) ───────────────
+// The outside close sits at top:-32px (above the dialog), so the dialog needs NO
+// top padding to accommodate it. The old padding-top: calc(24px + spacing-md) =
+// 40px painted a colored band above the content. With a two-column (image)
+// inside-close... here outside-close two-column: the layout must start at the
+// dialog's top edge (gap ≈ 0), not 40px down.
+test('outside close button leaves no padding band above the content', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === 'Mobile Chrome', 'desktop two-column layout')
+  await page.goto(
+    harnessUrl({ ...baseConfig, triggers: { time: 50 }, layout: { closeButton: 'outside' } }),
+  )
+  const dialog = page.locator('.enlb-dialog')
+  const scroll = page.locator('.enlb-scroll')
+  await expect(dialog).toBeVisible()
+
+  const dialogBox = await dialog.boundingBox()
+  const scrollBox = await scroll.boundingBox()
+  expect(dialogBox).not.toBeNull()
+  expect(scrollBox).not.toBeNull()
+  // The scroll wrapper (which holds the layout) starts at the dialog's top edge —
+  // no 40px padding band. Tolerance 2px for border-radius clipping.
+  const gap = scrollBox!.y - dialogBox!.y
+  expect(gap).toBeLessThanOrEqual(2)
+})
+
 // ── Accessible name for empty-header dialog ───────────────────────────────────
 // When the header is empty, aria-label provides the name and aria-labelledby must
 // NOT point at an empty title node (which would yield an empty accessible name).
