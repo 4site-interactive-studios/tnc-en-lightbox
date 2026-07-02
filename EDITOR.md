@@ -156,16 +156,37 @@ If `localStorage` is unavailable (e.g., private mode), the library fails open: i
 </script>
 ```
 
-### Eyebrow + forest preset (mockup-faithful look)
+### Eyebrow + forest/sky presets (campaign mockup look)
 
 The `eyebrow` is a small uppercase label rendered above the title. The `forest`
-and `sky` presets apply the client mockup treatment — a deep-green or light-blue
-surface with a centered content block — from `theme.preset` alone. They pair
-naturally with a specific image side (forest → `imagePosition: "right"`,
-sky → `imagePosition: "left"`), but the image side is a separate `layout`
-choice and is not forced by the theme. The client typically uses a single CTA;
-when a `secondaryCta`/`dismissLabel` is present under `forest`/`sky` it renders
-as an underlined italic text link.
+and `sky` presets apply the client mockup treatment — a campaign-style 50/50
+modal — from `theme.preset` alone:
+
+- **`forest`** — deep-green content panel (`#006537`) on the **left**, image on
+  the **right**, white body text, a white primary CTA with green (`#006537`) text,
+  a white underlined-italic secondary link, and a square green close button
+  (`#006537`, white ×) over the image. Desktop modal ≈ `835px × 475px`
+  (`max-width: calc(100vw - 60px)`), `6px` radius, rounded corners clipped.
+- **`sky`** — image on the **left**, light-blue content panel (`#8DBBDC`) on the
+  **right**, near-black text (`#191919`), a black primary CTA with white text, a
+  black underlined-italic secondary link, and a plain black × close icon (no
+  backing box) over the content panel.
+
+The campaign column order is **enforced by the theme** (forest = content-left /
+image-right; sky = image-left / content-right) via CSS grid order, so
+`layout.imagePosition` has no effect on `forest`/`sky` — do not set it for these
+presets. The content is centered (flex column, `align-items: center`,
+`justify-content: center`) with bold campaign typography: a 12px uppercase
+eyebrow, a ~42px / weight-800 / line-height 1.08 heading, 15–16px body text, and
+a ~238×56 uppercase square CTA. Below ~`700px` (a forest/sky-only breakpoint;
+the global `640px` breakpoint is unchanged) the two columns stack vertically, the
+modal becomes `calc(100vw - 32px)` wide, the heading drops to ~`34px`, and the
+theme's column order is preserved top-to-bottom.
+
+The client typically uses a single CTA; when a `secondaryCta`/`dismissLabel` is
+present under `forest`/`sky` it renders as an underlined italic text link below
+the primary CTA. All preset colors are starting points and are fully overridable
+via `theme.colors`.
 
 ```html
 <script>
@@ -176,14 +197,13 @@ as an underlined italic text link.
     image: { src: "/img/forest.jpg", alt: "Forest" },
     cta: { label: "Sign the petition", href: "#petition", action: "redirect" },
     theme: { preset: "forest" },
-    layout: { imagePosition: "right" },
   };
 </script>
 ```
 
-`sky` is the same shape with `theme: { preset: "sky" }` and
-`layout: { imagePosition: "left" }`. All preset colors are starting points and
-are fully overridable via `theme.colors`.
+`sky` is the same shape with `theme: { preset: "sky" }`. (No `imagePosition` is
+needed — the theme fixes the column order.) All preset colors are starting
+points and are fully overridable via `theme.colors`.
 
 ### Multi-trigger behavior
 
@@ -239,11 +259,15 @@ Because each EN page embeds the script independently, updating the lightbox vers
   host-page stylesheets have no effect on the lightbox.
 - **Layout is construct-time only.** Changing `layout` requires re-initializing the lightbox.
 - **Close button.** The × is a ≥44×44px rounded button with a contrasting backing
-  so it stays visible over photographs and surface colors across every theme.
-  `layout.closeButton` controls placement: `"inside"` (default, top-right of the
-  dialog), `"outside"` (sits above the dialog, not clipped), or `"none"` (no close
-  button — rely on the CTA, ESC, or overlay click). The backing and focus-ring
-  colors are themed via internal tokens; you do not configure them directly.
+  so it stays visible over photographs and surface colors across `light`/`dark`/
+  `brand`. `layout.closeButton` controls placement: `"inside"` (default, top-right
+  of the dialog), `"outside"` (sits above the dialog, not clipped), or `"none"`
+  (no close button — rely on the CTA, ESC, or overlay click). The `forest` and
+  `sky` campaign presets supersede this generic treatment with their own close ×:
+  `forest` uses a square green button (`#006537`, white ×) over the image;
+  `sky` uses a plain black × with no backing box over the content panel. The
+  backing and focus-ring colors are themed via internal tokens; you do not
+  configure them directly.
 - **Theme is runtime-settable.** `ENLightboxAPI.setTheme({ preset: "dark" })` re-applies the theme to an open lightbox.
 - **Custom CSS injection** (`theme.customCss`) is planned for a future wave and is not yet available. Use the theme token surface (`colors`, `radius`, `maxWidth`, `fontFamily`) for customization now.
 - **No page detection.** The library does not detect Engaging Networks page type or page ID. Show the lightbox only on the pages where you place `window.ENLightbox`.

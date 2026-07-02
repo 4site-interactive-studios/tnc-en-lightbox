@@ -78,34 +78,72 @@ describe('preset token completeness', () => {
 // so not in PRESET_TOKENS). These hex values mirror the SCSS .enlb-theme-forest
 // / .enlb-theme-sky classes and the :host defaults — keep them in sync.
 //
-// forest: the white CTA means var(--enlb-cta-bg) is white, so the default focus
-// ring would be invisible on the white close box. forest overrides --enlb-focus-ring
-// to pure black (#000000) — the brief's "near-black #16181d" gives only 2.73:1 on
-// the green surface (fails); pure black gives 3.23:1. sky's dark close box (#16181d)
-// means the default black ring would match the box (1:1), so sky overrides to a
-// medium blue (#2b6da6) that clears 3:1 against both the dark box and the light surface.
+// forest (corrected #47): the close button is now a GREEN square (#006537, the
+// surface) with a white ×, so the close backing == the surface. A black ring
+// only reaches 2.92:1 on the darker #006537 (FAILS); a WHITE ring clears both
+// the surface and the close box at 7.20:1. sky: the close button has NO box
+// (transparent), so its backing is the light-blue surface #8DBBDC; a BLACK ring
+// clears it at 10.27:1. (The old sky ring #2b6da6 / dark box #16181d are gone.)
 describe('forest/sky focus-ring + close-button contrast (WCAG 1.4.11)', () => {
-  it('forest focus-ring (#000000) >=3:1 vs surface and the white close-box', () => {
-    const surface = PRESET_TOKENS.forest['--enlb-surface-bg'] // #0d6b4e
-    const closeBox = '#ffffff' // forest close backing (white box / green x)
-    const ring = '#000000' // forest --enlb-focus-ring override
+  it('forest focus-ring (#ffffff) >=3:1 vs surface and the green close-box', () => {
+    const surface = PRESET_TOKENS.forest['--enlb-surface-bg'] // #006537
+    const closeBox = PRESET_TOKENS.forest['--enlb-surface-bg'] // green square == surface
+    const ring = '#ffffff' // forest --enlb-focus-ring override
     expect(contrastRatio(ring, surface)).toBeGreaterThanOrEqual(AA_UI_COMPONENT)
     expect(contrastRatio(ring, closeBox)).toBeGreaterThanOrEqual(AA_UI_COMPONENT)
   })
 
-  it('sky focus-ring (#2b6da6) >=3:1 vs surface and the dark close-box', () => {
-    const surface = PRESET_TOKENS.sky['--enlb-surface-bg'] // #a7cce3
-    const closeBox = '#16181d' // sky close backing (dark box / white x)
-    const ring = '#2b6da6' // sky --enlb-focus-ring override
+  it('sky focus-ring (#000000) >=3:1 vs surface (no close box; backing = surface)', () => {
+    const surface = PRESET_TOKENS.sky['--enlb-surface-bg'] // #8DBBDC
+    const closeBox = PRESET_TOKENS.sky['--enlb-surface-bg'] // no box -> backing is the surface
+    const ring = '#000000' // sky --enlb-focus-ring override
     expect(contrastRatio(ring, surface)).toBeGreaterThanOrEqual(AA_UI_COMPONENT)
     expect(contrastRatio(ring, closeBox)).toBeGreaterThanOrEqual(AA_UI_COMPONENT)
   })
 
-  it('forest close x (#0d6b4e) on white close-box meets AA text contrast', () => {
-    expect(contrastRatio('#0d6b4e', '#ffffff')).toBeGreaterThanOrEqual(AA_NORMAL_TEXT)
+  it('forest black ring would FAIL on #006537 (guards the white-ring choice)', () => {
+    const surface = PRESET_TOKENS.forest['--enlb-surface-bg'] // #006537
+    expect(contrastRatio('#000000', surface)).toBeLessThan(AA_UI_COMPONENT)
   })
 
-  it('sky close x (#ffffff) on dark close-box (#16181d) meets AA text contrast', () => {
-    expect(contrastRatio('#ffffff', '#16181d')).toBeGreaterThanOrEqual(AA_NORMAL_TEXT)
+  it('forest close x (#ffffff) on green close-box (#006537) meets AA text contrast', () => {
+    expect(contrastRatio('#ffffff', PRESET_TOKENS.forest['--enlb-surface-bg'])).toBeGreaterThanOrEqual(AA_NORMAL_TEXT)
+  })
+
+  it('sky close x (#000000) on the light-blue surface (#8DBBDC) meets AA text contrast', () => {
+    expect(contrastRatio('#000000', PRESET_TOKENS.sky['--enlb-surface-bg'])).toBeGreaterThanOrEqual(AA_NORMAL_TEXT)
+  })
+})
+
+// ── Wave-5 forest/sky mockup CORRECTION (issue #47) ───────────────────────────
+// The shipped PR #41 colors did not match the client mockups. These assert the
+// corrected source-of-truth values before the implementation propagates them.
+describe('forest/sky corrected mockup colors (issue #47)', () => {
+  it('forest surface is #006537 (corrected from #0d6b4e)', () => {
+    expect(PRESET_TOKENS.forest['--enlb-surface-bg']).toBe('#006537')
+  })
+
+  it('forest CTA text is #006537 on a white CTA (corrected from #0d6b4e)', () => {
+    expect(PRESET_TOKENS.forest['--enlb-cta-text']).toBe('#006537')
+  })
+
+  it('sky surface is #8DBBDC (corrected from #a7cce3)', () => {
+    expect(PRESET_TOKENS.sky['--enlb-surface-bg']).toBe('#8DBBDC')
+  })
+
+  it('sky text is #191919 (corrected from #16181d)', () => {
+    expect(PRESET_TOKENS.sky['--enlb-text']).toBe('#191919')
+  })
+
+  it('sky title is #191919 (corrected from #16181d)', () => {
+    expect(PRESET_TOKENS.sky['--enlb-title']).toBe('#191919')
+  })
+
+  it('sky primary CTA background is #000000 (black, corrected from #16181d)', () => {
+    expect(PRESET_TOKENS.sky['--enlb-cta-bg']).toBe('#000000')
+  })
+
+  it('sky secondary link text is #000000 (black, corrected from #16181d)', () => {
+    expect(PRESET_TOKENS.sky['--enlb-secondary-cta-text']).toBe('#000000')
   })
 })
