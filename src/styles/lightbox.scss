@@ -509,6 +509,24 @@
   .enlb-dialog.enlb-hide-image-mobile .enlb-image {
     display: none;
   }
+
+  // On mobile the close × sits over the image (which stacks on top per the
+  // order rule above), so a theme with a transparent close backing blends into
+  // the photograph. sky's desktop close is a transparent box + black × (reads
+  // fine over the light-blue content panel); on mobile give it a semi-opaque
+  // dark backing + white × so the × is visible over ANY image. white × on
+  // rgba(0,0,0,0.6) clears ≥ ~5.7:1 worst case (over a white photo) and higher
+  // over darker photos — passes WCAG AA text (4.5:1) and 1.4.11 UI (3:1). The
+  // other themes already have opaque backings (forest green, light/dark/brand
+  // boxes) that read over an image, so only sky needs the override. The focus
+  // ring flips to white to match the × and clear the dark backing (≥3:1 vs the
+  // box). Desktop sky (transparent + black × + #000 ring) is untouched — this
+  // rule is scoped to .enlb-theme-sky .enlb-close inside the 700px query only.
+  .enlb-theme-sky .enlb-close {
+    --enlb-close-bg: rgba(0, 0, 0, 0.6);
+    --enlb-close-color: #ffffff;
+    --enlb-focus-ring: #ffffff;
+  }
 }
 
 .enlb-overlay,
