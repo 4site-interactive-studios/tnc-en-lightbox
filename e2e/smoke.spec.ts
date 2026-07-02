@@ -84,6 +84,51 @@ test.describe('hideImageOnMobile default — image visible on mobile unless expl
   })
 })
 
+// ── Mobile image order: image ALWAYS above content when stacked (issue #49) ────
+// buildDom appends per imagePosition ('right' → content-then-image DOM order), and
+// the stacked (≤700px) grid flows top→bottom in DOM order — so imagePosition:'right'
+// put the CONTENT on top on mobile. The owner wants the image always first (top) on
+// mobile for consistency, regardless of the desktop imagePosition. Asserts the
+// RENDERED bounding-box y (not DOM order / class). jsdom can't read shadow layout
+// (LEARNINGS.md), so this is e2e-only. Runs on every project at a 375px viewport.
+test.describe('mobile image order — image always above content when stacked', () => {
+  test('imagePosition right shows the image ABOVE the content on mobile', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 800 })
+    await page.goto(
+      harnessUrl({ ...baseConfig, triggers: { time: 50 }, layout: { imagePosition: 'right' } }),
+    )
+    const image = page.locator('.enlb-image')
+    const content = page.locator('.enlb-content')
+    await expect(image).toBeVisible()
+    await expect(content).toBeVisible()
+    const imageBox = await image.boundingBox()
+    const contentBox = await content.boundingBox()
+    expect(imageBox).not.toBeNull()
+    expect(contentBox).not.toBeNull()
+    // Image on top (smaller y), content below — the opposite of the content-then-image
+    // DOM order that imagePosition:'right' produces, so this is RED until the fix.
+    expect(imageBox!.y).toBeLessThan(contentBox!.y)
+  })
+
+  test('imagePosition left keeps the image ABOVE the content on mobile (no regression)', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 800 })
+    await page.goto(
+      harnessUrl({ ...baseConfig, triggers: { time: 50 }, layout: { imagePosition: 'left' } }),
+    )
+    const image = page.locator('.enlb-image')
+    const content = page.locator('.enlb-content')
+    await expect(image).toBeVisible()
+    await expect(content).toBeVisible()
+    const imageBox = await image.boundingBox()
+    const contentBox = await content.boundingBox()
+    expect(imageBox).not.toBeNull()
+    expect(contentBox).not.toBeNull()
+    // image-left DOM is already image-then-content, so the image stays on top — a
+    // regression guard that the fix must not disturb.
+    expect(imageBox!.y).toBeLessThan(contentBox!.y)
+  })
+})
+
 test('focus moves inside dialog when opened', async ({ page }) => {
   await page.goto(harnessUrl({ ...baseConfig, triggers: { time: 50 } }))
   await expect(page.locator('.enlb-dialog')).toBeFocused()
@@ -1008,7 +1053,7 @@ test('dark theme default CTA is an inverted white button with dark text', async 
 
 // ── Forest/sky responsive (~700px stack; global 640px breakpoint untouched) ────
 test.describe('forest/sky responsive stacking (~700px)', () => {
-  test('forest stacks vertically below ~700px: modal ~calc(100vw-32px), heading ~34px, content above image', async ({ page }, testInfo) => {
+  test('forest stacks vertically below ~700px: modal ~calc(100vw-32px), heading ~34px, image above content', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name === 'Mobile Chrome', 'uses a custom desktop-width viewport')
     await page.setViewportSize({ width: 680, height: 800 })
     await page.goto(
@@ -1026,15 +1071,16 @@ test.describe('forest/sky responsive stacking (~700px)', () => {
     expect(dialogBox!.width).toBeGreaterThanOrEqual(644)
     expect(dialogBox!.width).toBeLessThanOrEqual(652)
 
-    // Stacked: image and content share the same x (single column), content above
-    // image (imagePosition:'right' → DOM content-then-image → grid keeps that
-    // order top→bottom in a single column).
+    // Stacked: image and content share the same x (single column). The image is
+    // ALWAYS on top on mobile (issue #49) regardless of imagePosition — even for
+    // 'right', whose DOM order is content-then-image (grid order is flipped via a
+    // mobile-only `order` rule, NOT a double-reverse; see LEARNINGS.md).
     const imageBox = await image.boundingBox()
     const contentBox = await content.boundingBox()
     expect(imageBox).not.toBeNull()
     expect(contentBox).not.toBeNull()
     expect(Math.abs(imageBox!.x - contentBox!.x)).toBeLessThanOrEqual(2)
-    expect(contentBox!.y).toBeLessThan(imageBox!.y) // DOM order preserved: content→image
+    expect(imageBox!.y).toBeLessThan(contentBox!.y) // image on top on mobile
 
     // Heading shrinks to ~34px.
     const titleSize = await title.evaluate((el) => getComputedStyle(el).fontSize)
