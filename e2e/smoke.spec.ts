@@ -533,7 +533,7 @@ test('forest theme applies the forest surface color and renders an eyebrow above
   await expect(overlay).toHaveClass(/enlb-theme-forest/)
   const dialog = page.locator('.enlb-dialog')
   const bg = await dialog.evaluate((el) => getComputedStyle(el).backgroundColor)
-  expect(bg).toBe('rgb(13, 107, 78)') // #0d6b4e
+  expect(bg).toBe('rgb(0, 101, 55)') // #006537 (corrected from #0d6b4e)
 
   // The eyebrow renders above the title.
   const eyebrow = page.locator('.enlb-eyebrow')
@@ -546,11 +546,15 @@ test('forest theme applies the forest surface color and renders an eyebrow above
   expect(titleBox).not.toBeNull()
   expect(eyebrowBox!.y).toBeLessThan(titleBox!.y)
 
-  // The forest close button has a white backing (white box / green x) so the x
-  // is visible over the green surface and over a photograph.
+  // The forest close button is a GREEN square (#006537) with a white ×, sitting
+  // over the image area (no rounded backing). Corrected from the white box.
   const close = page.locator('.enlb-close')
   const closeBg = await close.evaluate((el) => getComputedStyle(el).backgroundColor)
-  expect(closeBg).toBe('rgb(255, 255, 255)') // #fff
+  expect(closeBg).toBe('rgb(0, 101, 55)') // #006537
+  const closeColor = await close.evaluate((el) => getComputedStyle(el).color)
+  expect(closeColor).toBe('rgb(255, 255, 255)') // white ×
+  const closeRadius = await close.evaluate((el) => getComputedStyle(el).borderRadius)
+  expect(closeRadius).toBe('0px') // square, not rounded
 })
 
 test('sky theme applies the sky surface color to the dialog', async ({ page }) => {
@@ -561,12 +565,235 @@ test('sky theme applies the sky surface color to the dialog', async ({ page }) =
   await expect(overlay).toHaveClass(/enlb-theme-sky/)
   const dialog = page.locator('.enlb-dialog')
   const bg = await dialog.evaluate((el) => getComputedStyle(el).backgroundColor)
-  expect(bg).toBe('rgb(167, 204, 227)') // #a7cce3
+  expect(bg).toBe('rgb(141, 187, 220)') // #8DBBDC (corrected from #a7cce3)
 
-  // The sky close button has a dark backing (dark box / white x), visible over
-  // the light-blue surface.
+  // The sky close button has NO box (transparent) — just a black × over the
+  // light-blue surface. Corrected from the dark rounded box.
   const close = page.locator('.enlb-close')
   const closeBg = await close.evaluate((el) => getComputedStyle(el).backgroundColor)
-  expect(closeBg).toBe('rgb(22, 24, 29)') // #16181d
+  expect(closeBg).toBe('rgba(0, 0, 0, 0)') // transparent — no box
+  const closeColor = await close.evaluate((el) => getComputedStyle(el).color)
+  expect(closeColor).toBe('rgb(0, 0, 0)') // black ×
+  const closeRadius = await close.evaluate((el) => getComputedStyle(el).borderRadius)
+  expect(closeRadius).toBe('0px')
+})
+
+// ── Wave-5 forest/sky mockup CORRECTION (issue #47): campaign geometry ─────────
+// jsdom cannot read shadow computed style, so the 50/50 grid, modal sizing,
+// typography, CTA dimensions, per-theme close geometry, and RENDERED column order
+// (not DOM order) are all asserted here against a real browser. These run on the
+// desktop projects only — the Mobile Chrome project is skipped (image hidden +
+// stacked layout).
+const forestCampaign = {
+  ...baseConfig,
+  eyebrow: 'Last chance',
+  header: 'Protect what remains of our wild places',
+  body: 'Your monthly gift defends forests, rivers, and wildlife all year long.',
+  cta: { label: 'Give monthly', href: '#give' },
+  secondaryCta: { label: 'Maybe later', href: '#later' },
+  triggers: { time: 50 },
+  theme: { preset: 'forest' },
+}
+
+const skyCampaign = {
+  ...baseConfig,
+  eyebrow: 'Matching gift',
+  header: 'Double your impact today',
+  body: 'Every dollar donated today is matched through midnight. Do not miss it.',
+  cta: { label: 'Donate now', href: '#donate' },
+  secondaryCta: { label: 'Learn more', href: '#more' },
+  triggers: { time: 50 },
+  theme: { preset: 'sky' },
+  // imagePosition 'right' on purpose: sky must render image-LEFT regardless of
+  // DOM order (theme-enforced grid order, not a DOM swap + flex-reverse).
+  layout: { imagePosition: 'right' },
+}
+
+test.describe('forest/sky campaign geometry (desktop)', () => {
+  test('forest renders a 50/50 grid with content-LEFT / image-RIGHT, ~42px heading, ~238x56 CTA, square green close', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name === 'Mobile Chrome', 'desktop campaign layout')
+    await page.goto(harnessUrl(forestCampaign))
+    const dialog = page.locator('.enlb-dialog')
+    const image = page.locator('.enlb-image')
+    const content = page.locator('.enlb-content')
+    const title = page.locator('.enlb-title')
+    // Primary CTA only — the secondary link also carries .enlb-cta.
+    const cta = page.locator('.enlb-cta:not(.enlb-cta--secondary)')
+    const close = page.locator('.enlb-close')
+    await expect(dialog).toBeVisible()
+
+    // ~835px desktop modal (max-width calc(100vw - 60px) on a 1280px viewport).
+    const dialogBox = await dialog.boundingBox()
+    expect(dialogBox).not.toBeNull()
+    expect(dialogBox!.width).toBeGreaterThanOrEqual(830)
+    expect(dialogBox!.width).toBeLessThanOrEqual(840)
+
+    // 50/50: image and content each ~half the dialog, adjacent with no gap.
+    const imageBox = await image.boundingBox()
+    const contentBox = await content.boundingBox()
+    expect(imageBox).not.toBeNull()
+    expect(contentBox).not.toBeNull()
+    expect(imageBox!.height).toBeGreaterThanOrEqual(dialogBox!.height - 2) // full modal height
+    expect(contentBox!.height).toBeGreaterThanOrEqual(dialogBox!.height - 2)
+    // Both columns ~half the dialog width.
+    expect(contentBox!.width).toBeGreaterThan(dialogBox!.width * 0.45)
+    expect(contentBox!.width).toBeLessThan(dialogBox!.width * 0.55)
+    expect(imageBox!.width).toBeGreaterThan(dialogBox!.width * 0.45)
+    expect(imageBox!.width).toBeLessThan(dialogBox!.width * 0.55)
+    // No gap: content's right edge ~= image's left edge.
+    expect(Math.abs((contentBox!.x + contentBox!.width) - imageBox!.x)).toBeLessThanOrEqual(1)
+
+    // Theme-enforced order: content LEFT, image RIGHT (the DOM is image-then-
+    // content because imagePosition defaults to 'left', so this proves the grid
+    // order overrides the DOM order — not a double-reverse).
+    expect(contentBox!.x).toBeLessThan(imageBox!.x)
+
+    // Campaign typography.
+    const titleSize = await title.evaluate((el) => getComputedStyle(el).fontSize)
+    expect(titleSize).toBe('42px')
+    const titleWeight = await title.evaluate((el) => getComputedStyle(el).fontWeight)
+    expect(titleWeight).toBe('800')
+
+    // CTA ~238x56, square (radius 0).
+    const ctaBox = await cta.boundingBox()
+    expect(ctaBox).not.toBeNull()
+    expect(ctaBox!.width).toBeGreaterThanOrEqual(234)
+    expect(ctaBox!.width).toBeLessThanOrEqual(242)
+    expect(ctaBox!.height).toBeGreaterThanOrEqual(54)
+    expect(ctaBox!.height).toBeLessThanOrEqual(58)
+    const ctaRadius = await cta.evaluate((el) => getComputedStyle(el).borderRadius)
+    expect(ctaRadius).toBe('0px')
+    const ctaTransform = await cta.evaluate((el) => getComputedStyle(el).textTransform)
+    expect(ctaTransform).toBe('uppercase')
+
+    // Forest close: green square ~44x42 over the image, top-right.
+    const closeBox = await close.boundingBox()
+    expect(closeBox).not.toBeNull()
+    expect(closeBox!.width).toBeGreaterThanOrEqual(42)
+    expect(closeBox!.width).toBeLessThanOrEqual(46)
+    expect(closeBox!.height).toBeGreaterThanOrEqual(40)
+    expect(closeBox!.height).toBeLessThanOrEqual(44)
+    const closeBg = await close.evaluate((el) => getComputedStyle(el).backgroundColor)
+    expect(closeBg).toBe('rgb(0, 101, 55)') // green square
+  })
+
+  test('sky renders a 50/50 grid with image-LEFT / content-RIGHT (overrides DOM), black CTA, no-box black close', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name === 'Mobile Chrome', 'desktop campaign layout')
+    await page.goto(harnessUrl(skyCampaign))
+    const dialog = page.locator('.enlb-dialog')
+    const image = page.locator('.enlb-image')
+    const content = page.locator('.enlb-content')
+    // Primary CTA only — the secondary link also carries .enlb-cta.
+    const cta = page.locator('.enlb-cta:not(.enlb-cta--secondary)')
+    const close = page.locator('.enlb-close')
+    await expect(dialog).toBeVisible()
+
+    const imageBox = await image.boundingBox()
+    const contentBox = await content.boundingBox()
+    expect(imageBox).not.toBeNull()
+    expect(contentBox).not.toBeNull()
+
+    // Theme-enforced order: image LEFT, content RIGHT. The config sets
+    // imagePosition:'right' (DOM is content-then-image), so image.x < content.x
+    // proves the grid order overrides the DOM swap — no double-reverse.
+    expect(imageBox!.x).toBeLessThan(contentBox!.x)
+
+    // Black primary CTA, square, ~238x56.
+    const ctaBox = await cta.boundingBox()
+    expect(ctaBox).not.toBeNull()
+    expect(ctaBox!.width).toBeGreaterThanOrEqual(234)
+    expect(ctaBox!.width).toBeLessThanOrEqual(242)
+    expect(ctaBox!.height).toBeGreaterThanOrEqual(54)
+    expect(ctaBox!.height).toBeLessThanOrEqual(58)
+    const ctaBg = await cta.evaluate((el) => getComputedStyle(el).backgroundColor)
+    expect(ctaBg).toBe('rgb(0, 0, 0)') // black CTA
+    const ctaText = await cta.evaluate((el) => getComputedStyle(el).color)
+    expect(ctaText).toBe('rgb(255, 255, 255)') // white CTA text
+
+    // Sky close: no box (transparent), black ~24px ×, top-right. The hit area
+    // reuses the generic 44×44 box (kept transparent) for an accessible target.
+    const closeBox = await close.boundingBox()
+    expect(closeBox).not.toBeNull()
+    expect(closeBox!.width).toBeGreaterThanOrEqual(42)
+    expect(closeBox!.height).toBeGreaterThanOrEqual(42)
+    const closeBg = await close.evaluate((el) => getComputedStyle(el).backgroundColor)
+    expect(closeBg).toBe('rgba(0, 0, 0, 0)') // no box
+    const closeColor = await close.evaluate((el) => getComputedStyle(el).color)
+    expect(closeColor).toBe('rgb(0, 0, 0)') // black ×
+    const closeSize = await close.evaluate((el) => getComputedStyle(el).fontSize)
+    expect(closeSize).toBe('24px')
+  })
+})
+
+// ── Forest/sky responsive (~700px stack; global 640px breakpoint untouched) ────
+test.describe('forest/sky responsive stacking (~700px)', () => {
+  test('forest stacks vertically below ~700px: modal ~calc(100vw-32px), heading ~34px, content above image', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name === 'Mobile Chrome', 'uses a custom desktop-width viewport')
+    await page.setViewportSize({ width: 680, height: 800 })
+    await page.goto(
+      harnessUrl({ ...forestCampaign, layout: { hideImageOnMobile: false } }),
+    )
+    const dialog = page.locator('.enlb-dialog')
+    const image = page.locator('.enlb-image')
+    const content = page.locator('.enlb-content')
+    const title = page.locator('.enlb-title')
+    await expect(dialog).toBeVisible()
+
+    // Modal width ~= calc(100vw - 32px) = 648px.
+    const dialogBox = await dialog.boundingBox()
+    expect(dialogBox).not.toBeNull()
+    expect(dialogBox!.width).toBeGreaterThanOrEqual(644)
+    expect(dialogBox!.width).toBeLessThanOrEqual(652)
+
+    // Stacked: image and content share the same x (single column), content above image.
+    const imageBox = await image.boundingBox()
+    const contentBox = await content.boundingBox()
+    expect(imageBox).not.toBeNull()
+    expect(contentBox).not.toBeNull()
+    expect(Math.abs(imageBox!.x - contentBox!.x)).toBeLessThanOrEqual(2)
+    expect(contentBox!.y).toBeLessThan(imageBox!.y) // grid order preserved: content→image
+
+    // Heading shrinks to ~34px.
+    const titleSize = await title.evaluate((el) => getComputedStyle(el).fontSize)
+    expect(titleSize).toBe('34px')
+  })
+})
+
+// ── Negative: outside-close never clipped; unknown preset stays light ──────────
+test('forest with closeButton outside keeps the outside × visible and clickable (overflow not clipped)', async ({ page }) => {
+  await page.goto(
+    harnessUrl({ ...forestCampaign, layout: { closeButton: 'outside' } }),
+  )
+  const overlay = page.locator('.enlb-overlay')
+  const close = page.locator('.enlb-close')
+  await expect(overlay).toBeVisible()
+  // The outside × sits above the dialog (negative top); forest/sky overflow:hidden
+  // is scoped to the inside-close case, so this must NOT be clipped.
+  await expect(close).toBeVisible()
+  await close.click()
+  await expect(overlay).toHaveCount(0)
+})
+
+test('an unknown preset degrades to light and does NOT inherit the forest/sky campaign layout', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === 'Mobile Chrome', 'desktop-only: campaign/light widths only differ on desktop')
+  await page.goto(
+    harnessUrl({
+      ...baseConfig,
+      triggers: { time: 50 },
+      theme: { preset: 'bogus' as unknown as 'light' },
+    }),
+  )
+  const overlay = page.locator('.enlb-overlay')
+  await expect(overlay).toHaveClass(/enlb-theme-light/)
+  await expect(overlay).not.toHaveClass(/enlb-theme-forest/)
+  await expect(overlay).not.toHaveClass(/enlb-theme-sky/)
+  const dialog = page.locator('.enlb-dialog')
+  const dialogBox = await dialog.boundingBox()
+  expect(dialogBox).not.toBeNull()
+  // Light keeps the global 900px max-width cap and is NOT pinned to the forest/sky
+  // ~835px campaign width (which would prove it inherited the campaign grid). On a
+  // 1280px desktop viewport the light dialog fills to its 900px cap (> 835).
+  expect(dialogBox!.width).toBeLessThanOrEqual(900)
+  expect(dialogBox!.width).toBeGreaterThan(835)
 })
 

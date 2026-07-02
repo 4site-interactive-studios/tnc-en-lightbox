@@ -120,17 +120,17 @@ This works on every version of the popup, including the exit-intent one.
 
 ### Themes (the overall look)
 
-Five preset themes. The two newest ones — **forest** and **sky** — match the mockups you've seen.
+Five preset themes. The two newest ones — **forest** and **sky** — match the mockups you've seen. They use a campaign-style 50/50 layout (half image, half content) that the theme fixes in place: `forest` puts the green content panel on the left and the image on the right; `sky` puts the image on the left and the blue content panel on the right. You don't set the image side for these two — the theme handles it.
 
 | Theme | What it looks like |
 |---|---|
-| **`forest`** | Deep green panel (`#0d6b4e`), white body text, a white "Donate monthly" button with green text. Looks best with the image on the **right**. Content is centered. |
-| **`sky`** | Light blue panel (`#a7cce3`), near-black text (`#16181d`), a black button with white text. Looks best with the image on the **left**. Content is centered. |
+| **`forest`** | Deep green panel (`#006537`) on the left, image on the right, white body text, a white "Donate monthly" button with green text, and a square green × close button over the image. Centered, bold campaign text. |
+| **`sky`** | Light blue panel (`#8DBBDC`) on the right, image on the left, near-black text (`#191919`), a black button with white text, and a plain black × close icon (no box) over the content. Centered, bold campaign text. |
 | `light` | Clean white panel, dark text, blue button — a simple default. |
 | `dark` | Dark gray panel, light text, blue button — good for low-light pages. |
 | `brand` | TNC green (`#003d24`) panel, white text, green button — the classic TNC look. |
 
-Every theme's colors can be tweaked individually — just add a `colors` block:
+On wide screens the `forest`/`sky` modal is about 835×475px; below about 700px the two halves stack vertically (the image drops below or above the text depending on the theme) and the modal shrinks to fit. Every theme's colors can be tweaked individually — just add a `colors` block:
 
 ```javascript
 theme: { preset: "forest", colors: { ctaBg: "#004d2e" } }
@@ -167,12 +167,18 @@ layout: { imagePosition: "right" }  // image on the right
 layout: { imagePosition: "top" }    // image above the text
 ```
 
-Recommended pairings: forest → `"right"`, sky → `"left"`.
+For `light`, `dark`, and `brand`, this sets the image side. For `forest` and
+`sky`, the theme already fixes the campaign layout (forest = content left /
+image right; sky = image left / content right), so `imagePosition` has no effect
+on those two — leave it out.
 
 ### Close button
 
-The close button (×) is now larger and easier to see — 44×44 pixels with a contrasting round
-backing so it's visible over photographs and colored panels.
+The close button (×) is larger and easier to see — 44×44 pixels with a
+contrasting round backing so it's visible over photographs and colored panels
+(`light`/`dark`/`brand`). The `forest` and `sky` campaign themes have their own
+close × instead: `forest` uses a square green button with a white × over the
+image; `sky` uses a plain black × with no backing box over the content panel.
 
 Control its position:
 
@@ -202,8 +208,9 @@ again until the window has passed.
 
 ### Example 1: Exit-intent monthly-giving nudge (forest)
 
-A last-chance popup that appears when someone tries to leave. Uses the forest theme with the
-image on the right. A single button closes the popup (no page navigation).
+A last-chance popup that appears when someone tries to leave. Uses the forest theme, which fixes
+the green content panel on the left and the image on the right. A single button closes the popup
+(no page navigation).
 
 ```html
 <script>
@@ -214,7 +221,6 @@ image on the right. A single button closes the popup (no page navigation).
     image: { src: "/img/forest-hero.jpg", alt: "Forest landscape" },
     cta: { label: "Give monthly", action: "close" },
     theme: { preset: "forest" },
-    layout: { imagePosition: "right" },
     triggers: {
       frequencyDays: 14,
       list: [{ type: "exit-intent" }],
@@ -227,7 +233,7 @@ image on the right. A single button closes the popup (no page navigation).
 ### Example 2: Time-delayed donation prompt (sky)
 
 Appears after 15 seconds — enough time to read the page. The button links directly to the donation
-form. Uses the sky theme with the image on the left.
+form. Uses the sky theme, which fixes the image on the left and the blue content panel on the right.
 
 ```html
 <script>
@@ -242,7 +248,6 @@ form. Uses the sky theme with the image on the left.
       action: "redirect",
     },
     theme: { preset: "sky" },
-    layout: { imagePosition: "left" },
     triggers: {
       frequencyDays: 7,
       list: [{ type: "time", delayMs: 15000 }],
@@ -306,9 +311,11 @@ timing (in the visitor's browser storage).
 
 **Can the close button be bigger / easier to see?**
 
-Yes. It's now 44×44 pixels with a contrasting round backing — significantly larger than a standard
-close button. It stays visible over photographs and colored backgrounds in every theme. You can
-place it inside the dialog, outside the dialog, or remove it entirely.
+Yes. For `light`/`dark`/`brand` it's 44×44 pixels with a contrasting round backing — significantly
+larger than a standard close button — and it stays visible over photographs and colored backgrounds.
+The `forest` and `sky` campaign themes use their own close × instead (a square green button for
+forest, a plain black × for sky). You can place it inside the dialog, outside the dialog, or remove
+it entirely.
 
 **Can visitors on mobile or tablet use it?**
 

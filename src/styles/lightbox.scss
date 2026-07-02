@@ -65,53 +65,202 @@
 
 .enlb-theme-forest {
   --enlb-overlay-bg: rgba(0, 20, 10, 0.7);
-  --enlb-surface-bg: #0d6b4e;
+  --enlb-surface-bg: #006537;
   --enlb-text: #ffffff;
   --enlb-title: #ffffff;
   --enlb-cta-bg: #ffffff;
-  --enlb-cta-text: #0d6b4e;
+  --enlb-cta-text: #006537;
   --enlb-secondary-cta-bg: transparent;
   --enlb-secondary-cta-text: #ffffff;
   --enlb-border: rgba(255, 255, 255, 0.25);
-  --enlb-close-bg: #ffffff;
-  --enlb-close-color: #0d6b4e;
-  --enlb-focus-ring: #000000;
+  // Campaign close: a green square over the image with a white ×. The backing
+  // equals the surface green (#006537), so the focus ring must clear #006537 on
+  // both the surface and the close box — white (#ffffff) clears at 7.20:1. The
+  // previous black ring (#000000) fails at 2.92:1 on the darker #006537 surface.
+  --enlb-close-bg: #006537;
+  --enlb-close-color: #ffffff;
+  --enlb-focus-ring: #ffffff;
+  --enlb-radius: 6px;
 }
 
 .enlb-theme-sky {
   --enlb-overlay-bg: rgba(0, 0, 0, 0.6);
-  --enlb-surface-bg: #a7cce3;
-  --enlb-text: #16181d;
-  --enlb-title: #16181d;
-  --enlb-cta-bg: #16181d;
+  --enlb-surface-bg: #8DBBDC;
+  --enlb-text: #191919;
+  --enlb-title: #191919;
+  --enlb-cta-bg: #000000;
   --enlb-cta-text: #ffffff;
   --enlb-secondary-cta-bg: transparent;
-  --enlb-secondary-cta-text: #16181d;
+  --enlb-secondary-cta-text: #000000;
   --enlb-border: rgba(0, 0, 0, 0.15);
-  --enlb-close-bg: #16181d;
-  --enlb-close-color: #ffffff;
-  --enlb-focus-ring: #2b6da6;
+  // Campaign close: no box, just a black × over the light-blue surface. The
+  // backing is the surface itself, so a black focus ring clears it at 10.27:1.
+  --enlb-close-bg: transparent;
+  --enlb-close-color: #000000;
+  --enlb-focus-ring: #000000;
+  --enlb-radius: 6px;
 }
 
-// Centered content + centered CTA row for the mockup-faithful forest/sky look.
-// Scoped under the new theme classes so light/dark/brand stay left-aligned.
+// Mockup-faithful 50/50 modal: two equal full-height columns, no gap, ~835×475px
+// desktop, 6px radius, rounded-corner clipping via overflow:hidden on the dialog
+// (inside-close only, so closeButton:"outside" stays un-clipped for every theme).
+// The generic width (calc(100% - 32px)) already fills the overlay; capping
+// max-width at min(835px, 100vw - 60px) yields the ~835px desktop modal.
+.enlb-theme-forest .enlb-dialog,
+.enlb-theme-sky .enlb-dialog {
+  max-width: min(835px, 100vw - 60px);
+}
+
+// overflow:hidden clips the image/color panels to the 6px radius. Scoped to the
+// inside-close case (a dialog WITHOUT .enlb-close--outside) so an outside close
+// button (top:-32px) is never clipped. The selector is theme-scoped, so the
+// global .enlb-dialog { overflow: visible } still holds for light/dark/brand.
+.enlb-theme-forest .enlb-dialog:not(.enlb-close--outside),
+.enlb-theme-sky .enlb-dialog:not(.enlb-close--outside) {
+  overflow: hidden;
+}
+
+// 50/50 grid for the two-column campaign layout. Single-column (no image) keeps
+// the global flex layout above. Grid gap defaults to 0 (no gap, per mockup).
+.enlb-theme-forest .enlb-layout--two-column,
+.enlb-theme-sky .enlb-layout--two-column {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 475px;
+}
+
+// Theme-enforced desktop ordering via grid `order` — ONE mechanism, not a
+// flex-direction:row-reverse stacked on a DOM swap (which double-reverses per
+// LEARNINGS). Forest: content LEFT / image RIGHT. Sky: image LEFT / content RIGHT.
+.enlb-theme-forest .enlb-layout--two-column .enlb-content,
+.enlb-theme-sky .enlb-layout--two-column .enlb-image { order: 1; }
+.enlb-theme-forest .enlb-layout--two-column .enlb-image,
+.enlb-theme-sky .enlb-layout--two-column .enlb-content { order: 2; }
+
+// Centered campaign content panel (flex column, centered, ~64–80px h-padding).
 .enlb-theme-forest .enlb-content,
 .enlb-theme-sky .enlb-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
+  padding: 40px 72px;
 }
 
+// Campaign typography (scoped; other presets keep the global hierarchy). The
+// eyebrow inherits weight 700 + uppercase + 0.08em tracking from the global
+// .enlb-eyebrow (0.08em is in the 0.08–0.12em spec range); px sizes are absolute
+// so a host root-font-size change cannot scale them.
+.enlb-theme-forest .enlb-eyebrow,
+.enlb-theme-sky .enlb-eyebrow {
+  font-size: 12px;
+  margin: 0 0 36px;
+}
+
+.enlb-theme-forest .enlb-title,
+.enlb-theme-sky .enlb-title {
+  font-size: 42px;
+  line-height: 1.08;
+  font-weight: 800;
+  max-width: 300px;
+  margin: 0 0 30px;
+}
+
+.enlb-theme-forest .enlb-text,
+.enlb-theme-sky .enlb-text {
+  line-height: 1.75;
+  max-width: 320px;
+  margin: 0 0 38px;
+}
+
+// CTA row stacks (primary CTA above the secondary link) and centers horizontally.
 .enlb-theme-forest .enlb-cta-row,
 .enlb-theme-sky .enlb-cta-row {
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
 }
 
-// Secondary/dismiss link renders as an underlined italic text link under the
-// new themes (transparent bg). Scoped so existing presets keep their bordered look.
+// Primary CTA: ~238×56, flex-centered, uppercase, square (radius 0), no border.
+.enlb-theme-forest .enlb-cta,
+.enlb-theme-sky .enlb-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 238px;
+  height: 56px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin: 0 0 16px;
+}
+
+// Secondary/dismiss link: italic 700 underlined text link (underline snug to text).
 .enlb-theme-forest .enlb-cta--secondary,
 .enlb-theme-sky .enlb-cta--secondary {
+  font-size: 15px;
   font-style: italic;
+  font-weight: 700;
   text-decoration: underline;
   border: 0;
+}
+
+// ── Per-theme close buttons (supersede the generic rounded 44px backing) ──────
+// Forest: green square ~44×42 over the image, white ×, no radius. Background and
+// × color come from the --enlb-close-* tokens above; only geometry is overridden
+// (the generic width is already 44px, so only height is changed).
+.enlb-theme-forest .enlb-close {
+  top: 14px;
+  right: 13px;
+  height: 42px;
+  border-radius: 0;
+}
+
+// Sky: no box, ~24px black × over the light-blue content panel. Reuses the
+// generic 44×44 hit area (keeps the WCAG AAA tap target) with a transparent
+// background, so the box is invisible and only the 24px black × shows.
+.enlb-theme-sky .enlb-close {
+  top: 28px;
+  right: 22px;
+  border-radius: 0;
+}
+
+// ── Forest/sky responsive (~700px stack; the global 640px breakpoint is untouched)
+@media (max-width: 700px) {
+  // The desktop width:835px stays in force but is capped by this narrower
+  // max-width, so the modal becomes ~calc(100vw - 32px) without a second width.
+  .enlb-theme-forest .enlb-dialog,
+  .enlb-theme-sky .enlb-dialog {
+    max-width: calc(100vw - 32px);
+  }
+
+  .enlb-theme-forest .enlb-layout--two-column,
+  .enlb-theme-sky .enlb-layout--two-column {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  // Bounded image height when stacked. Columns flow top→bottom in grid order:
+  // forest content→image, sky image→content (the theme's desktop order preserved).
+  .enlb-theme-forest .enlb-layout--two-column .enlb-image,
+  .enlb-theme-sky .enlb-layout--two-column .enlb-image {
+    height: 200px;
+  }
+
+  .enlb-theme-forest .enlb-content,
+  .enlb-theme-sky .enlb-content {
+    padding: 36px;
+  }
+
+  .enlb-theme-forest .enlb-title,
+  .enlb-theme-sky .enlb-title {
+    font-size: 34px;
+  }
 }
 
 .enlb-overlay {
