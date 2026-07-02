@@ -173,7 +173,12 @@ preset** ships the same campaign-style 50/50 modal — not just `forest`/`sky`:
   gone) the two columns stack vertically, the modal becomes `calc(100vw - 32px)`
   wide, the heading drops to ~`34px`, and the stacked image caps at `200px`.
   `hideImageOnMobile` (default `false`) hides the stacked image entirely when set
-  to `true`.
+  to `true`. Two mobile-only rules keep the stacked view legible: the **image
+  always renders first (top)** regardless of desktop `imagePosition` (a mobile
+  `order: -1` on the image; desktop column order is untouched), and the **close ×
+  always has a visible backing** — `sky`'s transparent box (black × over the
+  content panel on desktop) becomes a semi-opaque dark backing with a white × on
+  mobile so it reads over the image.
 
 Presets are **color-only** variants of that shared layout — each sets its
 surface/text/CTA/close tokens and (for `forest`/`sky`) a per-theme close geometry.
@@ -279,7 +284,8 @@ Because each EN page embeds the script independently, updating the lightbox vers
   own close ×: `light` a dark rounded box with a white ×; `dark` a white box with
   a dark ×; `brand` a white box with a dark-green ×; `forest` a square green
   button (`#006537`, white ×) over the image; `sky` a plain black × with no
-  backing box over the content. The backing and focus-ring colors are themed via
+  backing box over the content (on mobile it gains a semi-opaque dark backing +
+  white × so it stays visible over the stacked image). The backing and focus-ring colors are themed via
   internal tokens; you do not configure them directly.
 - **CTA hover affordance.** The primary CTA scales up slightly on hover and
   keyboard `:focus-visible` (a transform, so no layout shift); the effect is

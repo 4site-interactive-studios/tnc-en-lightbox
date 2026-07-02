@@ -130,7 +130,7 @@ Five preset themes — **forest** and **sky** match the mockups you've seen, alo
 | `dark` | Dark gray panel, light text, a white button with dark text — good for low-light pages. |
 | `brand` | TNC green (`#003d24`) panel, white text, green button — the classic TNC look. |
 
-On wide screens the modal is about 835×475px; below about 700px the two halves stack vertically (the image drops above or below the text depending on `imagePosition`) and the modal shrinks to fit. By default the image still shows on mobile — set `hideImageOnMobile: true` to hide it. Every theme's colors can be tweaked individually — just add a `colors` block:
+On wide screens the modal is about 835×475px; below about 700px the two halves stack vertically and the modal shrinks to fit. When stacked, the **image always appears on top** (regardless of your `imagePosition` setting — the desktop side-by-side order is left alone), and the **close × always has a visible backing** so it stays readable over the image. By default the image still shows on mobile — set `hideImageOnMobile: true` to hide it. Every theme's colors can be tweaked individually — just add a `colors` block:
 
 ```javascript
 theme: { preset: "forest", colors: { ctaBg: "#004d2e" } }
@@ -180,6 +180,9 @@ contrasting round backing so it's visible over photographs and colored panels
 (`light`/`dark`/`brand`). The `forest` and `sky` campaign themes have their own
 close × instead: `forest` uses a square green button with a white × over the
 image; `sky` uses a plain black × with no backing box over the content panel.
+On mobile (below ~700px) every theme's close × keeps a visible backing — `sky`
+gains a semi-opaque dark backing with a white × so it stays readable over the
+stacked image.
 
 Control its position:
 
@@ -323,8 +326,10 @@ it entirely.
 **Can visitors on mobile or tablet use it?**
 
 Yes. The popup works on desktop, tablet, and mobile. On small screens the two halves stack
-(the image shows by default; set `hideImageOnMobile: true` to hide it). The only exception is
-the exit-intent trigger, which is desktop-only (mobile browsers don't have a mouse cursor to
+— with the image always on top (whatever your `imagePosition`) and the close × always
+carrying a visible backing so it reads over the image. The image shows by default; set
+`hideImageOnMobile: true` to hide it. The only exception is the exit-intent trigger,
+which is desktop-only (mobile browsers don't have a mouse cursor to
 detect).
 
 **Does the popup block the donation form?**
