@@ -58,7 +58,7 @@ export interface NormalizedConfig {
 
 export function normalizeConfig(input?: Partial<ENLightboxConfig>): NormalizedConfig {
   const src = { ...(input ?? {}) } as Partial<ENLightboxConfig>
-  const topLevelHideImageOnMobile = src.hideImageOnMobile ?? true
+  const topLevelHideImageOnMobile = src.hideImageOnMobile ?? false
   if (!isRecord(src.image) || typeof src.image.src !== 'string') src.image = undefined
   if (!isRecord(src.cta)) src.cta = undefined
   if (!isRecord(src.secondaryCta)) src.secondaryCta = undefined

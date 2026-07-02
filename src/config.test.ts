@@ -6,14 +6,17 @@ describe('normalizeConfig', () => {
     const c = normalizeConfig()
     expect(c.closeOnEsc).toBe(true)
     expect(c.closeOnOverlay).toBe(true)
-    expect(c.hideImageOnMobile).toBe(true)
+    // hideImageOnMobile defaults to false (show the image on mobile; set true to
+    // hide). Flipped from true → false so the image is visible on mobile unless
+    // an editor explicitly opts out.
+    expect(c.hideImageOnMobile).toBe(false)
     expect(c.triggers).toEqual({})
     expect(c.theme).toEqual({ preset: 'light', cssVars: {} })
     expect(c.layout).toEqual({
       variant: 'two-column',
       imagePosition: 'left',
       imageRatio: '40%',
-      hideImageOnMobile: true,
+      hideImageOnMobile: false,
       closeButton: 'inside',
     })
   })
