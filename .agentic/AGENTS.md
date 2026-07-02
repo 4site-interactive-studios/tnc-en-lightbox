@@ -13,7 +13,7 @@ Captured from the project brief — every agent must respect these:
 - **Non-intrusive.** Must not block page rendering, degrade performance, or interfere with Engaging Networks form submission or existing page behavior.
 - **Session discipline.** Must not re-trigger within the configured frequency window after the user dismisses it (scoped per-page, persistent via localStorage).
 - **Cross-browser.** Latest Chrome, Safari, Edge, Firefox.
-- **Responsive.** Desktop, tablet, mobile; the 2-column (image + content) layout stacks on mobile, with an optional toggle to hide the image on mobile (on by default).
+- **Responsive.** Desktop, tablet, mobile; the 2-column (image + content) layout stacks on mobile, with an optional toggle to hide the image on mobile (off by default).
 - **Accessible.** Modal semantics: focus trap, ESC-to-close, focus restored on close, appropriate ARIA roles/labels.
 - **Performance budget.** Keep the bundle small; defer all work until a trigger fires; avoid layout thrash.
 
