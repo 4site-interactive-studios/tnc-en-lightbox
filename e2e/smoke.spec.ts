@@ -579,6 +579,42 @@ test('close button has a >=44x44 tap target with a non-transparent rounded backi
   expect(radius).not.toBe('0px')
 })
 
+// ── Close × drawn with CSS pseudo-elements + hover scale (issue #49) ──────────
+// The visible × is drawn by ::before/::after (two diagonal lines) for pixel
+// consistency across browsers/fonts (the text × shifted vertically per font).
+// aria-label="Close" still provides the accessible name; the text glyph is
+// hidden (font-size:0). The line color follows --enlb-close-color per theme,
+// and hover/focus-visible scale the button up (~1.08) with a transition that
+// prefers-reduced-motion suppresses.
+test('close × is drawn with ::before/::after pseudo-elements in the theme color and scales on hover', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === 'Mobile Chrome', 'hover transform is a desktop interaction')
+  await page.goto(
+    harnessUrl({ ...baseConfig, triggers: { time: 50 }, theme: { preset: 'forest' } }),
+  )
+  const close = page.locator('.enlb-close')
+  await expect(close).toBeVisible()
+
+  // The × is drawn by ::before (a line), not a text glyph. Before the fix the
+  // pseudo-element is not generated (content: none) and has no background.
+  const before = await close.evaluate((el) => {
+    const cs = getComputedStyle(el, '::before')
+    return { content: cs.content, width: cs.width, background: cs.backgroundColor }
+  })
+  expect(before.content).not.toBe('none')
+  expect(before.width).not.toBe('auto')
+  expect(before.width).not.toBe('0px')
+  // Forest × is white (var(--enlb-close-color) #ffffff) on the green square.
+  expect(before.background).toBe('rgb(255, 255, 255)')
+
+  // No transform at rest; hover scales the button up (>1).
+  const restTransform = await close.evaluate((el) => getComputedStyle(el).transform)
+  expect(restTransform).toBe('none')
+  await close.hover()
+  await page.waitForTimeout(220)
+  const hoverA = await close.evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).a)
+  expect(hoverA).toBeGreaterThan(1)
+})
+
 // ── Wave-5 design refresh: eyebrow + forest/sky presets ───────────────────────
 test('forest theme applies the forest surface color and renders an eyebrow above the title', async ({ page }) => {
   await page.goto(
