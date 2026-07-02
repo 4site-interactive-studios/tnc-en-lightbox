@@ -20,8 +20,9 @@ export const PRESET_TOKENS: Record<ThemePreset, Record<string, string>> = {
     '--enlb-surface-bg': '#1f1f1f',
     '--enlb-text': '#e0e0e0',
     '--enlb-title': '#ffffff',
-    '--enlb-cta-bg': '#1a73e8',
-    '--enlb-cta-text': '#ffffff',
+    // Inverted CTA: white button + dark text (matches forest's pattern).
+    '--enlb-cta-bg': '#ffffff',
+    '--enlb-cta-text': '#1f1f1f',
     '--enlb-secondary-cta-bg': 'transparent',
     '--enlb-secondary-cta-text': '#8ab4f8',
     '--enlb-border': '#3a3a3a',

@@ -59,8 +59,14 @@
   --enlb-text: #e0e0e0;
   --enlb-title: #ffffff;
   --enlb-eyebrow: #ffffff;
-  --enlb-cta-bg: #1a73e8;
-  --enlb-cta-text: #ffffff;
+  // Inverted CTA (matching forest's pattern): a solid white button with dark
+  // text reads clearly on the #1f1f1f surface. CTA text #1f1f1f on #ffffff =
+  // 12.6:1 (AA). The focus ring resolves to var(--enlb-cta-bg) = #ffffff; with
+  // outline-offset:2px it sits outside the control on the dark surface
+  // (12.6:1), so no dedicated --enlb-focus-ring override is needed (same
+  // outline-offset reasoning as brand).
+  --enlb-cta-bg: #ffffff;
+  --enlb-cta-text: #1f1f1f;
   --enlb-secondary-cta-bg: transparent;
   --enlb-secondary-cta-text: #8ab4f8;
   --enlb-border: #3a3a3a;
