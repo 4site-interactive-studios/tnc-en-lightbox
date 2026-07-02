@@ -546,6 +546,12 @@ test('forest theme applies the forest surface color and renders an eyebrow above
   expect(titleBox).not.toBeNull()
   expect(eyebrowBox!.y).toBeLessThan(titleBox!.y)
 
+  // The eyebrow follows the forest title color (white), NOT the :host default
+  // --enlb-title (#1f1f1f) that the var(--enlb-title) chain on :host would lock
+  // in before the theme class's title takes effect.
+  const eyebrowColor = await eyebrow.evaluate((el) => getComputedStyle(el).color)
+  expect(eyebrowColor).toBe('rgb(255, 255, 255)')
+
   // The forest close button is a GREEN square (#006537) with a white ×, sitting
   // over the image area (no rounded backing). Corrected from the white box.
   const close = page.locator('.enlb-close')
@@ -559,13 +565,25 @@ test('forest theme applies the forest surface color and renders an eyebrow above
 
 test('sky theme applies the sky surface color to the dialog', async ({ page }) => {
   await page.goto(
-    harnessUrl({ ...baseConfig, triggers: { time: 50 }, theme: { preset: 'sky' } }),
+    harnessUrl({
+      ...baseConfig,
+      eyebrow: 'Matching gift',
+      triggers: { time: 50 },
+      theme: { preset: 'sky' },
+    }),
   )
   const overlay = page.locator('.enlb-overlay')
   await expect(overlay).toHaveClass(/enlb-theme-sky/)
   const dialog = page.locator('.enlb-dialog')
   const bg = await dialog.evaluate((el) => getComputedStyle(el).backgroundColor)
   expect(bg).toBe('rgb(141, 187, 220)') // #8DBBDC (corrected from #a7cce3)
+
+  // The eyebrow follows the sky title color (#191919), NOT the :host default
+  // --enlb-title (#1f1f1f) the var() chain would lock in.
+  const eyebrow = page.locator('.enlb-eyebrow')
+  await expect(eyebrow).toBeVisible()
+  const eyebrowColor = await eyebrow.evaluate((el) => getComputedStyle(el).color)
+  expect(eyebrowColor).toBe('rgb(25, 25, 25)')
 
   // The sky close button has NO box (transparent) — just a black × over the
   // light-blue surface. Corrected from the dark rounded box.
@@ -770,6 +788,41 @@ test('forest with closeButton outside keeps the outside × visible and clickable
   // The outside × sits above the dialog (negative top); forest/sky overflow:hidden
   // is scoped to the inside-close case, so this must NOT be clipped.
   await expect(close).toBeVisible()
+  await close.click()
+  await expect(overlay).toHaveCount(0)
+})
+
+// ── Close button must paint ABOVE an opaque image (z-index / paint order) ──────
+// buildDom appends the close button BEFORE the layout (lightbox.ts buildDom), and
+// both .enlb-close and .enlb-img are position:absolute with z-index:auto, so
+// without an explicit z-index the opaque image paints OVER the close button and
+// swallows the click. baseConfig's transparent 1×1 GIF hides this; a real opaque
+// photo exposes it. Use a forest config with imagePosition:'right' (image on the
+// right, close button top-right over the image) to match the client scenario.
+test('close button is clickable over an opaque image (forest, imagePosition right)', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === 'Mobile Chrome', 'desktop two-column layout (image hidden on mobile)')
+  // A solid-fill SVG renders as a fully opaque rectangle.
+  const opaqueImage =
+    "data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27400%27 height=%27400%27%3E%3Crect width=%27100%25%27 height=%27100%25%27 fill=%27%23cc3333%27/%3E%3C/svg%3E"
+  await page.goto(
+    harnessUrl({
+      ...baseConfig,
+      image: { src: opaqueImage, alt: '' },
+      header: 'Stay with us',
+      eyebrow: 'Last Chance',
+      cta: { label: 'Give monthly', href: '#give' },
+      triggers: { time: 50 },
+      theme: { preset: 'forest' },
+      layout: { imagePosition: 'right' },
+    }),
+  )
+  const overlay = page.locator('.enlb-overlay')
+  const close = page.locator('.enlb-close')
+  await expect(overlay).toBeVisible()
+  await expect(close).toBeVisible()
+  // Clicking the close button must close the lightbox. Before the z-index fix the
+  // opaque image covers the close button, so the click lands on the image and the
+  // lightbox stays open.
   await close.click()
   await expect(overlay).toHaveCount(0)
 })
