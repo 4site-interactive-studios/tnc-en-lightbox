@@ -109,3 +109,36 @@ describe('forest/sky focus-ring + close-button contrast (WCAG 1.4.11)', () => {
     expect(contrastRatio('#ffffff', '#16181d')).toBeGreaterThanOrEqual(AA_NORMAL_TEXT)
   })
 })
+
+// ── Wave-5 forest/sky mockup CORRECTION (issue #47) ───────────────────────────
+// The shipped PR #41 colors did not match the client mockups. These assert the
+// corrected source-of-truth values before the implementation propagates them.
+describe('forest/sky corrected mockup colors (issue #47)', () => {
+  it('forest surface is #006537 (corrected from #0d6b4e)', () => {
+    expect(PRESET_TOKENS.forest['--enlb-surface-bg']).toBe('#006537')
+  })
+
+  it('forest CTA text is #006537 on a white CTA (corrected from #0d6b4e)', () => {
+    expect(PRESET_TOKENS.forest['--enlb-cta-text']).toBe('#006537')
+  })
+
+  it('sky surface is #8DBBDC (corrected from #a7cce3)', () => {
+    expect(PRESET_TOKENS.sky['--enlb-surface-bg']).toBe('#8DBBDC')
+  })
+
+  it('sky text is #191919 (corrected from #16181d)', () => {
+    expect(PRESET_TOKENS.sky['--enlb-text']).toBe('#191919')
+  })
+
+  it('sky title is #191919 (corrected from #16181d)', () => {
+    expect(PRESET_TOKENS.sky['--enlb-title']).toBe('#191919')
+  })
+
+  it('sky primary CTA background is #000000 (black, corrected from #16181d)', () => {
+    expect(PRESET_TOKENS.sky['--enlb-cta-bg']).toBe('#000000')
+  })
+
+  it('sky secondary link text is #000000 (black, corrected from #16181d)', () => {
+    expect(PRESET_TOKENS.sky['--enlb-secondary-cta-text']).toBe('#000000')
+  })
+})
