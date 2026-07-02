@@ -120,17 +120,17 @@ This works on every version of the popup, including the exit-intent one.
 
 ### Themes (the overall look)
 
-Five preset themes. The two newest ones — **forest** and **sky** — match the mockups you've seen. They use a campaign-style 50/50 layout (half image, half content) that the theme fixes in place: `forest` puts the green content panel on the left and the image on the right; `sky` puts the image on the left and the blue content panel on the right. You don't set the image side for these two — the theme handles it.
+Five preset themes — **forest** and **sky** match the mockups you've seen, alongside `light`, `dark`, and `brand`. All five use the same campaign-style 50/50 layout (half image, half content). You control which side the image sits on with `imagePosition` (see below) — the theme does not fix it. As a convention, `forest` pairs with the image on the right and `sky` with the image on the left to match the mockups.
 
 | Theme | What it looks like |
 |---|---|
-| **`forest`** | Deep green panel (`#006537`) on the left, image on the right, white body text, a white "Donate monthly" button with green text, and a square green × close button over the image. Centered, bold campaign text. |
-| **`sky`** | Light blue panel (`#8DBBDC`) on the right, image on the left, near-black text (`#191919`), a black button with white text, and a plain black × close icon (no box) over the content. Centered, bold campaign text. |
+| **`forest`** | Deep green panel (`#006537`), white body text, a white button with green text, and a square green × close button over the image. Centered, bold campaign text. (Pair with `imagePosition: "right"`.) |
+| **`sky`** | Light blue panel (`#8DBBDC`), near-black text (`#191919`), a black button with white text, and a plain black × close icon (no box) over the content. Centered, bold campaign text. (Pair with `imagePosition: "left"`.) |
 | `light` | Clean white panel, dark text, blue button — a simple default. |
-| `dark` | Dark gray panel, light text, blue button — good for low-light pages. |
+| `dark` | Dark gray panel, light text, a white button with dark text — good for low-light pages. |
 | `brand` | TNC green (`#003d24`) panel, white text, green button — the classic TNC look. |
 
-On wide screens the `forest`/`sky` modal is about 835×475px; below about 700px the two halves stack vertically (the image drops below or above the text depending on the theme) and the modal shrinks to fit. Every theme's colors can be tweaked individually — just add a `colors` block:
+On wide screens the modal is about 835×475px; below about 700px the two halves stack vertically (the image drops above or below the text depending on `imagePosition`) and the modal shrinks to fit. By default the image still shows on mobile — set `hideImageOnMobile: true` to hide it. Every theme's colors can be tweaked individually — just add a `colors` block:
 
 ```javascript
 theme: { preset: "forest", colors: { ctaBg: "#004d2e" } }
@@ -167,10 +167,11 @@ layout: { imagePosition: "right" }  // image on the right
 layout: { imagePosition: "top" }    // image above the text
 ```
 
-For `light`, `dark`, and `brand`, this sets the image side. For `forest` and
-`sky`, the theme already fixes the campaign layout (forest = content left /
-image right; sky = image left / content right), so `imagePosition` has no effect
-on those two — leave it out.
+This sets the image side for **every** theme (the theme does not fix the column
+order). As a convention, `forest` looks best with `imagePosition: "right"`
+(content left / image right) and `sky` with `imagePosition: "left"` (image left /
+content right), matching the mockups — but you can use any position with any
+theme.
 
 ### Close button
 
@@ -208,9 +209,9 @@ again until the window has passed.
 
 ### Example 1: Exit-intent monthly-giving nudge (forest)
 
-A last-chance popup that appears when someone tries to leave. Uses the forest theme, which fixes
-the green content panel on the left and the image on the right. A single button closes the popup
-(no page navigation).
+A last-chance popup that appears when someone tries to leave. Uses the forest theme with the
+image on the right (`imagePosition: "right"`). A single button closes the popup (no page
+navigation).
 
 ```html
 <script>
@@ -221,6 +222,7 @@ the green content panel on the left and the image on the right. A single button 
     image: { src: "/img/forest-hero.jpg", alt: "Forest landscape" },
     cta: { label: "Give monthly", action: "close" },
     theme: { preset: "forest" },
+    layout: { imagePosition: "right" },
     triggers: {
       frequencyDays: 14,
       list: [{ type: "exit-intent" }],
@@ -233,7 +235,7 @@ the green content panel on the left and the image on the right. A single button 
 ### Example 2: Time-delayed donation prompt (sky)
 
 Appears after 15 seconds — enough time to read the page. The button links directly to the donation
-form. Uses the sky theme, which fixes the image on the left and the blue content panel on the right.
+form. Uses the sky theme with the image on the left (`imagePosition: "left"`).
 
 ```html
 <script>
@@ -248,6 +250,7 @@ form. Uses the sky theme, which fixes the image on the left and the blue content
       action: "redirect",
     },
     theme: { preset: "sky" },
+    layout: { imagePosition: "left" },
     triggers: {
       frequencyDays: 7,
       list: [{ type: "time", delayMs: 15000 }],
@@ -319,9 +322,10 @@ it entirely.
 
 **Can visitors on mobile or tablet use it?**
 
-Yes. The popup works on desktop, tablet, and mobile. On small screens the image stacks below the
-text (or you can choose to hide the image on mobile). The only exception is the exit-intent trigger,
-which is desktop-only (mobile browsers don't have a mouse cursor to detect).
+Yes. The popup works on desktop, tablet, and mobile. On small screens the two halves stack
+(the image shows by default; set `hideImageOnMobile: true` to hide it). The only exception is
+the exit-intent trigger, which is desktop-only (mobile browsers don't have a mouse cursor to
+detect).
 
 **Does the popup block the donation form?**
 

@@ -59,7 +59,7 @@ interface ENLightboxConfig {
   // ── BEHAVIOR: close paths ───────────────────────
   closeOnOverlay?: boolean // click the backdrop to close (default: true)
   closeOnEsc?: boolean     // press Escape to close (default: true)
-  hideImageOnMobile?: boolean // hide the image column on small screens (default: true)
+  hideImageOnMobile?: boolean // hide the image column on small screens (default: false — image shows on mobile; set true to hide)
 
   // ── BEHAVIOR: triggers ──────────────────────────
   triggers?: {
@@ -156,37 +156,44 @@ If `localStorage` is unavailable (e.g., private mode), the library fails open: i
 </script>
 ```
 
-### Eyebrow + forest/sky presets (campaign mockup look)
+### Campaign layout (all presets) + forest/sky color variants
 
-The `eyebrow` is a small uppercase label rendered above the title. The `forest`
-and `sky` presets apply the client mockup treatment — a campaign-style 50/50
-modal — from `theme.preset` alone:
+The `eyebrow` is a small uppercase label rendered above the title. **Every
+preset** ships the same campaign-style 50/50 modal — not just `forest`/`sky`:
 
-- **`forest`** — deep-green content panel (`#006537`) on the **left**, image on
-  the **right**, white body text, a white primary CTA with green (`#006537`) text,
-  a white underlined-italic secondary link, and a square green close button
-  (`#006537`, white ×) over the image. Desktop modal ≈ `835px × 475px`
-  (`max-width: calc(100vw - 60px)`), `6px` radius, rounded corners clipped.
-- **`sky`** — image on the **left**, light-blue content panel (`#8DBBDC`) on the
-  **right**, near-black text (`#191919`), a black primary CTA with white text, a
-  black underlined-italic secondary link, and a plain black × close icon (no
-  backing box) over the content panel.
+- 50/50 grid (two equal full-height columns, no gap), desktop modal ≈
+  `835px × 475px` (`max-width: min(835px, 100vw - 60px)`, `min-height: 475px`),
+  rounded corners clipped via `overflow: hidden` on the inside-close case (radius
+  per theme: `8px` for `light`/`dark`/`brand`, `6px` for `forest`/`sky`).
+- Centered content (flex column, `align-items: center`, `justify-content: center`)
+  with bold campaign typography: a 12px uppercase eyebrow, a ~42px / weight-800 /
+  line-height 1.08 heading, body text at line-height 1.75, a ~238×56 uppercase
+  rectangular CTA, and a 15px italic underlined secondary link beneath it.
+- Below ~`700px` (a single global breakpoint — the older `640px` breakpoint is
+  gone) the two columns stack vertically, the modal becomes `calc(100vw - 32px)`
+  wide, the heading drops to ~`34px`, and the stacked image caps at `200px`.
+  `hideImageOnMobile` (default `false`) hides the stacked image entirely when set
+  to `true`.
 
-The campaign column order is **enforced by the theme** (forest = content-left /
-image-right; sky = image-left / content-right) via CSS grid order, so
-`layout.imagePosition` has no effect on `forest`/`sky` — do not set it for these
-presets. The content is centered (flex column, `align-items: center`,
-`justify-content: center`) with bold campaign typography: a 12px uppercase
-eyebrow, a ~42px / weight-800 / line-height 1.08 heading, 15–16px body text, and
-a ~238×56 uppercase square CTA. Below ~`700px` (a forest/sky-only breakpoint;
-the global `640px` breakpoint is unchanged) the two columns stack vertically, the
-modal becomes `calc(100vw - 32px)` wide, the heading drops to ~`34px`, and the
-theme's column order is preserved top-to-bottom.
+Presets are **color-only** variants of that shared layout — each sets its
+surface/text/CTA/close tokens and (for `forest`/`sky`) a per-theme close geometry.
+**The column order is not theme-enforced**: it follows `layout.imagePosition`
+like every other preset, so use `imagePosition` to choose the image side.
 
-The client typically uses a single CTA; when a `secondaryCta`/`dismissLabel` is
-present under `forest`/`sky` it renders as an underlined italic text link below
-the primary CTA. All preset colors are starting points and are fully overridable
-via `theme.colors`.
+| Preset | Surface | Primary CTA | Close × |
+|---|---|---|---|
+| `light` | white `#fff` | blue `#1a73e8` bg / white text | dark rounded box, white × |
+| `dark` | `#1f1f1f` | inverted: white bg / `#1f1f1f` text | white box, dark × |
+| `brand` | TNC green `#003d24` | green `#00875a` bg / white text | white box, dark-green × |
+| `forest` | `#006537` | inverted: white bg / `#006537` text | square green box, white × (over the image) |
+| `sky` | `#8DBBDC` | black bg / white text | plain black ×, no box (over the content) |
+
+Convention (not a hard rule): pair `forest` with `imagePosition: "right"`
+(content-left / image-right) and `sky` with `imagePosition: "left"` (image-left /
+content-right) to match the client mockups. The client typically uses a single
+CTA; when a `secondaryCta`/`dismissLabel` is present it renders as an underlined
+italic text link below the primary CTA. All preset colors are starting points
+and are fully overridable via `theme.colors`.
 
 ```html
 <script>
@@ -197,13 +204,14 @@ via `theme.colors`.
     image: { src: "/img/forest.jpg", alt: "Forest" },
     cta: { label: "Sign the petition", href: "#petition", action: "redirect" },
     theme: { preset: "forest" },
+    layout: { imagePosition: "right" },
   };
 </script>
 ```
 
-`sky` is the same shape with `theme: { preset: "sky" }`. (No `imagePosition` is
-needed — the theme fixes the column order.) All preset colors are starting
-points and are fully overridable via `theme.colors`.
+`sky` is the same shape with `theme: { preset: "sky" }` and
+`layout: { imagePosition: "left" }`. All preset colors are starting points and
+are fully overridable via `theme.colors`.
 
 ### Multi-trigger behavior
 
@@ -258,16 +266,26 @@ Because each EN page embeds the script independently, updating the lightbox vers
   documented theme token surface (`colors`, `radius`, `maxWidth`, `fontFamily`);
   host-page stylesheets have no effect on the lightbox.
 - **Layout is construct-time only.** Changing `layout` requires re-initializing the lightbox.
-- **Close button.** The × is a ≥44×44px rounded button with a contrasting backing
-  so it stays visible over photographs and surface colors across `light`/`dark`/
-  `brand`. `layout.closeButton` controls placement: `"inside"` (default, top-right
-  of the dialog), `"outside"` (sits above the dialog, not clipped), or `"none"`
-  (no close button — rely on the CTA, ESC, or overlay click). The `forest` and
-  `sky` campaign presets supersede this generic treatment with their own close ×:
-  `forest` uses a square green button (`#006537`, white ×) over the image;
-  `sky` uses a plain black × with no backing box over the content panel. The
-  backing and focus-ring colors are themed via internal tokens; you do not
-  configure them directly.
+- **Close button.** The × is drawn with CSS pseudo-elements (two diagonal lines)
+  rather than a text glyph, so it renders identically across browsers and fonts;
+  the ≥44×44px hit area keeps the WCAG AAA tap target, and a modest `z-index`
+  lifts it above the image so it stays clickable over photographs.
+  `layout.closeButton` controls placement: `"inside"` (default, top-right of the
+  dialog), `"outside"` (sits above the dialog, not clipped — and with
+  `imagePosition: "top"` the image sits flush at the dialog's top edge, with no
+  padding band above it), or `"none"` (no close button — rely on the CTA, ESC, or
+  overlay click). A subtle hover/focus scale (a transform, so no layout shift) is
+  applied and suppressed under `prefers-reduced-motion`. Each preset themes its
+  own close ×: `light` a dark rounded box with a white ×; `dark` a white box with
+  a dark ×; `brand` a white box with a dark-green ×; `forest` a square green
+  button (`#006537`, white ×) over the image; `sky` a plain black × with no
+  backing box over the content. The backing and focus-ring colors are themed via
+  internal tokens; you do not configure them directly.
+- **CTA hover affordance.** The primary CTA scales up slightly on hover and
+  keyboard `:focus-visible` (a transform, so no layout shift); the effect is
+  suppressed under `prefers-reduced-motion`. It is a scale rather than a color
+  change so it reads for every CTA color (forest white, sky black, dark inverted
+  white, light blue, brand green).
 - **Theme is runtime-settable.** `ENLightboxAPI.setTheme({ preset: "dark" })` re-applies the theme to an open lightbox.
 - **Custom CSS injection** (`theme.customCss`) is planned for a future wave and is not yet available. Use the theme token surface (`colors`, `radius`, `maxWidth`, `fontFamily`) for customization now.
 - **No page detection.** The library does not detect Engaging Networks page type or page ID. Show the lightbox only on the pages where you place `window.ENLightbox`.
