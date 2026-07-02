@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.1.0](https://github.com/4site-interactive-studios/tnc-en-lightbox/compare/v1.0.0...v1.1.0) (2026-07-02)
+
+
+### Features
+
+* **close:** more-accessible close button with backing + focus-ring token ([6b11d05](https://github.com/4site-interactive-studios/tnc-en-lightbox/commit/6b11d05c0623724ca7b485dab5c48461cfd92de6))
+* design refresh — eyebrow label, forest/sky presets, accessible close button ([faf790c](https://github.com/4site-interactive-studios/tnc-en-lightbox/commit/faf790cc412d8ee693aa5c3915351170612e7128))
+* **eyebrow:** render optional eyebrow label above title ([f3770a9](https://github.com/4site-interactive-studios/tnc-en-lightbox/commit/f3770a9c5c81656e8c3041ac63ab8f6ff03aa11b))
+* **presets:** add forest and sky theme presets ([aa9cc89](https://github.com/4site-interactive-studios/tnc-en-lightbox/commit/aa9cc890941978ad36f47f1372c577d18e7c0e91))
+* **themes:** correct forest/sky to the client mockup spec ([#47](https://github.com/4site-interactive-studios/tnc-en-lightbox/issues/47)) ([9494852](https://github.com/4site-interactive-studios/tnc-en-lightbox/commit/94948524b1f662b3113b6f822e4b8cd3a9dc88dc))
+
+
+### Bug Fixes
+
+* **brand:** override focus-ring to #ffffff for WCAG 1.4.11 (green, [#50](https://github.com/4site-interactive-studios/tnc-en-lightbox/issues/50)) ([01b7cdf](https://github.com/4site-interactive-studios/tnc-en-lightbox/commit/01b7cdfec479eec98266e0ae18018ebb84cf894c))
+* **close,eyebrow:** paint close above opaque image + theme eyebrow color ([83cfd17](https://github.com/4site-interactive-studios/tnc-en-lightbox/commit/83cfd175a0ae93062c836c2a8ccc15bd1c542706))
+* **close,eyebrow:** paint close above opaque image + theme the eyebrow ([#49](https://github.com/4site-interactive-studios/tnc-en-lightbox/issues/49)) ([ac57afe](https://github.com/4site-interactive-studios/tnc-en-lightbox/commit/ac57afeab6d259c1091ac3f9922aff547db30548))
+* **close:** draw the × with CSS pseudo-elements + hover scale ([#49](https://github.com/4site-interactive-studios/tnc-en-lightbox/issues/49)) ([9607177](https://github.com/4site-interactive-studios/tnc-en-lightbox/commit/960717738419cbd69fd1e8e7816a4e029a514a8f))
+* **close:** remove the outside-close top padding band ([#49](https://github.com/4site-interactive-studios/tnc-en-lightbox/issues/49)) ([8c088a5](https://github.com/4site-interactive-studios/tnc-en-lightbox/commit/8c088a532357bb05fc61e12c590c757f1530c20a))
+* **config:** default hideImageOnMobile to false (show image on mobile) ([#50](https://github.com/4site-interactive-studios/tnc-en-lightbox/issues/50)) ([a5aa05c](https://github.com/4site-interactive-studios/tnc-en-lightbox/commit/a5aa05c76d9b99f6ee81c2cf6becda1b11232cdc))
+* **cta:** add a theme-agnostic hover scale to the CTA ([#49](https://github.com/4site-interactive-studios/tnc-en-lightbox/issues/49)) ([e11961f](https://github.com/4site-interactive-studios/tnc-en-lightbox/commit/e11961fd1e8cc0753175e0052672c9920bc5fc2e))
+* **dark:** invert the default CTA to white bg + [#1](https://github.com/4site-interactive-studios/tnc-en-lightbox/issues/1)f1f1f text ([#50](https://github.com/4site-interactive-studios/tnc-en-lightbox/issues/50)) ([7cc8c1c](https://github.com/4site-interactive-studios/tnc-en-lightbox/commit/7cc8c1c7edf6c5595e0978b545a192bc05d40427))
+* **layout:** stack image-top vertically by overriding the 50/50 grid ([#49](https://github.com/4site-interactive-studios/tnc-en-lightbox/issues/49)) ([280bbcd](https://github.com/4site-interactive-studios/tnc-en-lightbox/commit/280bbcd4c46f464ff4369e2a0add81caeff1f61e))
+* **layout:** unify the campaign layout across all themes — color-only variants ([#49](https://github.com/4site-interactive-studios/tnc-en-lightbox/issues/49)) ([6f1b002](https://github.com/4site-interactive-studios/tnc-en-lightbox/commit/6f1b002bbea1fd8df864db4e0718e285a9858b78))
+* **mobile:** force image above content when stacked via order ([#50](https://github.com/4site-interactive-studios/tnc-en-lightbox/issues/50)) ([ca0b5a4](https://github.com/4site-interactive-studios/tnc-en-lightbox/commit/ca0b5a44ac8a5fe00394a61fd75fd34e26977fda))
+* **mobile:** give sky close a backing over the image on mobile ([#50](https://github.com/4site-interactive-studios/tnc-en-lightbox/issues/50)) ([037ac3d](https://github.com/4site-interactive-studios/tnc-en-lightbox/commit/037ac3d2eae8d2ccfecbc25e581b3e95373f5b54))
+* **themes:** correct forest/sky to the client mockup spec ([fdede2b](https://github.com/4site-interactive-studios/tnc-en-lightbox/commit/fdede2b000e0a9366548f51784075d24815d2634))
+
 ## 1.0.0 (2026-06-26)
 
 

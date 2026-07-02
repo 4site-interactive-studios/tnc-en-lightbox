@@ -1,6 +1,6 @@
 {
   "name": "tnc-en-lightbox",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A dependency-free, configurable lightbox library for Engaging Networks pages.",
   "type": "module",
   "main": "dist/en-lightbox.js",
