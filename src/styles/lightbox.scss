@@ -44,6 +44,10 @@
   --enlb-surface-bg: #1f1f1f;
   --enlb-text: #e0e0e0;
   --enlb-title: #ffffff;
+  // Set explicitly: the :host default --enlb-eyebrow: var(--enlb-title) resolves
+  // at :host (light #1f1f1f) before this theme's title takes effect, so without
+  // an override the eyebrow stays dark gray on every theme.
+  --enlb-eyebrow: #ffffff;
   --enlb-cta-bg: #1a73e8;
   --enlb-cta-text: #ffffff;
   --enlb-secondary-cta-bg: transparent;
@@ -56,6 +60,7 @@
   --enlb-surface-bg: #003d24;
   --enlb-text: #f0f7f3;
   --enlb-title: #ffffff;
+  --enlb-eyebrow: #ffffff;
   --enlb-cta-bg: #00875a;
   --enlb-cta-text: #ffffff;
   --enlb-secondary-cta-bg: transparent;
@@ -68,6 +73,7 @@
   --enlb-surface-bg: #006537;
   --enlb-text: #ffffff;
   --enlb-title: #ffffff;
+  --enlb-eyebrow: #ffffff;
   --enlb-cta-bg: #ffffff;
   --enlb-cta-text: #006537;
   --enlb-secondary-cta-bg: transparent;
@@ -88,6 +94,7 @@
   --enlb-surface-bg: #8DBBDC;
   --enlb-text: #191919;
   --enlb-title: #191919;
+  --enlb-eyebrow: #191919;
   --enlb-cta-bg: #000000;
   --enlb-cta-text: #ffffff;
   --enlb-secondary-cta-bg: transparent;
@@ -299,6 +306,13 @@
 
 .enlb-close {
   position: absolute;
+  // buildDom appends the close button BEFORE the layout (which holds the
+  // position:absolute .enlb-img), and both default to z-index:auto, so without
+  // an explicit stacking level the opaque image paints OVER the close button and
+  // swallows its click. A modest positive z-index lifts the close above the image
+  // for every theme (generic fix; pre-existing since v1.0.0). It does not affect
+  // the outside-close button (top:-32px) — z-index changes paint order, not clip.
+  z-index: 10;
   top: var(--enlb-spacing-xs);
   right: var(--enlb-spacing-xs);
   display: flex;
