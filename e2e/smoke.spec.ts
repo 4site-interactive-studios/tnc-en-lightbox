@@ -444,6 +444,42 @@ test('image-top flush: no white band above image with outside close button', asy
   expect(gap).toBeLessThanOrEqual(2)
 })
 
+// ── imagePosition:"top" stacks vertically (not a second column) ──────────────
+// buildLayoutClasses adds BOTH enlb-layout--two-column AND enlb-layout--image-top,
+// so the generic 50/50 grid (display:grid) would force two columns and ignore
+// image-top. The image-top rule must override the grid back to a single stacked
+// column (image above content). Asserts the RENDERED position, not class presence.
+test('imagePosition top stacks the image above the content (not side-by-side)', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === 'Mobile Chrome', 'desktop two-column layout')
+  await page.goto(
+    harnessUrl({
+      ...baseConfig,
+      header: 'Stacked layout',
+      body: 'The image must sit above the content, not beside it.',
+      cta: { label: 'OK', action: 'close' },
+      layout: { imagePosition: 'top' },
+      triggers: { time: 50 },
+    }),
+  )
+  const layout = page.locator('.enlb-layout')
+  const image = page.locator('.enlb-image')
+  const content = page.locator('.enlb-content')
+  await expect(image).toBeVisible()
+  await expect(content).toBeVisible()
+
+  // The layout is a single stacked column (flex), NOT the 50/50 grid.
+  const layoutDisplay = await layout.evaluate((el) => getComputedStyle(el).display)
+  expect(layoutDisplay).toBe('flex')
+
+  const imageBox = await image.boundingBox()
+  const contentBox = await content.boundingBox()
+  expect(imageBox).not.toBeNull()
+  expect(contentBox).not.toBeNull()
+  // Image sits ABOVE the content (stacked), and they share the same x (full width).
+  expect(imageBox!.y).toBeLessThan(contentBox!.y)
+  expect(Math.abs(imageBox!.x - contentBox!.x)).toBeLessThanOrEqual(2)
+})
+
 // ── Outside close button (not clipped by dialog overflow) ─────────────────────
 // The outside close button sits above the dialog (top: -32px). The dialog's
 // overflow must not clip it. Red when the dialog has overflow:auto; green once
