@@ -988,6 +988,24 @@ test.describe('unified campaign layout across light/dark/brand (desktop)', () =>
   }
 })
 
+// ── Dark theme inverted CTA (white bg + dark text) ───────────────────────────
+// The dark theme's default CTA is an inverted white button with #1f1f1f text
+// (matching forest's inverted pattern), so it reads as a solid white CTA on the
+// #1f1f1f dark surface. jsdom can't read shadow computed style (LEARNINGS.md),
+// so the SCSS values are asserted here against a real browser.
+test('dark theme default CTA is an inverted white button with dark text', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === 'Mobile Chrome', 'desktop campaign layout (mobile stacks)')
+  await page.goto(
+    harnessUrl({ ...unifiedCampaignBase, theme: { preset: 'dark' }, triggers: { time: 50 } }),
+  )
+  const cta = page.locator('.enlb-cta:not(.enlb-cta--secondary)')
+  await expect(cta).toBeVisible()
+  const ctaBg = await cta.evaluate((el) => getComputedStyle(el).backgroundColor)
+  expect(ctaBg).toBe('rgb(255, 255, 255)') // white CTA bg
+  const ctaText = await cta.evaluate((el) => getComputedStyle(el).color)
+  expect(ctaText).toBe('rgb(31, 31, 31)') // #1f1f1f CTA text
+})
+
 // ── Forest/sky responsive (~700px stack; global 640px breakpoint untouched) ────
 test.describe('forest/sky responsive stacking (~700px)', () => {
   test('forest stacks vertically below ~700px: modal ~calc(100vw-32px), heading ~34px, content above image', async ({ page }, testInfo) => {

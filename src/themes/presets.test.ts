@@ -173,9 +173,11 @@ function effectiveFocusRing(theme: string): string {
 // do), so their ring inherits the :host default var(--enlb-cta-bg). That default
 // must still clear ≥3:1 against the surface. brand's cta-bg (#00875a green) on
 // the #003d24 surface is only 2.72:1 → FAILS (review block on PR #50). Fix: brand
-// overrides --enlb-focus-ring to #ffffff (12.4:1 on the surface). dark (#1a73e8
-// on #1f1f1f = 3.66:1) and light (#1a73e8 on #fff = 4.51:1) already pass — these
-// guard against a future regression that would re-introduce a block.
+// overrides --enlb-focus-ring to #ffffff (12.4:1 on the surface). dark's CTA is
+// inverted (cta-bg #ffffff / cta-text #1f1f1f), so its ring resolves to #ffffff
+// on the #1f1f1f surface = 12.6:1, and light (#1a73e8 on #fff = 4.51:1) already
+// passes — these guard against a future regression that would re-introduce a
+// block.
 //
 // The ring is drawn with `outline-offset: 2px` (scss focus-visible rule), so it
 // sits OUTSIDE the focused control on the surrounding surface — the adjacent
@@ -244,5 +246,24 @@ describe('forest/sky corrected mockup colors (issue #47)', () => {
 
   it('sky secondary link text is #000000 (black, corrected from #16181d)', () => {
     expect(PRESET_TOKENS.sky['--enlb-secondary-cta-text']).toBe('#000000')
+  })
+})
+
+// ── Dark theme inverted CTA (PR #50) ──────────────────────────────────────────
+// The dark theme's default CTA is an inverted white button with #1f1f1f text
+// (matching forest's inverted pattern), so it reads as a solid white CTA on the
+// #1f1f1f dark surface. CTA text #1f1f1f on CTA bg #ffffff = 12.6:1 (AA). The
+// PRESET_TOKENS mirror must stay in sync with the .enlb-theme-dark SCSS block.
+describe('dark theme inverted CTA tokens (white bg + dark text)', () => {
+  it('dark CTA background is #ffffff (white, inverted from #1a73e8)', () => {
+    expect(PRESET_TOKENS.dark['--enlb-cta-bg']).toBe('#ffffff')
+  })
+
+  it('dark CTA text is #1f1f1f (dark, inverted from #ffffff)', () => {
+    expect(PRESET_TOKENS.dark['--enlb-cta-text']).toBe('#1f1f1f')
+  })
+
+  it('dark inverted CTA text/bg contrast meets WCAG AA (4.5:1)', () => {
+    expect(contrastRatio('#1f1f1f', '#ffffff')).toBeGreaterThanOrEqual(AA_NORMAL_TEXT)
   })
 })
