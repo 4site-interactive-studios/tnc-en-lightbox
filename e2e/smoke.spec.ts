@@ -17,7 +17,7 @@ test('lightbox opens on time trigger', async ({ page }) => {
   await expect(overlay).toBeVisible()
 })
 
-test('renders overlay, dialog, two-column layout and close button', async ({ page }, testInfo) => {
+test('renders overlay, dialog, two-column layout and close button', async ({ page }) => {
   await page.goto(harnessUrl({ ...baseConfig, triggers: { time: 50 } }))
   const overlay = page.locator('.enlb-overlay')
   const dialog = page.locator('.enlb-dialog')
@@ -28,11 +28,9 @@ test('renders overlay, dialog, two-column layout and close button', async ({ pag
   await expect(dialog).toHaveAttribute('aria-modal', 'true')
   await expect(layout.locator('.enlb-content')).toBeVisible()
   await expect(page.locator('.enlb-close')).toBeVisible()
-  if (testInfo.project.name === 'Mobile Chrome') {
-    await expect(image).toBeHidden()
-  } else {
-    await expect(image).toBeVisible()
-  }
+  // hideImageOnMobile defaults to false (show on mobile), so the image column is
+  // visible on every project — including the Mobile Chrome (Pixel 5) viewport.
+  await expect(image).toBeVisible()
 })
 
 test('closes via Escape key', async ({ page }) => {
@@ -57,6 +55,33 @@ test('closes via overlay click', async ({ page }) => {
   await expect(overlay).toBeVisible()
   await overlay.click({ position: { x: 5, y: 5 } })
   await expect(overlay).toHaveCount(0)
+})
+
+// ── hideImageOnMobile default (show on mobile; set true to hide) ──────────────
+// The default is false: the image is VISIBLE on a mobile viewport unless
+// hideImageOnMobile is explicitly set to true. Asserts the RENDERED display
+// (not the class) on a 375px viewport (under the 700px stack breakpoint). jsdom
+// can't read shadow computed style (LEARNINGS.md), so this is e2e-only.
+test.describe('hideImageOnMobile default — image visible on mobile unless explicitly hidden', () => {
+  test('image is visible on a mobile viewport when hideImageOnMobile is unset (default)', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 800 })
+    await page.goto(harnessUrl({ ...baseConfig, triggers: { time: 50 } }))
+    const image = page.locator('.enlb-image')
+    await expect(image).toBeVisible()
+    const display = await image.evaluate((el) => getComputedStyle(el).display)
+    expect(display).not.toBe('none')
+  })
+
+  test('image is hidden (display:none) on a mobile viewport when hideImageOnMobile is true', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 800 })
+    await page.goto(
+      harnessUrl({ ...baseConfig, triggers: { time: 50 }, hideImageOnMobile: true }),
+    )
+    const image = page.locator('.enlb-image')
+    await expect(image).toBeHidden()
+    const display = await image.evaluate((el) => getComputedStyle(el).display)
+    expect(display).toBe('none')
+  })
 })
 
 test('focus moves inside dialog when opened', async ({ page }) => {
@@ -407,7 +432,8 @@ const portraitImage =
   )
 
 test('portrait image does not inflate the dialog height (no empty void)', async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name === 'Mobile Chrome', 'image column is hidden on mobile by default')
+  test.skip(testInfo.project.name === 'Mobile Chrome', 'desktop campaign layout (mobile stacks)')
+
   await page.goto(
     harnessUrl({
       ...baseConfig,
@@ -444,7 +470,8 @@ test('portrait image does not inflate the dialog height (no empty void)', async 
 // padding-top (40px) pushed the image down creating a white band. This test
 // measures the bounding-box gap between the dialog and the image to catch it.
 test('image-top flush: no white band above image with outside close button', async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name === 'Mobile Chrome', 'image column is hidden on mobile by default')
+  test.skip(testInfo.project.name === 'Mobile Chrome', 'desktop campaign layout (mobile stacks)')
+
   await page.goto(
     harnessUrl({
       header: 'Flush test',
@@ -1020,7 +1047,7 @@ test('forest with closeButton outside keeps the outside × visible and clickable
 // photo exposes it. Use a forest config with imagePosition:'right' (image on the
 // right, close button top-right over the image) to match the client scenario.
 test('close button is clickable over an opaque image (forest, imagePosition right)', async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name === 'Mobile Chrome', 'desktop two-column layout (image hidden on mobile)')
+  test.skip(testInfo.project.name === 'Mobile Chrome', 'desktop two-column layout (mobile stacks)')
   // A solid-fill SVG renders as a fully opaque rectangle.
   const opaqueImage =
     "data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27400%27 height=%27400%27%3E%3Crect width=%27100%25%27 height=%27100%25%27 fill=%27%23cc3333%27/%3E%3C/svg%3E"
