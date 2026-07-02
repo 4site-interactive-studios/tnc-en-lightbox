@@ -84,6 +84,14 @@
   // White box + dark-green × so the close reads on the dark-green surface.
   --enlb-close-bg: #ffffff;
   --enlb-close-color: #003d24;
+  // White focus ring. The focus-visible rule draws it with outline-offset: 2px,
+  // so the ring sits OUTSIDE the control on the #003d24 surface (12.4:1), not on
+  // the white close box (white-on-white would be 1:1). The default ring
+  // var(--enlb-cta-bg) = #00875a only reaches 2.72:1 on #003d24 — fails WCAG
+  // 1.4.11 (>=3:1). No single solid colour clears >=3:1 against BOTH the
+  // dark-green surface and the white close box, so the outline-offset gap is
+  // what makes white valid here (review block on PR #50).
+  --enlb-focus-ring: #ffffff;
 }
 
 .enlb-theme-forest {
