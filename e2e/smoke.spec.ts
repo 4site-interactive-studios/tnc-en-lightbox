@@ -611,6 +611,9 @@ const forestCampaign = {
   secondaryCta: { label: 'Maybe later', href: '#later' },
   triggers: { time: 50 },
   theme: { preset: 'forest' },
+  // Column order now follows imagePosition (themes are color-only). 'right' →
+  // content first (LEFT) / image second (RIGHT), matching the forest mockup.
+  layout: { imagePosition: 'right' },
 }
 
 const skyCampaign = {
@@ -622,9 +625,9 @@ const skyCampaign = {
   secondaryCta: { label: 'Learn more', href: '#more' },
   triggers: { time: 50 },
   theme: { preset: 'sky' },
-  // imagePosition 'right' on purpose: sky must render image-LEFT regardless of
-  // DOM order (theme-enforced grid order, not a DOM swap + flex-reverse).
-  layout: { imagePosition: 'right' },
+  // Column order follows imagePosition. 'left' → image first (LEFT) / content
+  // second (RIGHT), matching the sky mockup (image-left / content-right).
+  layout: { imagePosition: 'left' },
 }
 
 test.describe('forest/sky campaign geometry (desktop)', () => {
@@ -661,9 +664,8 @@ test.describe('forest/sky campaign geometry (desktop)', () => {
     // No gap: content's right edge ~= image's left edge.
     expect(Math.abs((contentBox!.x + contentBox!.width) - imageBox!.x)).toBeLessThanOrEqual(1)
 
-    // Theme-enforced order: content LEFT, image RIGHT (the DOM is image-then-
-    // content because imagePosition defaults to 'left', so this proves the grid
-    // order overrides the DOM order — not a double-reverse).
+    // Order follows imagePosition ('right' → content LEFT / image RIGHT); grid
+    // follows DOM order (content-then-image), no double-reverse.
     expect(contentBox!.x).toBeLessThan(imageBox!.x)
 
     // Campaign typography.
@@ -711,9 +713,8 @@ test.describe('forest/sky campaign geometry (desktop)', () => {
     expect(imageBox).not.toBeNull()
     expect(contentBox).not.toBeNull()
 
-    // Theme-enforced order: image LEFT, content RIGHT. The config sets
-    // imagePosition:'right' (DOM is content-then-image), so image.x < content.x
-    // proves the grid order overrides the DOM swap — no double-reverse.
+    // Order follows imagePosition ('left' → image LEFT / content RIGHT); grid
+    // follows DOM order (image-then-content), no double-reverse.
     expect(imageBox!.x).toBeLessThan(contentBox!.x)
 
     // Black primary CTA, square, ~238x56.
@@ -835,7 +836,7 @@ test.describe('forest/sky responsive stacking (~700px)', () => {
     test.skip(testInfo.project.name === 'Mobile Chrome', 'uses a custom desktop-width viewport')
     await page.setViewportSize({ width: 680, height: 800 })
     await page.goto(
-      harnessUrl({ ...forestCampaign, layout: { hideImageOnMobile: false } }),
+      harnessUrl({ ...forestCampaign, layout: { imagePosition: 'right', hideImageOnMobile: false } }),
     )
     const dialog = page.locator('.enlb-dialog')
     const image = page.locator('.enlb-image')
@@ -849,13 +850,15 @@ test.describe('forest/sky responsive stacking (~700px)', () => {
     expect(dialogBox!.width).toBeGreaterThanOrEqual(644)
     expect(dialogBox!.width).toBeLessThanOrEqual(652)
 
-    // Stacked: image and content share the same x (single column), content above image.
+    // Stacked: image and content share the same x (single column), content above
+    // image (imagePosition:'right' → DOM content-then-image → grid keeps that
+    // order top→bottom in a single column).
     const imageBox = await image.boundingBox()
     const contentBox = await content.boundingBox()
     expect(imageBox).not.toBeNull()
     expect(contentBox).not.toBeNull()
     expect(Math.abs(imageBox!.x - contentBox!.x)).toBeLessThanOrEqual(2)
-    expect(contentBox!.y).toBeLessThan(imageBox!.y) // grid order preserved: content→image
+    expect(contentBox!.y).toBeLessThan(imageBox!.y) // DOM order preserved: content→image
 
     // Heading shrinks to ~34px.
     const titleSize = await title.evaluate((el) => getComputedStyle(el).fontSize)
@@ -913,7 +916,7 @@ test('close button is clickable over an opaque image (forest, imagePosition righ
   await expect(overlay).toHaveCount(0)
 })
 
-test('an unknown preset degrades to light and does NOT inherit the forest/sky campaign layout', async ({ page }, testInfo) => {
+test('an unknown preset degrades to light and inherits the unified campaign layout', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name === 'Mobile Chrome', 'desktop-only: campaign/light widths only differ on desktop')
   await page.goto(
     harnessUrl({
@@ -927,12 +930,14 @@ test('an unknown preset degrades to light and does NOT inherit the forest/sky ca
   await expect(overlay).not.toHaveClass(/enlb-theme-forest/)
   await expect(overlay).not.toHaveClass(/enlb-theme-sky/)
   const dialog = page.locator('.enlb-dialog')
+  const layout = page.locator('.enlb-layout')
   const dialogBox = await dialog.boundingBox()
   expect(dialogBox).not.toBeNull()
-  // Light keeps the global 900px max-width cap and is NOT pinned to the forest/sky
-  // ~835px campaign width (which would prove it inherited the campaign grid). On a
-  // 1280px desktop viewport the light dialog fills to its 900px cap (> 835).
-  expect(dialogBox!.width).toBeLessThanOrEqual(900)
-  expect(dialogBox!.width).toBeGreaterThan(835)
+  // Themes are color-only now: light (the degrade target) inherits the generic
+  // campaign layout — ~835px modal + 50/50 grid — like every other theme.
+  expect(dialogBox!.width).toBeGreaterThanOrEqual(830)
+  expect(dialogBox!.width).toBeLessThanOrEqual(840)
+  const layoutDisplay = await layout.evaluate((el) => getComputedStyle(el).display)
+  expect(layoutDisplay).toBe('grid')
 })
 
