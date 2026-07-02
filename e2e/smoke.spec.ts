@@ -92,6 +92,38 @@ test('primary CTA is an anchor and navigates', async ({ page }) => {
   await expect(page).toHaveURL(/#cta-navigated$/)
 })
 
+// ── CTA hover effect (issue #49) ─────────────────────────────────────────────
+// A tasteful, theme-agnostic hover (transform: scale, not a color change so it
+// works for forest's white CTA, sky's black CTA, light's blue CTA, etc.). It must
+// not cause layout shift (transform, not width/padding). Hover + focus-visible
+// for keyboard parity; prefers-reduced-motion suppresses it.
+test('primary CTA scales up on hover with no layout shift', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === 'Mobile Chrome', 'hover transform is a desktop interaction')
+  await page.goto(
+    harnessUrl({ ...baseConfig, triggers: { time: 50 }, cta: { label: 'Give monthly', href: '#give' } }),
+  )
+  const cta = page.locator('.enlb-cta:not(.enlb-cta--secondary)')
+  await expect(cta).toBeVisible()
+
+  // No transform at rest.
+  const restTransform = await cta.evaluate((el) => getComputedStyle(el).transform)
+  expect(restTransform).toBe('none')
+  // Capture the LAYOUT size (offsetWidth/Height are transform-invariant, unlike
+  // boundingBox which includes the paint transform) to prove hover causes no
+  // layout shift — the effect is transform-only, not width/padding.
+  const restSize = await cta.evaluate((el) => ({ w: el.offsetWidth, h: el.offsetHeight }))
+
+  await cta.hover()
+  await page.waitForTimeout(220)
+  // Hover scales the CTA up (>1) via transform.
+  const hoverA = await cta.evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).a)
+  expect(hoverA).toBeGreaterThan(1)
+  // Transform doesn't trigger layout: offset size is unchanged.
+  const hoverSize = await cta.evaluate((el) => ({ w: el.offsetWidth, h: el.offsetHeight }))
+  expect(hoverSize.w).toBe(restSize.w)
+  expect(hoverSize.h).toBe(restSize.h)
+})
+
 test('imagePosition right renders image on the right', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name === 'Mobile Chrome', 'desktop layout only')
   await page.goto(
