@@ -445,6 +445,19 @@
   border: 0;
 }
 
+// CTA hover: a subtle, theme-agnostic scale (transform — not a color change — so
+// it reads for every CTA color: forest white, sky black, light/dark blue, brand
+// green). transform causes no layout shift. Hover + :focus-visible for keyboard
+// parity; prefers-reduced-motion suppresses it (below).
+.enlb-cta {
+  transition: transform 0.15s ease;
+}
+
+.enlb-cta:hover,
+.enlb-cta:focus-visible {
+  transform: scale(1.02);
+}
+
 // ── Responsive (~700px stack; replaces the old 640px breakpoint) ──────────────
 @media (max-width: 700px) {
   // The desktop width:835px stays in force but is capped by this narrower
@@ -492,6 +505,14 @@
   }
   .enlb-close:hover,
   .enlb-close:focus-visible {
+    transform: none;
+  }
+  // Suppress the CTA hover/focus scale and its transition.
+  .enlb-cta {
+    transition: none;
+  }
+  .enlb-cta:hover,
+  .enlb-cta:focus-visible {
     transform: none;
   }
 }

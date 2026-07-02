@@ -111,7 +111,7 @@ test('primary CTA scales up on hover with no layout shift', async ({ page }, tes
   // Capture the LAYOUT size (offsetWidth/Height are transform-invariant, unlike
   // boundingBox which includes the paint transform) to prove hover causes no
   // layout shift — the effect is transform-only, not width/padding.
-  const restSize = await cta.evaluate((el) => ({ w: el.offsetWidth, h: el.offsetHeight }))
+  const restSize = await cta.evaluate((el) => ({ w: (el as HTMLElement).offsetWidth, h: (el as HTMLElement).offsetHeight }))
 
   await cta.hover()
   await page.waitForTimeout(220)
@@ -119,7 +119,7 @@ test('primary CTA scales up on hover with no layout shift', async ({ page }, tes
   const hoverA = await cta.evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).a)
   expect(hoverA).toBeGreaterThan(1)
   // Transform doesn't trigger layout: offset size is unchanged.
-  const hoverSize = await cta.evaluate((el) => ({ w: el.offsetWidth, h: el.offsetHeight }))
+  const hoverSize = await cta.evaluate((el) => ({ w: (el as HTMLElement).offsetWidth, h: (el as HTMLElement).offsetHeight }))
   expect(hoverSize.w).toBe(restSize.w)
   expect(hoverSize.h).toBe(restSize.h)
 })
