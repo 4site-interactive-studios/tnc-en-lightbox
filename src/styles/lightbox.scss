@@ -485,8 +485,16 @@
     min-height: 0;
   }
 
-  // Bounded image height when stacked (columns flow top→bottom in DOM order).
+  // Bounded image height when stacked. The image ALWAYS renders first (top row)
+  // on mobile regardless of desktop imagePosition: a single `order: -1` puts the
+  // image ahead of the content (which keeps the grid default `order: 0`) in the
+  // stacked 1fr column. For imagePosition:'left'/'top' the DOM is already
+  // image-first, so this is a no-op; for 'right' (DOM content-then-image) it flips
+  // the image to the top — the SINGLE mechanism (no row-reverse on a swapped DOM,
+  // which would double-reverse; see LEARNINGS.md). Desktop order is untouched
+  // (this rule lives inside the 700px media query only).
   .enlb-layout--two-column .enlb-image {
+    order: -1;
     height: 200px;
   }
 
