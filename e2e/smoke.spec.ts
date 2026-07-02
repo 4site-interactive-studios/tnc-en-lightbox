@@ -836,8 +836,10 @@ test.describe('forest/sky campaign geometry (desktop)', () => {
     expect(closeBg).toBe('rgba(0, 0, 0, 0)') // no box
     const closeColor = await close.evaluate((el) => getComputedStyle(el).color)
     expect(closeColor).toBe('rgb(0, 0, 0)') // black ×
-    const closeSize = await close.evaluate((el) => getComputedStyle(el).fontSize)
-    expect(closeSize).toBe('24px')
+    // The × is a 24px ::before line (font-size:0 hides the text glyph); assert
+    // the pseudo-element line length, not the (now 0) font-size.
+    const closeLine = await close.evaluate((el) => getComputedStyle(el, '::before').width)
+    expect(closeLine).toBe('24px')
   })
 })
 

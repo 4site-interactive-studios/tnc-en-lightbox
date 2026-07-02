@@ -181,9 +181,44 @@
   border-radius: 50%;
   background: var(--enlb-close-bg);
   color: var(--enlb-close-color);
-  font-size: 24px;
+  // Hide the text × glyph (it renders at different vertical positions per
+  // browser/font); the × is drawn by ::before/::after below for pixel
+  // consistency. font-size:0 also keeps getComputedStyle(.color) intact (the
+  // theme color), while the glyph no longer paints. aria-label="Close" names it.
+  font-size: 0;
   line-height: 1;
   cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+// CSS-drawn × — two diagonal lines centered in the 44×44 button. The line color
+// follows --enlb-close-color so it stays correct per theme (white on forest's
+// green square, black on sky's no-box, dark on light/dark's box, etc.).
+.enlb-close::before,
+.enlb-close::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 24px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--enlb-close-color);
+}
+
+.enlb-close::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.enlb-close::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+// Hover/keyboard parity: scale the button up slightly (transform, not width, so
+// no layout shift). Suppressed under prefers-reduced-motion (below).
+.enlb-close:hover,
+.enlb-close:focus-visible {
+  transform: scale(1.08);
 }
 
 .enlb-dialog.enlb-close--outside .enlb-close {
@@ -450,6 +485,14 @@
   .enlb-overlay,
   .enlb-dialog {
     transition: none;
+  }
+  // Suppress the close × hover/focus scale and its transition.
+  .enlb-close {
+    transition: none;
+  }
+  .enlb-close:hover,
+  .enlb-close:focus-visible {
+    transform: none;
   }
 }
 
