@@ -719,6 +719,43 @@ test('close × is drawn with ::before/::after pseudo-elements in the theme color
   expect(hoverA).toBeGreaterThan(1)
 })
 
+// ── Mobile close backing: sky gets a visible backing over the image (issue #49) ─
+// On mobile the close × sits over the image (which stacks on top per the mobile
+// image-order fix). The sky theme's desktop close is a transparent box with a black
+// × — over a photograph that × blends in. On mobile (≤700px) sky's close MUST have
+// a non-transparent backing so the × reads across ALL themes (the other themes
+// already have opaque backings: forest green, light/dark/brand boxes). jsdom can't
+// read shadow computed style (LEARNINGS.md), so this is e2e-only at a 375px viewport.
+test.describe('mobile close backing — sky has a visible backing over the image', () => {
+  test('sky close button has a non-transparent backing on mobile', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 800 })
+    await page.goto(
+      harnessUrl({ ...baseConfig, triggers: { time: 50 }, theme: { preset: 'sky' } }),
+    )
+    const close = page.locator('.enlb-close')
+    await expect(close).toBeVisible()
+    const bg = await close.evaluate((el) => getComputedStyle(el).backgroundColor)
+    // Not transparent — the × must not blend into the image on mobile.
+    expect(bg).not.toBe('rgba(0, 0, 0, 0)')
+    expect(bg).not.toBe('transparent')
+  })
+
+  test('sky close × stays visible against its mobile backing', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 800 })
+    await page.goto(
+      harnessUrl({ ...baseConfig, triggers: { time: 50 }, theme: { preset: 'sky' } }),
+    )
+    const close = page.locator('.enlb-close')
+    await expect(close).toBeVisible()
+    // The backing is a dark semi-opaque box, so the × flips to white to keep
+    // contrast (white on rgba(0,0,0,0.6) ≥ ~5.7:1 worst case over a white photo).
+    const bg = await close.evaluate((el) => getComputedStyle(el).backgroundColor)
+    const color = await close.evaluate((el) => getComputedStyle(el).color)
+    expect(bg).not.toBe('rgba(0, 0, 0, 0)')
+    expect(color).toBe('rgb(255, 255, 255)') // white × on the dark backing
+  })
+})
+
 // ── Wave-5 design refresh: eyebrow + forest/sky presets ───────────────────────
 test('forest theme applies the forest surface color and renders an eyebrow above the title', async ({ page }) => {
   await page.goto(
@@ -786,15 +823,24 @@ test('sky theme applies the sky surface color to the dialog', async ({ page }) =
   const eyebrowColor = await eyebrow.evaluate((el) => getComputedStyle(el).color)
   expect(eyebrowColor).toBe('rgb(25, 25, 25)')
 
-  // The sky close button has NO box (transparent) — just a black × over the
-  // light-blue surface. Corrected from the dark rounded box.
+  // The sky close button: on desktop NO box (transparent) — just a black × over
+  // the light-blue surface. On mobile (≤700px) the × sits over the image, so it
+  // gets a non-transparent dark backing + white × to stay visible (issue #49).
   const close = page.locator('.enlb-close')
   const closeBg = await close.evaluate((el) => getComputedStyle(el).backgroundColor)
-  expect(closeBg).toBe('rgba(0, 0, 0, 0)') // transparent — no box
   const closeColor = await close.evaluate((el) => getComputedStyle(el).color)
-  expect(closeColor).toBe('rgb(0, 0, 0)') // black ×
   const closeRadius = await close.evaluate((el) => getComputedStyle(el).borderRadius)
   expect(closeRadius).toBe('0px')
+  const vw = page.viewportSize()!.width
+  if (vw < 700) {
+    // Mobile: visible backing over the image + white × (RED until the fix).
+    expect(closeBg).not.toBe('rgba(0, 0, 0, 0)')
+    expect(closeColor).toBe('rgb(255, 255, 255)')
+  } else {
+    // Desktop: no box, black × over the light-blue content panel.
+    expect(closeBg).toBe('rgba(0, 0, 0, 0)') // transparent — no box
+    expect(closeColor).toBe('rgb(0, 0, 0)') // black ×
+  }
 })
 
 // ── Wave-5 forest/sky mockup CORRECTION (issue #47): campaign geometry ─────────
