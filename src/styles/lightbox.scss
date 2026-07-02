@@ -343,6 +343,16 @@
   min-height: 475px;
 }
 
+// imagePosition:"top" carries BOTH --two-column and --image-top classes, so the
+// grid above would force two columns and ignore the stack. This compound selector
+// (specificity 0,2,0 > the grid's 0,1,0) overrides it back to a single stacked
+// flex column: image on top (full width, 200px), content below.
+.enlb-layout--two-column.enlb-layout--image-top {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
 // Centered campaign content panel (flex column, centered, ~64–80px h-padding).
 .enlb-content {
   display: flex;
