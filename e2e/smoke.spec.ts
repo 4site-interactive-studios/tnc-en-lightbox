@@ -743,6 +743,92 @@ test.describe('forest/sky campaign geometry (desktop)', () => {
   })
 })
 
+// ── Unified campaign layout across ALL themes (issue #49) ─────────────────────
+// Themes are now COLOR-ONLY variants: light/dark/brand adopt the FULL campaign
+// layout (50/50 grid, ~835px modal, 42px heading, centered content, 238x56 CTA)
+// that forest/sky already had. jsdom can't read shadow computed style, so the
+// grid/typography/centering are asserted here against a real browser. Desktop
+// only — Mobile Chrome is skipped (image hidden + stacked layout).
+const unifiedCampaignBase = {
+  ...baseConfig,
+  eyebrow: 'Last chance',
+  header: 'Protect what remains of our wild places',
+  body: 'Your monthly gift defends forests, rivers, and wildlife all year long.',
+  cta: { label: 'Give monthly', href: '#give' },
+  secondaryCta: { label: 'Maybe later', href: '#later' },
+  triggers: { time: 50 },
+}
+
+const themeCases: Array<{ name: string; preset: string; imagePosition: 'left' | 'right' }> = [
+  { name: 'light', preset: 'light', imagePosition: 'left' },
+  { name: 'dark', preset: 'dark', imagePosition: 'left' },
+  { name: 'brand', preset: 'brand', imagePosition: 'left' },
+]
+
+test.describe('unified campaign layout across light/dark/brand (desktop)', () => {
+  for (const tc of themeCases) {
+    test(`${tc.name} renders the 50/50 grid, ~835px modal, 42px heading, centered content, 238x56 CTA`, async ({ page }, testInfo) => {
+      test.skip(testInfo.project.name === 'Mobile Chrome', 'desktop campaign layout')
+      await page.goto(
+        harnessUrl({
+          ...unifiedCampaignBase,
+          theme: { preset: tc.preset },
+          layout: { imagePosition: tc.imagePosition },
+        }),
+      )
+      const dialog = page.locator('.enlb-dialog')
+      const layout = page.locator('.enlb-layout')
+      const image = page.locator('.enlb-image')
+      const content = page.locator('.enlb-content')
+      const title = page.locator('.enlb-title')
+      const cta = page.locator('.enlb-cta:not(.enlb-cta--secondary)')
+      await expect(dialog).toBeVisible()
+
+      // ~835px desktop modal (campaign max-width), NOT the old 900px cap.
+      const dialogBox = await dialog.boundingBox()
+      expect(dialogBox).not.toBeNull()
+      expect(dialogBox!.width).toBeGreaterThanOrEqual(830)
+      expect(dialogBox!.width).toBeLessThanOrEqual(840)
+
+      // 50/50 grid: display:grid + two equal columns, each ~half the dialog.
+      const layoutDisplay = await layout.evaluate((el) => getComputedStyle(el).display)
+      expect(layoutDisplay).toBe('grid')
+      const imageBox = await image.boundingBox()
+      const contentBox = await content.boundingBox()
+      expect(imageBox).not.toBeNull()
+      expect(contentBox).not.toBeNull()
+      expect(contentBox!.width).toBeGreaterThan(dialogBox!.width * 0.45)
+      expect(contentBox!.width).toBeLessThan(dialogBox!.width * 0.55)
+      expect(imageBox!.width).toBeGreaterThan(dialogBox!.width * 0.45)
+      expect(imageBox!.width).toBeLessThan(dialogBox!.width * 0.55)
+
+      // Campaign typography: 42px / 800 heading.
+      const titleSize = await title.evaluate((el) => getComputedStyle(el).fontSize)
+      expect(titleSize).toBe('42px')
+      const titleWeight = await title.evaluate((el) => getComputedStyle(el).fontWeight)
+      expect(titleWeight).toBe('800')
+
+      // Centered campaign content.
+      const contentAlign = await content.evaluate((el) => getComputedStyle(el).textAlign)
+      expect(contentAlign).toBe('center')
+      const contentItems = await content.evaluate((el) => getComputedStyle(el).alignItems)
+      expect(contentItems).toBe('center')
+
+      // CTA ~238x56, square (radius 0), uppercase.
+      const ctaBox = await cta.boundingBox()
+      expect(ctaBox).not.toBeNull()
+      expect(ctaBox!.width).toBeGreaterThanOrEqual(234)
+      expect(ctaBox!.width).toBeLessThanOrEqual(242)
+      expect(ctaBox!.height).toBeGreaterThanOrEqual(54)
+      expect(ctaBox!.height).toBeLessThanOrEqual(58)
+      const ctaRadius = await cta.evaluate((el) => getComputedStyle(el).borderRadius)
+      expect(ctaRadius).toBe('0px')
+      const ctaTransform = await cta.evaluate((el) => getComputedStyle(el).textTransform)
+      expect(ctaTransform).toBe('uppercase')
+    })
+  }
+})
+
 // ── Forest/sky responsive (~700px stack; global 640px breakpoint untouched) ────
 test.describe('forest/sky responsive stacking (~700px)', () => {
   test('forest stacks vertically below ~700px: modal ~calc(100vw-32px), heading ~34px, content above image', async ({ page }, testInfo) => {
