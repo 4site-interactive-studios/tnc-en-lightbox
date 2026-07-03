@@ -20,6 +20,38 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           release-type: node
 
+      # ── dist-sync: rebuild committed dist on the release PR branch ──────────
+      # WHY: release-please bumps package.json via API but does not rebuild
+      # dist/en-lightbox.js, so the committed dist's version banner lags one
+      # version behind after each release-please update.  The release-qa job
+      # uploads a fresh asset to the GitHub Release, but that asset is never
+      # committed back.  By rebuilding on the release PR branch, the merged
+      # result keeps main's dist/banner consistent with package.json.
+      # Ref: issue #53.
+      - uses: actions/checkout@v4
+        if: ${{ steps.rp.outputs.pr }}
+        with:
+          ref: ${{ fromJson(steps.rp.outputs.pr).headBranchName }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        if: ${{ steps.rp.outputs.pr }}
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        if: ${{ steps.rp.outputs.pr }}
+        run: npm ci
+
+      - name: Rebuild and sync committed dist
+        if: ${{ steps.rp.outputs.pr }}
+        run: |
+          git config user.email fern@ndo.io
+          git config user.name "Fernando Santos"
+          tools/sdd/sync_release_dist.sh --push --expected-branch "${{ fromJson(steps.rp.outputs.pr).headBranchName }}"
+
   release-qa:
     if: ${{ needs.release-please.outputs.release_created == 'true' }}
     needs: [release-please]

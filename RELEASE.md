@@ -14,6 +14,8 @@ When a feature branch is merged to `main`, release-please evaluates whether a re
 
 Check that the proposed version is consistent with the changes and that the changelog accurately reflects what shipped. An already-released version in the proposal means the scope is stale.
 
+The release PR automatically includes a rebuilt `dist/en-lightbox.js` whose version banner matches the bumped `package.json`. This is handled by the `dist-sync` step in `release.yml` (see issue #53). The `release-qa` job still rebuilds, tests, and uploads the GitHub Release asset from the tag — the committed dist on the release PR branch is purely for keeping `main` consistent after merge.
+
 ### 3. Merge the release PR
 
 Use a **merge commit** (`gh pr merge --merge`) — never squash. Merge triggers:
