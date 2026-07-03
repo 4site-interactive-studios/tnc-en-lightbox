@@ -46,22 +46,74 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+# ── branch-name validation (defense-in-depth against refspec injection) ────────
+# A branch name like "+main" would pass a literal != "main" check but is parsed
+# by git as a force-push refspec ("+main" ⇒ force-push local main to remote main).
+# Similarly, names starting with "-" could be misinterpreted as options, and
+# characters like :, ~, ^, ?, *, [, \, or ".." have special meaning in git refs
+# or refspecs.  We enforce a strict allowlist AND reject forbidden leading chars.
+# This validation runs in BOTH modes (--check and --push) so misuse is caught early.
+validate_branch_name() {
+  local name="$1"
+  local label="$2"
+
+  if [[ -z "$name" ]]; then
+    echo "::error::$label: branch name is empty" >&2
+    exit 1
+  fi
+
+  # Reject leading + or - (refspec force / option injection)
+  if [[ "$name" == +* || "$name" == -* ]]; then
+    echo "::error::$label: branch name '$name' starts with '${name:0:1}' — could be misinterpreted as a refspec modifier or option" >&2
+    exit 1
+  fi
+
+  # Strict allowlist: alphanumeric, dots, underscores, slashes, hyphens only
+  # This implicitly rejects :, ~, ^, ?, *, [, \, whitespace, and any other
+  # character that has special meaning in git refs or refspecs.
+  if [[ ! "$name" =~ ^[A-Za-z0-9._/-]+$ ]]; then
+    echo "::error::$label: branch name '$name' contains invalid characters (only A-Za-z0-9._/- allowed)" >&2
+    exit 1
+  fi
+
+  # Reject consecutive dots (could form ".." range syntax)
+  if [[ "$name" == *".."* ]]; then
+    echo "::error::$label: branch name '$name' contains '..' — could be misinterpreted as a ref range" >&2
+    exit 1
+  fi
+
+  # Reject exact matches for forbidden branch names
+  if [[ "$name" == "main" || "$name" == "HEAD" ]]; then
+    echo "::error::$label: refusing to operate on '$name' — dist sync targets release PR branches only" >&2
+    exit 1
+  fi
+}
+
 # ── branch safety checks (both modes) ──────────────────────────────────────────
 CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 
-if [[ "$CURRENT_BRANCH" == "HEAD" ]]; then
-  echo "::error::refusing to operate on a detached HEAD" >&2
-  exit 1
-fi
+# Validate the current branch name
+validate_branch_name "$CURRENT_BRANCH" "current branch"
 
-if [[ "$CURRENT_BRANCH" == "main" ]]; then
-  echo "::error::refusing to operate on main — dist sync targets release PR branches only" >&2
-  exit 1
-fi
-
-if [[ -n "$EXPECTED_BRANCH" && "$CURRENT_BRANCH" != "$EXPECTED_BRANCH" ]]; then
-  echo "::error::branch mismatch: on '$CURRENT_BRANCH', expected '$EXPECTED_BRANCH'" >&2
-  exit 1
+# In push mode, --expected-branch is REQUIRED and must match exactly
+if [[ "$MODE" == "push" ]]; then
+  if [[ -z "$EXPECTED_BRANCH" ]]; then
+    echo "::error::--expected-branch is required in push mode" >&2
+    exit 1
+  fi
+  # Validate the expected branch name too (defense-in-depth)
+  validate_branch_name "$EXPECTED_BRANCH" "expected branch"
+  if [[ "$CURRENT_BRANCH" != "$EXPECTED_BRANCH" ]]; then
+    echo "::error::branch mismatch: on '$CURRENT_BRANCH', expected '$EXPECTED_BRANCH'" >&2
+    exit 1
+  fi
+elif [[ -n "$EXPECTED_BRANCH" ]]; then
+  # In check mode, --expected-branch is optional but if given, validate and match
+  validate_branch_name "$EXPECTED_BRANCH" "expected branch"
+  if [[ "$CURRENT_BRANCH" != "$EXPECTED_BRANCH" ]]; then
+    echo "::error::branch mismatch: on '$CURRENT_BRANCH', expected '$EXPECTED_BRANCH'" >&2
+    exit 1
+  fi
 fi
 
 # ── build ──────────────────────────────────────────────────────────────────────
@@ -86,7 +138,10 @@ git add dist/en-lightbox.js
 git commit -m "chore: rebuild dist banner for release"
 echo "sync_release_dist: committed rebuilt dist."
 
-# Push to the current branch (already validated it is NOT main)
+# Push using an explicit, fully-qualified, non-force refspec.
+# Never use bare `git push origin "$CURRENT_BRANCH"` — a name like "+main" would
+# be parsed as a force-push refspec.  The explicit refs/heads/ form ensures git
+# treats the argument as a branch name, not a refspec modifier.
 echo "sync_release_dist: pushing to '$CURRENT_BRANCH'…"
-git push origin "$CURRENT_BRANCH"
+git push origin "refs/heads/${CURRENT_BRANCH}:refs/heads/${CURRENT_BRANCH}"
 echo "sync_release_dist: pushed."
