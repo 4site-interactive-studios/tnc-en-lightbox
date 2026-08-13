@@ -4,8 +4,8 @@
   "kind": "feature",
   "stable_key": "lightbox-analytics-tracking",
   "state": "tracked",
-  "revision": 42,
-  "generation": 3,
+  "revision": 50,
+  "generation": 4,
   "base_branch": "main",
   "base_sha": "20efb1b3dc8781b571dac986b1dd3e9d17f8e38e",
   "domain": "analytics-tracking",
@@ -20,8 +20,8 @@
     ".agentic/planning/feature/lightbox-analytics-tracking/ROADMAP.md"
   ],
   "seal": {
-    "revision": 3,
-    "hash": "787401517e2692cd153a00b737241b80e4977754a810d6415c78dde74a5de5ca",
+    "revision": 4,
+    "hash": "56ba1e33d7b4ee6342b8409f86a599a1242257bcfb2504a29e3089aa86ab3ea8",
     "sealed_by": "Fernando Santos"
   },
   "waves": [
@@ -379,30 +379,30 @@
     "backend": "github",
     "wave_ids": [
       {
-        "id": "55",
         "key": "wave-6",
+        "id": "55",
         "url": "https://github.com/4site-interactive-studios/tnc-en-lightbox/issues/55"
       }
     ],
     "stream_ids": [
       {
-        "id": "56",
         "key": "wave-6/stream-a",
+        "id": "56",
         "url": "https://github.com/4site-interactive-studios/tnc-en-lightbox/issues/56"
       },
       {
-        "id": "57",
         "key": "wave-6/stream-b",
+        "id": "57",
         "url": "https://github.com/4site-interactive-studios/tnc-en-lightbox/issues/57"
       },
       {
-        "id": "58",
         "key": "wave-6/stream-c",
+        "id": "58",
         "url": "https://github.com/4site-interactive-studios/tnc-en-lightbox/issues/58"
       },
       {
-        "id": "59",
         "key": "wave-6/stream-d",
+        "id": "59",
         "url": "https://github.com/4site-interactive-studios/tnc-en-lightbox/issues/59"
       }
     ]
@@ -584,5 +584,5 @@
     "U": 5,
     "D": 26
   },
-  "reopen_reason": "Populate top-level manifest waves with the key-based structure ({key, streams:[{key}]}) that trackerKeys() joins on — sealed manifest had top-level waves:[] so no tracker packet could bind (owner-directed fix; toolchain gap noted: seal accepted empty top-level waves with populated epic.waves). No plan-content change."
+  "reopen_reason": "top-level waves missing from sealed manifest, tracker join impossible."
 }
