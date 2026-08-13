@@ -3,8 +3,8 @@
   "case_id": "0baf6e68c1ff62e8:feature:lightbox-analytics-tracking",
   "kind": "feature",
   "stable_key": "lightbox-analytics-tracking",
-  "state": "tracked",
-  "revision": 52,
+  "state": "ready_for_delivery",
+  "revision": 54,
   "generation": 4,
   "base_branch": "main",
   "base_sha": "20efb1b3dc8781b571dac986b1dd3e9d17f8e38e",
@@ -408,12 +408,12 @@
     ]
   },
   "review": {
-    "artifact_digest": null,
-    "seal_hash": null,
-    "base_sha": null,
-    "verdict": null,
-    "reviewer": null,
-    "reviewer_model": null
+    "artifact_digest": "89672d21b1e8f7475f0cbd7a2a95ca0671cd84f4f9dfe4c6a730f6a7f4aa750a",
+    "seal_hash": "56ba1e33d7b4ee6342b8409f86a599a1242257bcfb2504a29e3089aa86ab3ea8",
+    "base_sha": "20efb1b3dc8781b571dac986b1dd3e9d17f8e38e",
+    "verdict": "APPROVED",
+    "reviewer": "planning-reviewer",
+    "reviewer_model": "anthropic/claude-opus-5"
   },
   "planning_pr": {
     "number": 60,
