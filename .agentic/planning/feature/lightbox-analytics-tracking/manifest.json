@@ -1,0 +1,584 @@
+{
+  "version": 1,
+  "case_id": "0baf6e68c1ff62e8:feature:lightbox-analytics-tracking",
+  "kind": "feature",
+  "stable_key": "lightbox-analytics-tracking",
+  "state": "tracked",
+  "revision": 41,
+  "generation": 3,
+  "base_branch": "main",
+  "base_sha": "20efb1b3dc8781b571dac986b1dd3e9d17f8e38e",
+  "domain": "analytics-tracking",
+  "included_ids": [
+    "backlog:analytics-lifecycle-hooks",
+    "client-guide-faq:en-reference-field-recording"
+  ],
+  "artifacts": [
+    ".agentic/planning/feature/lightbox-analytics-tracking/DECISIONS.md",
+    ".agentic/planning/feature/lightbox-analytics-tracking/OPEN-QUESTIONS.md",
+    ".agentic/planning/feature/lightbox-analytics-tracking/RESEARCH.md",
+    ".agentic/planning/feature/lightbox-analytics-tracking/ROADMAP.md"
+  ],
+  "seal": {
+    "revision": 3,
+    "hash": "787401517e2692cd153a00b737241b80e4977754a810d6415c78dde74a5de5ca",
+    "sealed_by": "Fernando Santos"
+  },
+  "waves": [
+    {
+      "goal": "Make lightbox engagement measurable — Marketing via Tealium/Adobe Analytics (impression + accept), Membership via a designated EN reference field (accepted/declined) — plus ?debug=true|log console diagnostics.",
+      "key": "wave-6",
+      "name": "Analytics & EN reference-field tracking",
+      "streams": [
+        {
+          "acceptance": [
+            "enlb:open fires on document exactly once per successful mount and never from the abortOpen/catch path",
+            "enlb:cta dispatches synchronously inside onCtaClick before routing/navigation with role 'primary'|'secondary'|'dismiss'; no preventDefault on redirect anchors",
+            "enlb:dismiss detail.reason is role-qualified per D8: close-button|esc|overlay|cta-primary|cta-secondary|cta-dismiss|api; detail.pathname frozen (D15)",
+            "Full pre-existing suite green and behaviorally unchanged; api-surface snapshot byte-identical",
+            "Wave-6 scaffold landed: .agentic/specs/wave-6/README.md + stream-a.md, ROADMAP.md events-table + line-266 stance amendment, BACKLOG.md promotion of 'Analytics / lifecycle event hooks', specs index row, ownership.json rules for src/analytics/** src/en/** src/debug/**, EDITOR.md events section, dist rebuild"
+          ],
+          "concern": "Emit the reserved lifecycle CustomEvents from Lightbox (enlb:open once per mount, enlb:cta with role before routing, enlb:dismiss with role-qualified reason) with zero consumers — pure additive seam; carries the wave-6 governance scaffold.",
+          "contracts_changed": [
+            "enlb-lifecycle-events"
+          ],
+          "contracts_read": [],
+          "depends_on": [],
+          "key": "wave-6/stream-a",
+          "locks": [
+            "dist/en-lightbox.js",
+            "src/index.ts"
+          ],
+          "name": "Lifecycle event seam (enlb:open, enlb:cta role, role-qualified enlb:dismiss reason)",
+          "owned_paths": [
+            "src/core/lightbox.ts",
+            ".agentic/specs/wave-6/**"
+          ],
+          "produces": {
+            "name": "enlb-lifecycle-events",
+            "version": 1
+          },
+          "read_paths": [
+            "src/index.ts",
+            "src/config.ts",
+            ".agentic/LEARNINGS.md",
+            ".agentic/specs/ROADMAP.md"
+          ],
+          "verification": [
+            {
+              "cmd": "npm test",
+              "cwd": "/Users/fernando/sites/tnc-en-lightbox"
+            },
+            {
+              "cmd": "npm run typecheck",
+              "cwd": "/Users/fernando/sites/tnc-en-lightbox"
+            },
+            {
+              "cmd": "npm run lint",
+              "cwd": "/Users/fernando/sites/tnc-en-lightbox"
+            },
+            {
+              "cmd": "npm run build",
+              "cwd": "/Users/fernando/sites/tnc-en-lightbox"
+            },
+            {
+              "cmd": "npm run contracts:generate && git add -AN && git diff --exit-code .agentic/contracts/snapshots/api-surface.txt",
+              "cwd": "/Users/fernando/sites/tnc-en-lightbox"
+            },
+            {
+              "cmd": "node tools/sdd/check_size.mjs",
+              "cwd": "/Users/fernando/sites/tnc-en-lightbox"
+            },
+            {
+              "cmd": "npm run e2e",
+              "cwd": "/Users/fernando/sites/tnc-en-lightbox"
+            }
+          ],
+          "write_paths": [
+            "src/core/lightbox.ts",
+            "src/core/lightbox.events.test.ts",
+            "src/core/lightbox.cta.test.ts",
+            "src/core/lightbox.close.test.ts",
+            "e2e/smoke.spec.ts",
+            ".agentic/specs/wave-6/README.md",
+            ".agentic/specs/wave-6/stream-a.md",
+            ".agentic/specs/ROADMAP.md",
+            ".agentic/specs/README.md",
+            ".agentic/BACKLOG.md",
+            ".agentic/ownership.json",
+            "EDITOR.md",
+            "dist/en-lightbox.js"
+          ]
+        },
+        {
+          "acceptance": [
+            "utag.link receives exactly {event_name:'lightbox_impression', lightbox_name:'inactivity-exit'} once per display",
+            "utag.link receives exactly {event_name:'lightbox_click', lightbox_name:'inactivity-exit'} on primary CTA accept AND browser navigation still happens (e2e)",
+            "Zero utag.link calls on X/ESC/overlay/decline-button/secondary-close paths (explicit negative matrix)",
+            "utag absent / wrong shape / throwing => silent no-op, page never errors (unit matrix + e2e/degraded.spec.ts: open/accept/close with no window.utag, zero page errors)",
+            "Always-on per D3: no config block; config-schema and api-surface snapshots byte-identical",
+            "Logic in named modules (src/analytics/*); index.ts thin call-through (repo Decision D8)"
+          ],
+          "concern": "Translate enlb:open and primary enlb:cta into exact frozen utag.link payloads, always-on (D3), guarded never-throw when utag is absent (D6); owns the degraded/utag-absent public-boundary e2e (journey j_degraded).",
+          "contracts_changed": [
+            "tealium-utag-event-payload"
+          ],
+          "contracts_read": [
+            {
+              "name": "enlb-lifecycle-events",
+              "version": 1
+            }
+          ],
+          "depends_on": [
+            "wave-6/stream-a"
+          ],
+          "key": "wave-6/stream-b",
+          "locks": [
+            "dist/en-lightbox.js",
+            "src/index.ts"
+          ],
+          "name": "Tealium/Adobe impression + accept-click tracking (always-on, guarded; owns degraded/utag-absent e2e)",
+          "owned_paths": [
+            "src/analytics/**"
+          ],
+          "produces": {
+            "name": "tealium-utag-event-payload",
+            "version": 1
+          },
+          "read_paths": [
+            "src/core/lightbox.ts",
+            "src/index.ts",
+            "e2e/harness.html",
+            "e2e/helpers.ts",
+            ".agentic/contracts/registry.json"
+          ],
+          "verification": [
+            {
+              "cmd": "npm test",
+              "cwd": "/Users/fernando/sites/tnc-en-lightbox"
+            },
+            {
+              "cmd": "npm run typecheck",
+              "cwd": "/Users/fernando/sites/tnc-en-lightbox"
+            },
+            {
+              "cmd": "npm run lint",
+              "cwd": "/Users/fernando/sites/tnc-en-lightbox"
+            },
+            {
+              "cmd": "npm run build",
+              "cwd": "/Users/fernando/sites/tnc-en-lightbox"
+            },
+            {
+              "cmd": "npm run contracts:generate && git add -AN && git diff --exit-code .agentic/contracts/snapshots/",
+              "cwd": "/Users/fernando/sites/tnc-en-lightbox"
+            },
+            {
+              "cmd": "node tools/sdd/check_size.mjs",
+              "cwd": "/Users/fernando/sites/tnc-en-lightbox"
+            },
+            {
+              "cmd": "npm run e2e -- e2e/analytics.spec.ts e2e/degraded.spec.ts",
+              "cwd": "/Users/fernando/sites/tnc-en-lightbox"
+            }
+          ],
+          "write_paths": [
+            "src/analytics/tealium.ts",
+            "src/analytics/payloads.ts",
+            "src/analytics/tealium.test.ts",
+            "src/index.ts",
+            "e2e/analytics.spec.ts",
+            "e2e/degraded.spec.ts",
+            "e2e/utag-stub.ts",
+            ".agentic/specs/wave-6/stream-b.md",
+            "EDITOR.md",
+            "dist/en-lightbox.js"
+          ]
+        },
+        {
+          "acceptance": [
+            "enlb:cta role primary => write lightbox_accepted; enlb:dismiss reason in {close-button, esc, overlay, cta-secondary, cta-dismiss, api} => write lightbox_declined; reason cta-primary => NO write (accept owns the outcome, D8) — asserted in unit AND e2e for a close-action primary CTA",
+            "Same-page find-or-create hidden input write AND session-scoped sessionStorage carry-over replay on the destination page (write-if-form-present then clear); last-write-wins across separate interactions",
+            "Fully inert when en.referenceField is unconfigured; no-form/no-field => no-op, never throws",
+            "Hidden input never required; validation/submit handlers untouched; lightbox.en-interference.test.ts extended",
+            "enlb:field-write dispatched on document per write/replay with detail {action:'write'|'replay', field, value}",
+            "e2e/reference-field.spec.ts green against harness #en-form + e2e/carry-over.html replay; form still submits",
+            "config-schema snapshot regenerated, additive-only reviewed diff; src/config.ts edit carries [no-spec: additive config field owned by wave-6 module]",
+            "Docs landed: CLIENT_GUIDE.md:312-316 FAQ rewrite + EDITOR.md en.referenceField section incl. Membership-designation note and the destination-page-embeds-dist carry-over precondition"
+          ],
+          "concern": "Write lightbox_accepted/lightbox_declined into the configured EN reference field via same-page hidden-input write plus session-scoped redirect carry-over, config-gated and inert by default (D2), with accept-owns-outcome precedence (D8); carries the config-schema gate artifacts and the editor/client docs.",
+          "contracts_changed": [
+            "en-reference-field-value"
+          ],
+          "contracts_read": [
+            {
+              "name": "enlb-lifecycle-events",
+              "version": 1
+            }
+          ],
+          "depends_on": [
+            "wave-6/stream-a"
+          ],
+          "key": "wave-6/stream-c",
+          "locks": [
+            "dist/en-lightbox.js",
+            "src/index.ts",
+            "src/config.ts"
+          ],
+          "name": "EN reference-field writer (config-gated, same-page + carry-over, accept-owns-outcome precedence; carries config-schema regen + waiver + docs)",
+          "owned_paths": [
+            "src/en/**"
+          ],
+          "produces": {
+            "name": "en-reference-field-value",
+            "version": 1
+          },
+          "read_paths": [
+            "src/core/lightbox.ts",
+            "src/index.ts",
+            "src/config.ts",
+            ".agentic/specs/ROADMAP.md",
+            ".agentic/ownership.json",
+            "e2e/harness.html"
+          ],
+          "verification": [
+            {
+              "cmd": "npm test",
+              "cwd": "/Users/fernando/sites/tnc-en-lightbox"
+            },
+            {
+              "cmd": "npm run typecheck",
+              "cwd": "/Users/fernando/sites/tnc-en-lightbox"
+            },
+            {
+              "cmd": "npm run lint",
+              "cwd": "/Users/fernando/sites/tnc-en-lightbox"
+            },
+            {
+              "cmd": "npm run build",
+              "cwd": "/Users/fernando/sites/tnc-en-lightbox"
+            },
+            {
+              "cmd": "npm run contracts:generate && git add -AN && git diff --exit-code .agentic/contracts/snapshots/config-schema.txt",
+              "cwd": "/Users/fernando/sites/tnc-en-lightbox"
+            },
+            {
+              "cmd": "node tools/sdd/check_size.mjs",
+              "cwd": "/Users/fernando/sites/tnc-en-lightbox"
+            },
+            {
+              "cmd": "npm run e2e -- e2e/reference-field.spec.ts",
+              "cwd": "/Users/fernando/sites/tnc-en-lightbox"
+            }
+          ],
+          "write_paths": [
+            "src/en/reference-field.ts",
+            "src/en/config.ts",
+            "src/en/reference-field.test.ts",
+            "src/config.ts",
+            "src/index.ts",
+            "src/core/lightbox.en-interference.test.ts",
+            "e2e/reference-field.spec.ts",
+            "e2e/carry-over.html",
+            ".agentic/contracts/snapshots/config-schema.txt",
+            ".agentic/specs/wave-6/stream-c.md",
+            "EDITOR.md",
+            "CLIENT_GUIDE.md",
+            "dist/en-lightbox.js"
+          ]
+        },
+        {
+          "acceptance": [
+            "?debug=true and ?debug=log both activate diagnostics; absent / ?debug=false / ?debug=1 / other values / malformed query produce ZERO console output (load-bearing negative tests)",
+            "Console output includes lifecycle events (with role/reason), exact utag payload objects (same pure builder as the wire), and enlb:field-write entries — verified by console spy unit tests and Playwright console capture incl. a run with utag absent",
+            "Never throws (bad URL, frozen console); console-only scope (in-page panel deferred to BACKLOG)",
+            "Wave tail landed: wave-6 README retro, LEARNINGS promotion candidates, DOCS_AUDIT.md re-true, conditional budgets.json gzip re-baseline reviewed on this stream alone (GATE-ARMING D13)"
+          ],
+          "concern": "When the URL query carries debug=true or debug=log, log lifecycle events, exact utag payloads, and EN field writes/replays (observed via enlb:field-write) to the console; silent otherwise; carries the wave-6 tail.",
+          "contracts_changed": [],
+          "contracts_read": [
+            {
+              "name": "enlb-lifecycle-events",
+              "version": 1
+            },
+            {
+              "name": "tealium-utag-event-payload",
+              "version": 1
+            },
+            {
+              "name": "en-reference-field-value",
+              "version": 1
+            }
+          ],
+          "depends_on": [
+            "wave-6/stream-a",
+            "wave-6/stream-b",
+            "wave-6/stream-c"
+          ],
+          "key": "wave-6/stream-d",
+          "locks": [
+            "dist/en-lightbox.js",
+            "src/index.ts"
+          ],
+          "name": "?debug=true|log console diagnostics + wave tail",
+          "owned_paths": [
+            "src/debug/**"
+          ],
+          "read_paths": [
+            "src/core/lightbox.ts",
+            "src/analytics/tealium.ts",
+            "src/analytics/payloads.ts",
+            "src/en/reference-field.ts",
+            "src/index.ts"
+          ],
+          "verification": [
+            {
+              "cmd": "npm test",
+              "cwd": "/Users/fernando/sites/tnc-en-lightbox"
+            },
+            {
+              "cmd": "npm run typecheck",
+              "cwd": "/Users/fernando/sites/tnc-en-lightbox"
+            },
+            {
+              "cmd": "npm run lint",
+              "cwd": "/Users/fernando/sites/tnc-en-lightbox"
+            },
+            {
+              "cmd": "npm run build",
+              "cwd": "/Users/fernando/sites/tnc-en-lightbox"
+            },
+            {
+              "cmd": "node tools/sdd/check_size.mjs",
+              "cwd": "/Users/fernando/sites/tnc-en-lightbox"
+            },
+            {
+              "cmd": "npm run e2e -- e2e/debug.spec.ts",
+              "cwd": "/Users/fernando/sites/tnc-en-lightbox"
+            }
+          ],
+          "write_paths": [
+            "src/debug/diagnostics.ts",
+            "src/debug/diagnostics.test.ts",
+            "src/index.ts",
+            "e2e/debug.spec.ts",
+            ".agentic/specs/wave-6/stream-d.md",
+            ".agentic/specs/wave-6/README.md",
+            ".agentic/LEARNINGS.md",
+            "DOCS_AUDIT.md",
+            "EDITOR.md",
+            "CLIENT_GUIDE.md",
+            ".agentic/contracts/budgets.json",
+            "dist/en-lightbox.js"
+          ]
+        }
+      ]
+    }
+  ],
+  "tracker": {
+    "backend": "github",
+    "wave_ids": [
+      {
+        "id": "55",
+        "key": "wave-6",
+        "url": "https://github.com/4site-interactive-studios/tnc-en-lightbox/issues/55"
+      }
+    ],
+    "stream_ids": [
+      {
+        "id": "56",
+        "key": "wave-6/stream-a",
+        "url": "https://github.com/4site-interactive-studios/tnc-en-lightbox/issues/56"
+      },
+      {
+        "id": "57",
+        "key": "wave-6/stream-b",
+        "url": "https://github.com/4site-interactive-studios/tnc-en-lightbox/issues/57"
+      },
+      {
+        "id": "58",
+        "key": "wave-6/stream-c",
+        "url": "https://github.com/4site-interactive-studios/tnc-en-lightbox/issues/58"
+      },
+      {
+        "id": "59",
+        "key": "wave-6/stream-d",
+        "url": "https://github.com/4site-interactive-studios/tnc-en-lightbox/issues/59"
+      }
+    ]
+  },
+  "review": {
+    "artifact_digest": null,
+    "seal_hash": null,
+    "base_sha": null,
+    "verdict": null,
+    "reviewer": null,
+    "reviewer_model": null
+  },
+  "planning_pr": null,
+  "supersedes": [],
+  "superseded_by": null,
+  "epic": {
+    "contracts": [
+      {
+        "adoption_owner": "wave-6/stream-a",
+        "compat_rule": "additive-only detail members; enlb:dismiss detail.pathname frozen (Decision D15); detail.reason is role-qualified (D8): 'close-button'|'esc'|'overlay'|'cta-primary'|'cta-secondary'|'cta-dismiss'|'api'; enlb:cta detail carries role 'primary'|'secondary'|'dismiss'; event names enlb:-namespaced, dispatched on document with bubbles:true",
+        "legacy_removal_owner": "n/a — first version; enlb:dismiss pathname sub-contract remains owned by wave-1 D15",
+        "name": "enlb-lifecycle-events",
+        "persistence": "none — DOM CustomEvents on document, observed synchronously",
+        "public_boundary_test": "jsdom + Playwright listeners on document assert enlb:open once-per-mount, enlb:cta role values, and role-qualified enlb:dismiss reason per close path (close-action primary CTA yields cta-primary) via the public dist asset on e2e/harness.html",
+        "reader": "src/analytics/*, src/en/*, src/debug/*, and host-page listeners",
+        "version": 1,
+        "writer": "src/core/lightbox.ts (Lightbox.open/close/onCtaClick)"
+      },
+      {
+        "adoption_owner": "wave-6/stream-b",
+        "compat_rule": "payload keys additive-only; event_name and lightbox_name values are frozen strings; no PII — constant strings by construction",
+        "legacy_removal_owner": "n/a — first version",
+        "name": "tealium-utag-event-payload",
+        "persistence": "none — fire-and-forget call on host-provided window.utag.link (Tealium → Adobe, external)",
+        "public_boundary_test": "e2e/analytics.spec.ts exact-payload assertions against a window.utag recording stub on e2e/harness.html loading dist/en-lightbox.js; utag-absent degradation proven by e2e/degraded.spec.ts",
+        "reader": "Tealium → Adobe Analytics (external Marketing reporting)",
+        "version": 1,
+        "writer": "src/analytics/tealium.ts"
+      },
+      {
+        "adoption_owner": "wave-6/stream-c",
+        "compat_rule": "value strings frozen ('lightbox_accepted'/'lightbox_declined'); field name integrator-configured, validated before DOM insertion; hidden input find-or-create, never required; accept owns the outcome (D8): enlb:dismiss reason cta-primary never overwrites lightbox_accepted; additive diagnostics emission enlb:field-write {action:'write'|'replay', field, value} on document is observability only, not the persisted record",
+        "legacy_removal_owner": "n/a — first version",
+        "name": "en-reference-field-value",
+        "persistence": "Engaging Networks transaction/constituent record via the page's form submission; session-scoped sessionStorage carry-over between pages, self-clearing; carry-over replay requires the destination page to also embed dist/en-lightbox.js",
+        "public_boundary_test": "e2e/reference-field.spec.ts against the #en-form in e2e/harness.html plus replay page e2e/carry-over.html: field equals lightbox_accepted after accept (including a close-action primary CTA) and lightbox_declined after every decline close path; form still submits",
+        "reader": "Engaging Networks reporting, segmentation, and downstream Membership processes; src/debug/* (diagnostics via enlb:field-write)",
+        "version": 1,
+        "writer": "src/en/reference-field.ts"
+      }
+    ],
+    "criteria": [
+      "When the Inactivity & Exit Intent Lightbox displays, exactly one utag.link call fires with event_name='lightbox_impression' and lightbox_name='inactivity-exit'",
+      "When a user clicks the primary CTA (accept), utag.link fires with event_name='lightbox_click' and lightbox_name='inactivity-exit', and navigation still proceeds (native anchor)",
+      "No analytics event fires on any close/dismiss/decline path (X, ESC, overlay, decline button, secondary close CTA)",
+      "When the reference field is configured, accept writes 'lightbox_accepted' and any decline close path writes 'lightbox_declined' into the designated EN field (same-page write and session-scoped redirect carry-over), flowing into Engaging Networks with the supporter's submission; accept owns the outcome — a close-action primary CTA leaves the field at 'lightbox_accepted' (D8)",
+      "With no field configured the reference-field writer is fully inert; Membership designates the deployed field value later",
+      "?debug=true or ?debug=log logs lifecycle events, exact utag payloads, field writes, and carry-over replays to the console; all other param states produce zero console output",
+      "window.utag absent, wrong-shaped, or throwing results in a guarded silent no-op; the asset never throws on the host page (repo invariant)",
+      "Event naming and parameter values match the stakeholder specification exactly and are validated in browser tooling and Playwright e2e"
+    ],
+    "fixtures": [
+      {
+        "id": "e2e/analytics.spec.ts",
+        "public": true
+      },
+      {
+        "id": "e2e/reference-field.spec.ts",
+        "public": true
+      },
+      {
+        "id": "e2e/debug.spec.ts",
+        "public": true
+      },
+      {
+        "id": "e2e/degraded.spec.ts",
+        "public": true
+      }
+    ],
+    "id": "lightbox-analytics-tracking",
+    "journeys": [
+      {
+        "id": "j_impression",
+        "name": "Lightbox display fires exactly one utag.link call with payload {event_name:'lightbox_impression', lightbox_name:'inactivity-exit'} — asserted against a window.utag recording stub on the public e2e harness loading the built dist/en-lightbox.js",
+        "public_boundary_test": "e2e/analytics.spec.ts"
+      },
+      {
+        "id": "j_accept",
+        "name": "Primary CTA accept fires {event_name:'lightbox_click', lightbox_name:'inactivity-exit'} AND navigation proceeds (native anchor) AND the configured EN field equals 'lightbox_accepted' — same-page write on the harness #en-form (including for a close-action accept CTA, per D8 precedence) and session-scoped carry-over replay on e2e/carry-over.html",
+        "public_boundary_test": "e2e/reference-field.spec.ts"
+      },
+      {
+        "id": "j_decline",
+        "name": "Every decline close path (X, ESC, overlay click, decline/dismissLabel button, secondary close CTA) fires ZERO utag.link calls and writes 'lightbox_declined' into the configured EN field on the harness #en-form",
+        "public_boundary_test": "e2e/reference-field.spec.ts"
+      },
+      {
+        "id": "j_debug",
+        "name": "?debug=true and ?debug=log log lifecycle events, exact utag payloads, EN field writes, and carry-over replays to the console (including with utag absent); no param, ?debug=false, ?debug=1, or malformed query produce zero output",
+        "public_boundary_test": "e2e/debug.spec.ts"
+      },
+      {
+        "id": "j_degraded",
+        "name": "Host page with no window.utag runs open/accept/close flows with zero page errors and no thrown exceptions (never-throw invariant)",
+        "public_boundary_test": "e2e/degraded.spec.ts"
+      }
+    ],
+    "name": "Inactivity & Exit Intent Lightbox — Tealium/Adobe analytics + EN reference-field tracking",
+    "streams": [
+      {
+        "depends_on": [],
+        "id": "wave-6/stream-a",
+        "name": "Lifecycle event seam (enlb:open, enlb:cta role, role-qualified enlb:dismiss reason)",
+        "produces": [
+          {
+            "name": "enlb-lifecycle-events",
+            "version": 1
+          }
+        ]
+      },
+      {
+        "depends_on": [
+          "wave-6/stream-a"
+        ],
+        "id": "wave-6/stream-b",
+        "name": "Tealium/Adobe impression + accept-click tracking (always-on, guarded; owns degraded/utag-absent e2e)",
+        "produces": [
+          {
+            "name": "tealium-utag-event-payload",
+            "version": 1
+          }
+        ]
+      },
+      {
+        "depends_on": [
+          "wave-6/stream-a"
+        ],
+        "id": "wave-6/stream-c",
+        "name": "EN reference-field writer (config-gated, same-page + carry-over, accept-owns-outcome precedence; carries config-schema regen + waiver + docs)",
+        "produces": [
+          {
+            "name": "en-reference-field-value",
+            "version": 1
+          }
+        ]
+      },
+      {
+        "depends_on": [
+          "wave-6/stream-a",
+          "wave-6/stream-b",
+          "wave-6/stream-c"
+        ],
+        "id": "wave-6/stream-d",
+        "name": "?debug=true|log console diagnostics + wave tail",
+        "produces": []
+      }
+    ],
+    "waves": [
+      {
+        "goal": "Make lightbox engagement measurable — Marketing via Tealium/Adobe Analytics (impression + accept), Membership via a designated EN reference field (accepted/declined) — plus ?debug=true|log console diagnostics.",
+        "id": "wave-6",
+        "name": "Analytics & EN reference-field tracking",
+        "streams": [
+          "wave-6/stream-a",
+          "wave-6/stream-b",
+          "wave-6/stream-c",
+          "wave-6/stream-d"
+        ]
+      }
+    ]
+  },
+  "progress": {
+    "S": 4,
+    "K": 8,
+    "U": 5,
+    "D": 26
+  },
+  "reopen_reason": "Populate top-level manifest waves with the key-based structure ({key, streams:[{key}]}) that trackerKeys() joins on — sealed manifest had top-level waves:[] so no tracker packet could bind (owner-directed fix; toolchain gap noted: seal accepted empty top-level waves with populated epic.waves). No plan-content change."
+}
