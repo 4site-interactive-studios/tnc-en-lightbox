@@ -21,7 +21,7 @@ re-deriving it — and so "deferred" never quietly means "forgotten."
 - **Revisit trigger:** A campaign owner asks for "don't show again for X days" or campaign-wide suppression.
 
 ### Analytics / lifecycle event hooks (deferred)
-- **Status:** Deferred — no consumer for metrics yet. **Date:** 2026-06-25.
+- **Status:** PROMOTED into wave-6 (no longer deferred) — the lifecycle seam is landing first, followed by Tealium/Adobe, EN reference-field, and diagnostics readers. **Date:** 2026-08-13.
 - **Idea:** Optional callbacks (`onShow`, `onDismiss`, `onCTA`) and/or `dataLayer`/custom-event emissions so campaigns can measure impressions and conversions.
 - **Why deferred:** Core behavior must land first; the brief doesn't yet require measurement, and the integration target (GA/EN/dataLayer) is unspecified.
 - **Revisit trigger:** A campaign needs conversion/impression tracking, or an analytics target is chosen.

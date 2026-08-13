@@ -162,6 +162,137 @@ test('primary CTA is an anchor and navigates', async ({ page }) => {
   await expect(page).toHaveURL(/#cta-navigated$/)
 })
 
+test('lifecycle seam emits open once per mount and CTA before native navigation', async ({ page }) => {
+  await page.goto(
+    harnessUrl({
+      ...baseConfig,
+      triggers: { time: 50, frequencyDays: 0 },
+      cta: { label: 'Track me', href: '#lifecycle-cta' },
+    }),
+  )
+  await expect(page.locator('.enlb-overlay')).toBeVisible()
+  await page.evaluate(() => {
+    const events: Array<{ name: string; detail: unknown }> = []
+    const recordOpen = (event: Event) => {
+      events.push({ name: event.type, detail: (event as CustomEvent).detail })
+    }
+    document.addEventListener('enlb:open', recordOpen)
+    document.addEventListener('enlb:cta', (event) => {
+      events.push({ name: event.type, detail: (event as CustomEvent).detail })
+    })
+    window.addEventListener('hashchange', () => events.push({ name: 'hashchange', detail: null }))
+    ;(window as unknown as { lifecycle: Array<{ name: string; detail: unknown }> }).lifecycle = events
+    ;(window as unknown as { ENLightboxAPI: { close: () => void } }).ENLightboxAPI.close()
+    ;(window as unknown as { ENLightboxAPI: { open: () => void } }).ENLightboxAPI.open()
+  })
+  await expect(page.locator('.enlb-overlay')).toBeVisible()
+  expect(
+    await page.evaluate(
+      () => (window as unknown as { lifecycle: Array<{ name: string; detail: unknown }> }).lifecycle,
+    ),
+  ).toEqual([{ name: 'enlb:open', detail: {} }])
+
+  await page.locator('.enlb-cta').click()
+  await expect(page).toHaveURL(/#lifecycle-cta$/)
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        return (window as unknown as { lifecycle: Array<{ name: string; detail: unknown }> }).lifecycle
+      }),
+    )
+    .toEqual([
+      { name: 'enlb:open', detail: {} },
+      { name: 'enlb:cta', detail: { role: 'primary' } },
+      { name: 'hashchange', detail: null },
+    ])
+})
+
+test('lifecycle seam reports role-qualified dismissal reasons across close paths', async ({ page }) => {
+  await page.goto(
+    harnessUrl({
+      ...baseConfig,
+      triggers: { time: 50, frequencyDays: 0 },
+      cta: { label: 'Primary', action: 'close' },
+      secondaryCta: { label: 'Secondary', action: 'close' },
+      dismissLabel: 'Dismiss',
+    }),
+  )
+  await expect(page.locator('.enlb-overlay')).toBeVisible()
+  await page.evaluate(() => {
+    const events: Array<{ name: string; detail: unknown }> = []
+    document.addEventListener('enlb:cta', (event) => {
+      events.push({ name: event.type, detail: (event as CustomEvent).detail })
+    })
+    document.addEventListener('enlb:dismiss', (event) => {
+      events.push({ name: event.type, detail: (event as CustomEvent).detail })
+    })
+    ;(window as unknown as { lifecycle: Array<{ name: string; detail: unknown }> }).lifecycle = events
+    ;(window as unknown as { ENLightboxAPI: { close: () => void } }).ENLightboxAPI.close()
+  })
+
+  const open = async () => {
+    await page.evaluate(() => {
+      ;(window as unknown as { ENLightboxAPI: { open: () => void } }).ENLightboxAPI.open()
+    })
+    await expect(page.locator('.enlb-overlay')).toBeVisible()
+  }
+
+  await open()
+  await page.locator('.enlb-close').click()
+  await expect(page.locator('.enlb-overlay')).toHaveCount(0)
+
+  await open()
+  await page.keyboard.press('Escape')
+  await expect(page.locator('.enlb-overlay')).toHaveCount(0)
+
+  await open()
+  await page.locator('.enlb-overlay').click({ position: { x: 5, y: 5 } })
+  await expect(page.locator('.enlb-overlay')).toHaveCount(0)
+
+  await open()
+  await page.locator('.enlb-cta:not(.enlb-cta--secondary)').click()
+  await expect(page.locator('.enlb-overlay')).toHaveCount(0)
+
+  await open()
+  await page.locator('.enlb-cta--secondary').first().click()
+  await expect(page.locator('.enlb-overlay')).toHaveCount(0)
+
+  await open()
+  await page.locator('.enlb-cta--secondary').last().click()
+  await expect(page.locator('.enlb-overlay')).toHaveCount(0)
+
+  await open()
+  await page.evaluate(() => {
+    ;(window as unknown as { ENLightboxAPI: { close: () => void } }).ENLightboxAPI.close()
+  })
+  await expect(page.locator('.enlb-overlay')).toHaveCount(0)
+
+  const lifecycle = await page.evaluate(
+    () => (window as unknown as { lifecycle: Array<{ name: string; detail: unknown }> }).lifecycle,
+  )
+  expect(lifecycle.filter((event) => event.name === 'enlb:cta')).toEqual([
+    { name: 'enlb:cta', detail: { role: 'primary' } },
+    { name: 'enlb:cta', detail: { role: 'secondary' } },
+    { name: 'enlb:cta', detail: { role: 'dismiss' } },
+  ])
+  const dismissals = lifecycle.filter((event) => event.name === 'enlb:dismiss')
+  expect(dismissals.map((event) => (event.detail as { reason: string }).reason)).toEqual([
+    'api',
+    'close-button',
+    'esc',
+    'overlay',
+    'cta-primary',
+    'cta-secondary',
+    'cta-dismiss',
+    'api',
+  ])
+  expect(
+    dismissals.every(
+      (event) => (event.detail as { pathname: string }).pathname === '/e2e/harness.html',
+    ),
+  ).toBe(true)
+})
+
 // ── CTA hover effect (issue #49) ─────────────────────────────────────────────
 // A tasteful, theme-agnostic hover (transform: scale, not a color change so it
 // works for forest's white CTA, sky's black CTA, light's blue CTA, etc.). It must
@@ -1208,4 +1339,3 @@ test('an unknown preset degrades to light and inherits the unified campaign layo
   const layoutDisplay = await layout.evaluate((el) => getComputedStyle(el).display)
   expect(layoutDisplay).toBe('grid')
 })
-
