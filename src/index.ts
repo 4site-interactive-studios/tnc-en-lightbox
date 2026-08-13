@@ -4,6 +4,7 @@ import { normalizeTriggers, type NormalizedTriggers } from './triggers/config'
 import { normalizeTheme } from './themes/config'
 import { createDispatcher, type Dispatcher } from './triggers/dispatcher'
 import { isEligible as checkEligible, stamp } from './triggers/dismissal'
+import { installTealiumListeners } from './analytics/tealium'
 
 export { Lightbox, normalizeConfig }
 
@@ -94,6 +95,7 @@ function autoInit(cfg: unknown): void {
   if (g.__ENLightboxLoaded) return
   g.__ENLightboxLoaded = true
   try {
+    installTealiumListeners()
     const cfg = g.ENLightbox
     if (cfg) {
       autoInit(cfg)

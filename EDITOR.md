@@ -126,6 +126,17 @@ The lightbox dispatches these `CustomEvent`s on `document` with `bubbles: true`:
 
 These events are integration-observable internal seams for the wave-6 tracking readers, not a public JavaScript API. `enlb:dismiss.detail.pathname` remains the stable dismissal identity; later detail members are additive only.
 
+### Analytics tracking
+
+Analytics tracking is always on when the built lightbox is present; there is no analytics config block or opt-in switch. When the host page provides `window.utag.link`, the lifecycle reader sends these constant, PII-free payloads:
+
+| Lifecycle event | Condition | Exact `utag.link` payload |
+|---|---|---|
+| `enlb:open` | Once after each successful display mount | `{ event_name: "lightbox_impression", lightbox_name: "inactivity-exit" }` |
+| `enlb:cta` | `detail.role === "primary"`, including a close-action primary CTA | `{ event_name: "lightbox_click", lightbox_name: "inactivity-exit" }` |
+
+Close-button, Escape, overlay, decline (`cta-dismiss`), secondary (`cta-secondary`), and API dismissals do not send a click payload. If `window.utag` is absent, has the wrong shape, or its `link` function throws, tracking silently does nothing and never interrupts the host page. The payload values are frozen constants; no page or visitor data is included.
+
 ## Dismissal frequency
 
 The lightbox records a timestamp in `localStorage` keyed by `location.pathname` when it is shown or dismissed. It will not re-arm on that page until `frequencyDays` have elapsed.
