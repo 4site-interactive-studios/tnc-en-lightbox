@@ -4,7 +4,7 @@
   "kind": "feature",
   "stable_key": "lightbox-analytics-tracking",
   "state": "tracked",
-  "revision": 50,
+  "revision": 52,
   "generation": 4,
   "base_branch": "main",
   "base_sha": "20efb1b3dc8781b571dac986b1dd3e9d17f8e38e",
