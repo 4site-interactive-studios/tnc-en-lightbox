@@ -11,6 +11,9 @@ type SavedSibling = {
   tabindex: string | null
 }
 
+type CtaRole = 'primary' | 'secondary' | 'dismiss'
+type DismissReason = 'close-button' | 'esc' | 'overlay' | `cta-${CtaRole}` | 'api'
+
 export class Lightbox {
   private config: NormalizedConfig
   private host: HTMLElement | null = null
@@ -28,31 +31,33 @@ export class Lightbox {
   private onKeydown = (e: KeyboardEvent): void => {
     if (e.key === 'Escape' && this.config.closeOnEsc) {
       e.stopPropagation()
-      this.close()
+      this.closeWithReason('esc')
     }
   }
 
   private onOverlayClick = (e: MouseEvent): void => {
     if (this.config.closeOnOverlay && e.target === this.overlay) {
-      this.close()
+      this.closeWithReason('overlay')
     }
   }
 
   private onCloseClick = (e: MouseEvent): void => {
     e.stopPropagation()
-    this.close()
+    this.closeWithReason('close-button')
   }
 
   private onCtaClick = (e: MouseEvent): void => {
     const target = e.currentTarget as HTMLElement
-    const action = target.getAttribute('data-enlb-action')
+    const action = target.dataset.enlbAction
+    const role = (target.dataset.enlbRole as CtaRole) || 'primary'
+    this.emit('enlb:cta', { role })
     if (action === 'close') {
       e.preventDefault()
       e.stopPropagation()
-      this.close()
+      this.closeWithReason(`cta-${role}`)
       return
     }
-    // Redirect: native <a href> handles navigation; just stop bubbling inside the dialog.
+    // Redirect stays native; stop bubbling inside the dialog.
     e.stopPropagation()
   }
 
@@ -111,6 +116,7 @@ export class Lightbox {
         cta.addEventListener('click', this.onCtaClick)
       })
       this.dialog?.focus()
+      this.emit('enlb:open', {})
     } catch (e) {
       this.abortOpen()
       console.warn('[ENLightbox] open() failed:', e)
@@ -130,6 +136,10 @@ export class Lightbox {
   }
 
   close(): void {
+    this.closeWithReason('api')
+  }
+
+  private closeWithReason(reason: DismissReason): void {
     if (!this.host) return
     document.removeEventListener('keydown', this.onKeydown)
     this.overlay?.removeEventListener('click', this.onOverlayClick)
@@ -151,12 +161,7 @@ export class Lightbox {
       this.prevFocus.focus()
       this.prevFocus = null
     }
-    document.dispatchEvent(
-      new CustomEvent('enlb:dismiss', {
-        detail: { pathname: location.pathname },
-        bubbles: true,
-      }),
-    )
+    this.emit('enlb:dismiss', { pathname: location.pathname, reason })
   }
 
   destroy(): void {
@@ -278,6 +283,7 @@ export class Lightbox {
   private buildCtaElement(
     label: string,
     className: string,
+    role: CtaRole,
     action?: 'redirect' | 'close',
     href?: string,
   ): HTMLElement {
@@ -286,14 +292,16 @@ export class Lightbox {
       const el = document.createElement('a')
       el.className = className
       if (href) el.href = href
-      el.setAttribute('data-enlb-action', 'redirect')
+      el.dataset.enlbAction = 'redirect'
+      el.dataset.enlbRole = role
       el.textContent = label
       return el
     }
     const el = document.createElement('button')
     el.type = 'button'
     el.className = className
-    el.setAttribute('data-enlb-action', 'close')
+    el.dataset.enlbAction = 'close'
+    el.dataset.enlbRole = role
     el.textContent = label
     return el
   }
@@ -309,17 +317,24 @@ export class Lightbox {
 
     if (hasPrimary) {
       const { label, action, href } = this.config.cta!
-      row.appendChild(this.buildCtaElement(label, 'enlb-cta', action, href))
+      row.appendChild(this.buildCtaElement(label, 'enlb-cta', 'primary', action, href))
     }
 
     if (hasSecondary) {
       const { label, action, href } = this.config.secondaryCta!
-      row.appendChild(this.buildCtaElement(label, 'enlb-cta enlb-cta--secondary', action, href))
+      row.appendChild(
+        this.buildCtaElement(label, 'enlb-cta enlb-cta--secondary', 'secondary', action, href),
+      )
     }
 
     if (hasDecline) {
       row.appendChild(
-        this.buildCtaElement(this.config.dismissLabel!, 'enlb-cta enlb-cta--secondary', 'close'),
+        this.buildCtaElement(
+          this.config.dismissLabel!,
+          'enlb-cta enlb-cta--secondary',
+          'dismiss',
+          'close',
+        ),
       )
     }
 
@@ -407,5 +422,9 @@ export class Lightbox {
 
     this.dialog = dialog
     return overlay
+  }
+
+  private emit(name: 'enlb:open' | 'enlb:cta' | 'enlb:dismiss', detail: object): void {
+    document.dispatchEvent(new CustomEvent(name, { detail, bubbles: true }))
   }
 }

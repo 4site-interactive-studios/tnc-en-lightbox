@@ -38,6 +38,70 @@ describe('Lightbox CTA', () => {
     expect(assignSpy).not.toHaveBeenCalled()
   })
 
+  it('dispatches enlb:cta synchronously before redirect navigation without preventing the anchor default', () => {
+    const order: string[] = []
+    const events: CustomEvent[] = []
+    const onCta = (event: Event) => {
+      order.push('cta')
+      events.push(event as CustomEvent)
+    }
+    document.addEventListener('enlb:cta', onCta)
+
+    const lb = new Lightbox(
+      normalizeConfig({ header: 'H', body: 'B', cta: { label: 'Go', href: '#redirect' } }),
+    )
+    try {
+      lb.open()
+      const cta = sq('.enlb-cta') as HTMLElement
+      cta.addEventListener('click', (event) => {
+        order.push(`click:${event.defaultPrevented}`)
+      })
+
+      const click = new MouseEvent('click', { bubbles: true, cancelable: true })
+      expect(cta.dispatchEvent(click)).toBe(true)
+
+      expect(events).toHaveLength(1)
+      expect(events[0].target).toBe(document)
+      expect(events[0].bubbles).toBe(true)
+      expect(events[0].detail).toEqual({ role: 'primary' })
+      expect(order).toEqual(['cta', 'click:false'])
+      expect(click.defaultPrevented).toBe(false)
+    } finally {
+      document.removeEventListener('enlb:cta', onCta)
+      lb.close()
+    }
+  })
+
+  it('reports primary, secondary, and dismiss CTA roles', () => {
+    const roles: string[] = []
+    const onCta = (event: Event) => {
+      roles.push((event as CustomEvent<{ role: string }>).detail.role)
+    }
+    document.addEventListener('enlb:cta', onCta)
+
+    const lb = new Lightbox(
+      normalizeConfig({
+        header: 'H',
+        body: 'B',
+        cta: { label: 'Primary', href: '#primary' },
+        secondaryCta: { label: 'Secondary', href: '#secondary' },
+        dismissLabel: 'Dismiss',
+      }),
+    )
+    try {
+      lb.open()
+      const ctas = Array.from(sq('.enlb-cta-row')!.querySelectorAll<HTMLElement>('.enlb-cta'))
+      ctas[0].click()
+      ctas[1].click()
+      ctas[2].click()
+
+      expect(roles).toEqual(['primary', 'secondary', 'dismiss'])
+    } finally {
+      document.removeEventListener('enlb:cta', onCta)
+      lb.close()
+    }
+  })
+
   it('renders a secondary CTA next to the primary', () => {
     const lb = new Lightbox(
       normalizeConfig({
@@ -146,9 +210,43 @@ describe('Lightbox CTA', () => {
     expect(lightboxHost()).toBeNull()
     expect(dismissHandler).toHaveBeenCalledOnce()
     expect(dismissHandler).toHaveBeenCalledWith(
-      expect.objectContaining({ detail: { pathname: expect.any(String) } }),
+      expect.objectContaining({
+        detail: expect.objectContaining({ pathname: expect.any(String), reason: 'cta-primary' }),
+      }),
     )
 
     document.removeEventListener('enlb:dismiss', dismissHandler)
+  })
+
+  it('qualifies secondary and dismiss CTA closes in enlb:dismiss', () => {
+    const reasons: string[] = []
+    const onDismiss = (event: Event) => {
+      reasons.push((event as CustomEvent<{ reason: string }>).detail.reason)
+    }
+    document.addEventListener('enlb:dismiss', onDismiss)
+
+    const lb = new Lightbox(
+      normalizeConfig({
+        header: 'H',
+        body: 'B',
+        cta: { label: 'Primary', href: '#primary' },
+        secondaryCta: { label: 'Secondary', action: 'close' },
+        dismissLabel: 'Dismiss',
+      }),
+    )
+    try {
+      lb.open()
+      const secondary = sq('.enlb-cta-row')!.querySelectorAll<HTMLElement>('.enlb-cta')[1]
+      secondary.click()
+
+      lb.open()
+      const dismiss = sq('.enlb-cta-row')!.querySelectorAll<HTMLElement>('.enlb-cta')[2]
+      dismiss.click()
+
+      expect(reasons).toEqual(['cta-secondary', 'cta-dismiss'])
+    } finally {
+      document.removeEventListener('enlb:dismiss', onDismiss)
+      lb.close()
+    }
   })
 })

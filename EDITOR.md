@@ -116,6 +116,16 @@ interface ENLightboxConfig {
 
 `secondaryCta` follows the same rules. `dismissLabel` is always a close button.
 
+## Events
+
+The lightbox dispatches these `CustomEvent`s on `document` with `bubbles: true`:
+
+- `enlb:open` — after each successful mount; `detail` is `{}`.
+- `enlb:cta` — synchronously before CTA routing; `detail` is `{ role: "primary" | "secondary" | "dismiss" }`.
+- `enlb:dismiss` — on each close path; `detail` is `{ pathname: string, reason: "close-button" | "esc" | "overlay" | "cta-primary" | "cta-secondary" | "cta-dismiss" | "api" }`.
+
+These events are integration-observable internal seams for the wave-6 tracking readers, not a public JavaScript API. `enlb:dismiss.detail.pathname` remains the stable dismissal identity; later detail members are additive only.
+
 ## Dismissal frequency
 
 The lightbox records a timestamp in `localStorage` keyed by `location.pathname` when it is shown or dismissed. It will not re-arm on that page until `frequencyDays` have elapsed.

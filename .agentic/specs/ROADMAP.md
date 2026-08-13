@@ -258,12 +258,12 @@ interface ENPageContext { pageType: ENPageType | null; pageId: string | number |
 
 | Event | Wave | When | `detail` | Consumer |
 |---|---|---|---|---|
-| `enlb:dismiss` | **wave-1** | `Lightbox.close()` (any path) | `{ pathname: string }` | session guard records dismissal |
-| `enlb:open` | wave-1 (optional) | `open()` mounts overlay | `{}` | none required |
+| `enlb:dismiss` | **wave-1; wave-6 reason additive** | `Lightbox.close()` (any path) | `{ pathname: string, reason: 'close-button' \| 'esc' \| 'overlay' \| 'cta-primary' \| 'cta-secondary' \| 'cta-dismiss' \| 'api' }` | session guard records dismissal; wave-6 EN writer consumes reasons |
+| `enlb:open` | wave-6 | successful `open()` mount, after focus | `{}` | reserved lifecycle seam; no consumer in stream-a |
 | `enlb:trigger` | wave-1 (internal) | a trigger fires, before `open()` | `{ type }` | dispatcher disarms the rest |
-| `enlb:cta` | wave-3 | CTA activated, before routing | `{ action, href? }` | CTA router (redirect/close/submit) |
+| `enlb:cta` | wave-6 | CTA activated synchronously before routing | `{ role: 'primary' \| 'secondary' \| 'dismiss' }` | reserved lifecycle seam; no consumer in stream-a |
 
-**Frozen sub-contract — `enlb:dismiss` + session key (Decision D15):** name, target (`document`), and `detail.pathname` are durable. The `sessionStorage` key format is frozen as **`enlb:dismissed:${location.pathname}`** and derived by a single internal function used by *both* the writer and `isDismissed()`, so they cannot disagree (a wave-1 unit test asserts round-trip: dismiss on path A ⇒ `isDismissed()` true on A, false on B). **Caveat logged:** `pathname` may be the wrong page-identity granularity on EN (same path, different `pageId`); this is accepted for wave-1 with a BACKLOG revisit trigger and an optional future `campaignKey` (Risk R-N4key). `enlb:dismiss` is an *internal* decoupling signal, not a public analytics hook (hooks deferred per BACKLOG).
+**Frozen sub-contract — `enlb:dismiss` + session key (Decision D15):** name, target (`document`), and `detail.pathname` are durable. The `sessionStorage` key format is frozen as **`enlb:dismissed:${location.pathname}`** and derived by a single internal function used by *both* the writer and `isDismissed()`, so they cannot disagree (a wave-1 unit test asserts round-trip: dismiss on path A ⇒ `isDismissed()` true on A, false on B). **Caveat logged:** `pathname` may be the wrong page-identity granularity on EN (same path, different `pageId`); this is accepted for wave-1 with a BACKLOG revisit trigger and an optional future `campaignKey` (Risk R-N4key). `enlb:dismiss` is a sanctioned internal seam feeding wave-6 analytics, still **not** a public API; `detail.reason` is additive and role-qualified while `detail.pathname` remains frozen.
 
 ### Why this is provably additive
 
