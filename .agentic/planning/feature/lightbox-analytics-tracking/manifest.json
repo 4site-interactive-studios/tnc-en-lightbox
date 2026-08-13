@@ -4,7 +4,7 @@
   "kind": "feature",
   "stable_key": "lightbox-analytics-tracking",
   "state": "tracked",
-  "revision": 41,
+  "revision": 42,
   "generation": 3,
   "base_branch": "main",
   "base_sha": "20efb1b3dc8781b571dac986b1dd3e9d17f8e38e",
@@ -415,7 +415,11 @@
     "reviewer": null,
     "reviewer_model": null
   },
-  "planning_pr": null,
+  "planning_pr": {
+    "number": 60,
+    "url": "https://github.com/4site-interactive-studios/tnc-en-lightbox/pull/60",
+    "state": "OPEN"
+  },
   "supersedes": [],
   "superseded_by": null,
   "epic": {
