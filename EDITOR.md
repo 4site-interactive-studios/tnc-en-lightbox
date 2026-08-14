@@ -142,6 +142,20 @@ Analytics tracking is always on when the built lightbox is present; there is no 
 
 Close-button, Escape, overlay, decline (`cta-dismiss`), secondary (`cta-secondary`), and API dismissals do not send a click payload. If `window.utag` is absent, has the wrong shape, or its `link` function throws, tracking silently does nothing and never interrupts the host page. The payload values are frozen constants; no page or visitor data is included.
 
+### Optional diagnostics
+
+For a QA run, append `?debug=true` or `?debug=log` to the **page URL**. Either value enables
+console-only diagnostics without changing the lightbox configuration or public API. Diagnostics log
+the `enlb:open`, `enlb:cta` (including its `role`), `enlb:dismiss` (including its `reason` and frozen
+`pathname`), and `enlb:field-write` details (including `action: "write"` or `"replay"`). They also log
+the exact Tealium payload objects produced for impression and primary-CTA events. When `utag` is
+absent, the payload is shown in QA mode as `utag absent — would fire: {payload}`; nothing is queued or
+sent by diagnostics.
+
+When the query is absent, malformed, or uses any other value (including `debug=false` or `debug=1`),
+diagnostics produce **zero console output**. Diagnostics are intentionally console-only; an in-page
+panel is deferred to BACKLOG.
+
 ## Dismissal frequency
 
 The lightbox records a timestamp in `localStorage` keyed by `location.pathname` when it is shown or dismissed. It will not re-arm on that page until `frequencyDays` have elapsed.

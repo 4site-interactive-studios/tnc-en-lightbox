@@ -7,6 +7,7 @@ import { isEligible as checkEligible, stamp } from './triggers/dismissal'
 import { installTealiumListeners } from './analytics/tealium'
 import { installReferenceFieldListeners } from './en/reference-field'
 import { normalizeENConfig } from './en/config'
+import { installDiagnosticsListeners } from './debug/diagnostics'
 
 export { Lightbox, normalizeConfig }
 
@@ -102,6 +103,7 @@ function autoInit(cfg: unknown): void {
   g.__ENLightboxLoaded = true
   try {
     installTealiumListeners()
+    installDiagnosticsListeners()
     const cfg = g.ENLightbox
     if (cfg) {
       autoInit(cfg)
