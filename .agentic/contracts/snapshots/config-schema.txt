@@ -12,6 +12,7 @@ interface ENLightboxConfig {
   triggers?: TriggersConfigBase | undefined
   theme?: ThemeConfigBase | undefined
   layout?: LayoutConfigBase | undefined
+  en?: ENIntegrationConfig | undefined
 }
 
 interface NormalizedConfig {

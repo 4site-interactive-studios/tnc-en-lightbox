@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>EN Lightbox Carry-over Harness</title>
+  </head>
+  <body>
+    <h1>Destination form</h1>
+    <form id="en-form" class="en-form" data-en-component="form" action="javascript:void(0)">
+      <input type="email" name="email" required />
+      <input type="text" name="name" required />
+      <button type="submit">Submit</button>
+    </form>
+
+    <script>
+      window.ENLightbox = (() => {
+        const encoded = new URLSearchParams(location.search).get('cfg')
+        if (encoded) {
+          try {
+            return JSON.parse(atob(encoded))
+          } catch {
+            // fall through to the inert destination default
+          }
+        }
+        return { en: { referenceField: 'en_txn3' } }
+      })()
+    </script>
+    <script src="/dist/en-lightbox.js"></script>
+  </body>
+</html>

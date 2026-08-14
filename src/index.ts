@@ -5,6 +5,8 @@ import { normalizeTheme } from './themes/config'
 import { createDispatcher, type Dispatcher } from './triggers/dispatcher'
 import { isEligible as checkEligible, stamp } from './triggers/dismissal'
 import { installTealiumListeners } from './analytics/tealium'
+import { installReferenceFieldListeners } from './en/reference-field'
+import { normalizeENConfig } from './en/config'
 
 export { Lightbox, normalizeConfig }
 
@@ -12,8 +14,11 @@ let activeInstance: Lightbox | null = null
 let activeTriggers: NormalizedTriggers | null = null
 let dispatcher: Dispatcher | null = null
 let dismissListener: ((e: Event) => void) | null = null
+let uninstallReferenceFieldListeners: (() => void) | null = null
 
 export function init(config?: Partial<ENLightboxConfig>): Lightbox {
+  uninstallReferenceFieldListeners?.()
+  uninstallReferenceFieldListeners = null
   if (activeInstance) {
     activeInstance.destroy()
     activeInstance = null
@@ -21,6 +26,7 @@ export function init(config?: Partial<ENLightboxConfig>): Lightbox {
   disarmTriggers()
   activeInstance = new Lightbox(normalizeConfig(config))
   activeTriggers = normalizeTriggers(config?.triggers)
+  uninstallReferenceFieldListeners = installReferenceFieldListeners(normalizeENConfig(config))
   return activeInstance
 }
 

@@ -76,6 +76,11 @@ interface ENLightboxConfig {
     }>
   }
 
+  // ── EN INTEGRATION: reference-field outcome ─────
+  en?: {
+    referenceField?: string // Membership-designated EN field; inert when omitted
+  }
+
   // ── PRESENTATION: layout ────────────────────────
   layout?: {
     variant?: "two-column" // default: "two-column"; image absent ⇒ single-column
@@ -145,6 +150,24 @@ The lightbox records a timestamp in `localStorage` keyed by `location.pathname` 
 - `frequencyDays: 0` — show on every page load.
 
 If `localStorage` is unavailable (e.g., private mode), the library fails open: it treats the page as eligible and never throws.
+
+## Engaging Networks reference-field outcomes
+
+Set `en.referenceField` to the available Engaging Networks reference field designated by
+Membership. Membership should choose a field that is not shared with the annual upsell (avoid
+`en_txn2` when that campaign is present). The writer is config-gated and fully inert when this option is omitted. A primary CTA
+writes the exact value `lightbox_accepted`; close-button, Escape, overlay, secondary close, dismiss
+CTA, and API close paths write `lightbox_declined`. A primary CTA with `action: "close"` remains an
+accept, so its follow-up close event does not overwrite `lightbox_accepted`.
+
+The library finds or creates a non-required hidden input with that field name inside the EN form on
+the current page. It also keeps the most recent outcome in `sessionStorage` so a native redirect CTA
+can carry the value to the next page. The destination page must embed the same `dist/en-lightbox.js`
+asset and configure the same `en.referenceField`; on load, the matching EN form receives the value
+and the carry-over entry is cleared. Same-page writes do not require a redirect.
+
+Use a field name made of letters, numbers, and underscores, beginning with a letter or underscore.
+The library rejects unsafe names and form-clobbering names such as `submit` and `action`.
 
 ## Examples
 

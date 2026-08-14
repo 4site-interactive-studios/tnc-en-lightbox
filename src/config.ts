@@ -24,6 +24,8 @@ export interface ThemeConfigBase {}
 
 export interface LayoutConfigBase {}
 
+export interface ENIntegrationConfig {}
+
 export interface ENLightboxConfig {
   header?: string
   eyebrow?: string
@@ -38,6 +40,7 @@ export interface ENLightboxConfig {
   triggers?: TriggersConfigBase
   theme?: ThemeConfigBase
   layout?: LayoutConfigBase
+  en?: ENIntegrationConfig
 }
 
 export interface NormalizedConfig {

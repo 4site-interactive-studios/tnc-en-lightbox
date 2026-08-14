@@ -2,6 +2,7 @@ import { describe, it, expect, afterEach } from 'vitest'
 import { Lightbox } from './lightbox'
 import { normalizeConfig } from '../config'
 import { sq } from './shadow-test-helpers'
+import { installReferenceFieldListeners } from '../en/reference-field'
 
 afterEach(() => {
   document.body.innerHTML = ''
@@ -12,6 +13,7 @@ afterEach(() => {
   document.head.querySelectorAll('style[data-enlb]').forEach((el) => el.remove())
   window.scrollTo = () => undefined
   localStorage.clear()
+  sessionStorage.clear()
 })
 
 function mountEnForm(options?: { preExistingAttrs?: boolean }): {
@@ -224,5 +226,25 @@ describe('EN form non-interference', () => {
 
     assertFormRestored(form)
     expect(form.hasAttribute('aria-hidden')).toBe(false)
+  })
+
+  it('writes an optional hidden reference field without changing validation or submit behavior', () => {
+    const { form, lastSubmit } = mountEnForm()
+    const uninstall = installReferenceFieldListeners({ referenceField: 'en_txn3' })
+
+    document.dispatchEvent(new CustomEvent('enlb:cta', { detail: { role: 'primary' } }))
+
+    const field = form.querySelector<HTMLInputElement>('input[name="en_txn3"]')
+    expect(field).not.toBeNull()
+    expect(field!.type).toBe('hidden')
+    expect(field!.value).toBe('lightbox_accepted')
+    expect(field!.required).toBe(false)
+    expect(field!.hasAttribute('required')).toBe(false)
+
+    assertFormInvalid(form)
+    assertFormValid(form)
+    assertFormSubmits(form, lastSubmit)
+
+    uninstall()
   })
 })

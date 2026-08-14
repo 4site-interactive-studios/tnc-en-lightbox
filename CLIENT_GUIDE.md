@@ -309,11 +309,21 @@ cta: { label: "Donate monthly", href: "https://support.nature.org/…", action: 
 Yes. The theme, layout, and image position are completely independent of the trigger. Any design
 pairs with any trigger.
 
-**Can we record a click or exit into an Engaging Networks reference field for A/B testing?**
+**Can we record lightbox outcomes in an Engaging Networks reference field?**
 
-Not yet — this is on the roadmap as a planned future enhancement. Today the popup doesn't write
-to any Engaging Networks fields. It's purely a visual tool that records only the "don't show again"
-timing (in the visitor's browser storage).
+Yes. Configure the reference field designated by Membership:
+
+```javascript
+en: { referenceField: "en_txn3" }
+```
+
+The primary CTA writes `lightbox_accepted`; close, Escape, overlay, secondary, dismiss, and API
+close paths write `lightbox_declined`. The writer is disabled unless `en.referenceField` is set,
+and the hidden input is never required. A redirect CTA also carries the latest outcome through the
+current session and replays it on the destination page. For that carry-over, the destination page
+must embed `dist/en-lightbox.js` and use the same configured field; the value is cleared after a
+successful replay. Membership owns the deployed field designation—avoid `en_txn2` when the annual
+upsell uses it, and do not share a field with another campaign.
 
 **Can the close button be bigger / easier to see?**
 
