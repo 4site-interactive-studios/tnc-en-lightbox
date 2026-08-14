@@ -19,6 +19,7 @@ when it appears, and how it looks — all from a few lines of config.
   - [Image position](#image-position)
   - [Close button](#close-button)
 - [How often it shows](#how-often-it-shows)
+- [Optional diagnostics](#optional-diagnostics)
 - [Real examples](#real-examples)
   - [Example 1: Exit-intent monthly-giving nudge (forest)](#example-1-exit-intent-monthly-giving-nudge-forest)
   - [Example 2: Time-delayed donation prompt (sky)](#example-2-time-delayed-donation-prompt-sky)
@@ -205,6 +206,21 @@ triggers: { frequencyDays: 0 }   // show on every page load
 
 The popup remembers using `localStorage` — even if someone refreshes the page, they won't see it
 again until the window has passed.
+
+---
+
+## Optional diagnostics
+
+For a QA run, append `?debug=true` or `?debug=log` to the **page URL**. Either value turns on
+console-only diagnostics; it is not a lightbox config setting. The console records lifecycle events
+(`enlb:open`, `enlb:cta` with its role, and `enlb:dismiss` with its reason and pathname) plus
+`enlb:field-write` entries for reference-field `write` and `replay` actions. It also records the
+exact Tealium payload objects for impression and primary-CTA events. If `utag` is absent, QA mode
+prints `utag absent — would fire: {payload}` instead; diagnostics never queue or send an event.
+
+Without the query, or with any other value such as `debug=false`, `debug=1`, an arbitrary value, or a
+malformed query, the lightbox produces **zero console output**. Diagnostics stay console-only; an
+in-page panel is deferred to BACKLOG.
 
 ---
 

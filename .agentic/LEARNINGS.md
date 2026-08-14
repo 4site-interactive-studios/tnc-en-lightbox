@@ -42,6 +42,24 @@ surfaces the silent rot of uncaptured lessons.
   `console.warn`, never re-throw); `normalizeConfig`/`normalizeTriggers` degrade wrong-typed or unknown
   input to defaults rather than throwing (e.g. unknown `triggers.list` types are dropped before reaching
   the default-less `createTrigger`). EDITOR.md promises this — keep it true. (wave-4/stream-a, PR #28.)
+- **Lifecycle event seams are integration-observable but internal.** `enlb:open` fires once per
+  successful mount and never from `abortOpen`; `enlb:cta` carries its role before routing; and
+  `enlb:dismiss` carries the role-qualified reason enum while preserving the frozen pathname. Consumers
+  attach with document listeners instead of coupling to core rendering. (wave-6/stream-a, PR #62.)
+- **Accept-owns-outcome precedence (`cta-primary` never overwrites `lightbox_accepted`).** A primary
+  `enlb:cta` writes `lightbox_accepted`, and the
+  following `cta-primary` dismissal must never overwrite it with `lightbox_declined`; all other
+  dismissal reasons are decline outcomes. (wave-6/stream-c, PR #65.)
+- **Optional Tealium integrations are strict no-op boundaries (`typeof utag?.link === 'function'`,
+  swallow throws, no queue).** Call `utag.link` only when
+  `typeof utag?.link === 'function'`, swallow host throws, and never add a queue or replay path.
+  (wave-6/stream-b, PR #64.)
+- **Debug logging reuses the wire payload builder, never duplicates frozen strings.** Diagnostics
+  imports the pure Tealium payload builder and logs the exact object it produces; it must never
+  duplicate frozen event-name or lightbox-name strings. (wave-6/stream-d.)
+- **Spec-coupling waivers are read from durable evidence.** The gate reads `PR_BODY` from the
+  PR-CREATION event payload plus `git log base..HEAD`; commit-message waivers survive reruns, while
+  body edits do not. (wave-6 retrospective.)
 
 ## Gotchas (have bitten us)
 
