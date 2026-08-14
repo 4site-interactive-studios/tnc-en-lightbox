@@ -63,6 +63,20 @@ function writeOutcome(field: string, value: 'lightbox_accepted' | 'lightbox_decl
 function replayPending(field: string): void {
   const pending = readPending()
   if (!pending || pending.field !== field) return
+  if (document.readyState === 'loading') {
+    document.addEventListener(
+      'DOMContentLoaded',
+      () => {
+        try {
+          replayPending(field)
+        } catch {
+          // Deferred carry-over replay must not escape into the host page.
+        }
+      },
+      { once: true },
+    )
+    return
+  }
   if (writeToForm(field, pending.value, 'replay')) clearPending()
 }
 

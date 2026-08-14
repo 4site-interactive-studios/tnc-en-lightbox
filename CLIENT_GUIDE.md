@@ -335,11 +335,13 @@ en: { referenceField: "en_txn3" }
 
 The primary CTA writes `lightbox_accepted`; close, Escape, overlay, secondary, dismiss, and API
 close paths write `lightbox_declined`. The writer is disabled unless `en.referenceField` is set,
-and the hidden input is never required. A redirect CTA also carries the latest outcome through the
-current session and replays it on the destination page. For that carry-over, the destination page
-must embed `dist/en-lightbox.js` and use the same configured field; the value is cleared after a
-successful replay. Membership owns the deployed field designation—avoid `en_txn2` when the annual
-upsell uses it, and do not share a field with another campaign.
+and the hidden input is never required. A redirect CTA carries the latest outcome through the
+current session only after the origin page wrote it to its EN form, so the origin form must be
+present. For carry-over, the destination page must embed `dist/en-lightbox.js` and use the same
+configured field. Replay waits automatically for DOM readiness, so a config-before-script embed in
+`<head>` is allowed; the value is cleared after a successful replay. Membership owns the deployed
+field designation—avoid `en_txn2` when the annual upsell uses it, and do not share a field with
+another campaign.
 
 **Can the close button be bigger / easier to see?**
 
