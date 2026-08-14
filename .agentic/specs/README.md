@@ -16,8 +16,9 @@ prose.
 | [wave-0](./wave-0/README.md) — Foundation | stream-a (core, PR #2) + stream-b (backfill, PR #8) | complete |
 | [wave-1](./wave-1/README.md) — Triggers | time-on-page · scroll-depth · inactivity · exit-intent; frequency-capped dismissal (localStorage, default 7d); manual multi-trigger composition | complete (PR #11) |
 | [wave-2](./wave-2/README.md) — Theming & layout | stream-a (layout + `--enlb-*` tokens + a11y/motion + secondary-CTA, PR #17) · stream-b (theme set + customization, PR #21) | complete |
-| [wave-3](./wave-3/README.md) — EN integration | CTA redirect/close semantics (submit deferred) · no EN-form interference · editor + advanced README · remove inert `en` placeholder (by-hand targeting — no page detection) | in progress |
-| [wave-6](./wave-6/README.md) — Analytics & EN reference-field tracking | stream-a lifecycle event seam · streams b–d planned analytics, EN reference-field, and diagnostics readers | in progress |
+| [wave-3](./wave-3/README.md) — EN integration | CTA redirect/close semantics (submit deferred) · no EN-form interference · editor + advanced README · remove inert `en` placeholder (by-hand targeting — no page detection) | complete (PR #24) |
+| [wave-5](./wave-5/README.md) — Post-1.0 client (TNC/Erin) design feedback | design-refresh · forest/sky correction · release-dist sync | complete (implementation landed; wave README retro pending) |
+| [wave-6](./wave-6/README.md) — Analytics & EN reference-field tracking | stream-a (PR #62) · stream-b (PR #64) · stream-c (PR #65) · stream-d (PR #66) + remediation (PR #67) | delivered (wave review approved) |
 
 wave-0 is complete. The full waves-1–4 **master plan** — decomposition, the holistic config +
 `ENLightboxAPI` contract, the machine-checked contracts, and the NFR/use-case coverage matrix — lives

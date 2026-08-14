@@ -32,7 +32,7 @@ EN reference-field values, and optional URL-query diagnostics without expanding 
 | stream-a — Lifecycle event seam | [stream-a](./stream-a.md) | approved |
 | stream-b — Tealium analytics reader | [stream-b](./stream-b.md) | approved |
 | stream-c — EN reference-field writer | [stream-c](./stream-c.md) | approved |
-| stream-d — URL-query diagnostics reader | [stream-d](./stream-d.md) | implementation complete; independent review pending after repair R1 |
+| stream-d — URL-query diagnostics reader | [stream-d](./stream-d.md) | reviewed & approved (rounds=1, repair R1) |
 
 ## Deliverables
 
@@ -69,7 +69,7 @@ dismissal reasons before adding any lifecycle consumer.
 - Diagnostics must import and call the same pure payload builder that feeds the wire; never copy its
   frozen strings or add a debug config block.
 
-## Retrospective (wave exit — stream-d review pending)
+## Retrospective (wave exit — final)
 
 - **What worked:** streams a–c were approved by independent reviewers without block rounds (a:
   coding-medium/reviewer-medium; b,c: coding-frontend/reviewer-frontend); the a-landed event seam let
@@ -90,3 +90,4 @@ dismissal reasons before adding any lifecycle consumer.
   stream-c's did) and pre-authorize measured per-stream budget raises when the ceiling headroom is
   smaller than the wave's expected growth; put waiver tokens in commit messages from the start (git log
   is read fresh; event payloads are not).
+- **Wave exit:** round-0 BLOCK (carry-over replay timing under the documented head embed + journey-coverage gaps) → remediation PR #67 → round-1 APPROVED.
