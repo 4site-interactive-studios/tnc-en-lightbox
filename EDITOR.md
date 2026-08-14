@@ -175,10 +175,12 @@ CTA, and API close paths write `lightbox_declined`. A primary CTA with `action: 
 accept, so its follow-up close event does not overwrite `lightbox_accepted`.
 
 The library finds or creates a non-required hidden input with that field name inside the EN form on
-the current page. It also keeps the most recent outcome in `sessionStorage` so a native redirect CTA
-can carry the value to the next page. The destination page must embed the same `dist/en-lightbox.js`
-asset and configure the same `en.referenceField`; on load, the matching EN form receives the value
-and the carry-over entry is cleared. Same-page writes do not require a redirect.
+the current page. It keeps the most recent outcome in `sessionStorage` for a native redirect only
+after that origin-page write occurred, so the origin page needs its EN form present. The destination
+page must embed the same `dist/en-lightbox.js` asset and configure the same `en.referenceField`.
+Replay automatically waits for DOM readiness, so a config-before-script embed in `<head>` is allowed;
+the matching EN form then receives the value and the carry-over entry is cleared. Same-page writes do
+not require a redirect.
 
 Use a field name made of letters, numbers, and underscores, beginning with a letter or underscore.
 The library rejects unsafe names and form-clobbering names such as `submit` and `action`.

@@ -46,6 +46,18 @@ function fieldInput(form: HTMLFormElement, field = FIELD): HTMLInputElement | nu
   return Array.from(form.querySelectorAll<HTMLInputElement>('input')).find((input) => input.name === field) ?? null
 }
 
+function setDocumentReadyState(value: DocumentReadyState): () => void {
+  const descriptor = Object.getOwnPropertyDescriptor(document, 'readyState')
+  Object.defineProperty(document, 'readyState', { configurable: true, value })
+  return () => {
+    if (descriptor) {
+      Object.defineProperty(document, 'readyState', descriptor)
+    } else {
+      Reflect.deleteProperty(document, 'readyState')
+    }
+  }
+}
+
 afterEach(() => {
   document.body.innerHTML = ''
   sessionStorage.clear()
@@ -230,6 +242,55 @@ describe('EN reference-field listener', () => {
 
     uninstallDestination()
     document.removeEventListener('enlb:field-write', onWrite)
+  })
+
+  it('defers pending replay until DOMContentLoaded, then writes, emits replay, and clears storage', () => {
+    const restoreReadyState = setDocumentReadyState('loading')
+    const writes: CustomEvent[] = []
+    const onWrite = (event: Event) => writes.push(event as CustomEvent)
+    document.addEventListener('enlb:field-write', onWrite)
+    sessionStorage.setItem('enlb:reference-field', JSON.stringify({ field: FIELD, value: 'lightbox_accepted' }))
+    let uninstall: (() => void) | undefined
+
+    try {
+      uninstall = installReferenceFieldListeners({ referenceField: FIELD })
+      const destination = mountEnForm()
+
+      expect(fieldInput(destination.form)).toBeNull()
+      expect(writes).toHaveLength(0)
+      expect(sessionStorage.getItem('enlb:reference-field')).not.toBeNull()
+
+      Object.defineProperty(document, 'readyState', { configurable: true, value: 'interactive' })
+      document.dispatchEvent(new Event('DOMContentLoaded'))
+
+      expect(fieldInput(destination.form)?.value).toBe('lightbox_accepted')
+      expect(writes).toHaveLength(1)
+      expect(writes[0].detail).toEqual({ action: 'replay', field: FIELD, value: 'lightbox_accepted' })
+      expect(sessionStorage.getItem('enlb:reference-field')).toBeNull()
+    } finally {
+      uninstall?.()
+      document.removeEventListener('enlb:field-write', onWrite)
+      restoreReadyState()
+    }
+  })
+
+  it('keeps pending carry-over when the form is still absent at DOMContentLoaded', () => {
+    const restoreReadyState = setDocumentReadyState('loading')
+    const pending = JSON.stringify({ field: FIELD, value: 'lightbox_declined' })
+    sessionStorage.setItem('enlb:reference-field', pending)
+    let uninstall: (() => void) | undefined
+
+    try {
+      uninstall = installReferenceFieldListeners({ referenceField: FIELD })
+
+      Object.defineProperty(document, 'readyState', { configurable: true, value: 'interactive' })
+      expect(() => document.dispatchEvent(new Event('DOMContentLoaded'))).not.toThrow()
+
+      expect(sessionStorage.getItem('enlb:reference-field')).toBe(pending)
+    } finally {
+      uninstall?.()
+      restoreReadyState()
+    }
   })
 
   it('uses the last interaction when multiple outcomes are stored before replay', () => {

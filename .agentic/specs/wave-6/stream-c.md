@@ -61,3 +61,11 @@ forms, or host errors cannot escape the asset.
   required before handoff.
 - Mutation verification breaks one load-bearing write line, demonstrates the named unit test going
   red, restores the line, and reruns the test green.
+
+## Remediation R1 (wave exit)
+
+- A matching pending carry-over now waits once for DOM readiness when installation occurs during
+  parsing, then reruns the guarded write-and-clear path while preserving pending storage if no form
+  exists.
+- Coverage proves the documented head embed and jointly binds Tealium/reference-field assertions to
+  primary accept and selected decline interactions.

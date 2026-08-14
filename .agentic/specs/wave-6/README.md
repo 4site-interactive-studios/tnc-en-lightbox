@@ -84,6 +84,8 @@ dismissal reasons before adding any lifecycle consumer.
   waiver had to ride an empty commit; the sealed plan also predicted budget pressure only in stream-d,
   but stream-a consumed the entire 6000B ceiling, forcing mid-wave HITL re-planning of the budget-raise
   owner.
+  Wave review also caught a documented-head carry-over replay-timing defect and public-boundary/debug
+  coverage gaps, requiring remediation R1 before wave exit.
 - **What to change:** sealed plans should pre-declare waiver tokens for every governed-path edit (as
   stream-c's did) and pre-authorize measured per-stream budget raises when the ceiling headroom is
   smaller than the wave's expected growth; put waiver tokens in commit messages from the start (git log

@@ -88,6 +88,33 @@ test('debug=log logs exact wire payloads when utag is present', async ({ page })
   await expect.poll(() => hasRecord(records, '[ENLightbox debug] utag payload:', { event_name: 'lightbox_click', lightbox_name: 'inactivity-exit' })).toBe(true)
 })
 
+test('debug=log logs a deferred head-embed reference-field replay', async ({ page }) => {
+  const records: ConsoleRecord[] = []
+  captureConsole(page, records)
+  const destination = '/e2e/carry-over-head.html'
+
+  await page.goto(
+    harnessUrl({
+      ...baseConfig,
+      en: { referenceField: 'en_txn3' },
+      cta: { label: 'Continue', href: destination, action: 'redirect' },
+    }),
+  )
+  await expect(page.locator('.enlb-overlay')).toBeVisible()
+  await page.locator('.enlb-cta:not(.enlb-cta--secondary)').evaluate((element) => {
+    element.setAttribute('href', '/e2e/carry-over-head.html?debug=log')
+  })
+  await page.locator('.enlb-cta:not(.enlb-cta--secondary)').click()
+
+  await expect(page).toHaveURL(/\/e2e\/carry-over-head\.html\?debug=log$/)
+  await expect(page.locator('#en-form input[name="en_txn3"]')).toHaveValue('lightbox_accepted')
+  await expect.poll(() => hasRecord(records, 'enlb:field-write', {
+    action: 'replay',
+    field: 'en_txn3',
+    value: 'lightbox_accepted',
+  })).toBe(true)
+})
+
 test('normal open and close flow stays console-silent without a debug query', async ({ page }) => {
   const messages: string[] = []
   page.on('console', (message) => messages.push(message.text()))
@@ -99,3 +126,23 @@ test('normal open and close flow stays console-silent without a debug query', as
 
   expect(messages).toEqual([])
 })
+
+const disabledDebugQueries = [
+  { name: 'debug=false', query: '&debug=false' },
+  { name: 'debug=1', query: '&debug=1' },
+  { name: 'a malformed debug query', query: '&debug=%E0%A4%A' },
+] as const
+
+for (const disabledDebugQuery of disabledDebugQueries) {
+  test(`normal open and close stays console-silent with ${disabledDebugQuery.name}`, async ({ page }) => {
+    const messages: string[] = []
+    page.on('console', (message) => messages.push(message.text()))
+
+    await page.goto(`${harnessUrl(baseConfig)}${disabledDebugQuery.query}`)
+    await expect(page.locator('.enlb-overlay')).toBeVisible()
+    await page.locator('.enlb-close').click()
+    await expect(page.locator('.enlb-overlay')).toHaveCount(0)
+
+    expect(messages).toEqual([])
+  })
+}
