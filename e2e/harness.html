@@ -20,10 +20,20 @@
     <h1 id="page-heading">Smoke harness</h1>
     <button id="page-button" type="button">Page button</button>
 
-    <form id="en-form" class="en-form" data-en-component="form" action="javascript:void(0)">
-      <input type="email" name="email" required />
-      <input type="text" name="name" required />
-      <button type="submit">Submit</button>
+    <form method="post" id="en-form" name="pb_test" action="#" class="en__component en__component--page">
+      <div class="en__field">
+        <div class="en__field__element">
+          <input id="en__field_supporter_appealCode" type="text" class="en__field__input en__field__input--text" name="supporter.appealCode" />
+        </div>
+      </div>
+      <div class="en__field">
+        <div class="en__field__element">
+          <input id="en__field_supporter_emailAddress" type="email" class="en__field__input en__field__input--email" name="supporter.emailAddress" required />
+        </div>
+      </div>
+      <div class="en__submit">
+        <button type="submit">Submit</button>
+      </div>
     </form>
 
     <script>

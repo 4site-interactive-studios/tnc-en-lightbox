@@ -5,16 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>EN Lightbox Head Carry-over Harness</title>
     <script>
-      window.ENLightbox = { en: { referenceField: 'en_txn3' } }
+      window.ENLightbox = { en: { referenceField: 'supporter.appealCode' } }
     </script>
     <script src="/dist/en-lightbox.js"></script>
   </head>
   <body>
     <h1>Destination form</h1>
-    <form id="en-form" class="en-form" data-en-component="form" action="javascript:void(0)">
-      <input type="email" name="email" required />
-      <input type="text" name="name" required />
-      <button type="submit">Submit</button>
+    <form method="post" id="en-form" name="pb_test" action="#" class="en__component en__component--page">
+      <div class="en__field">
+        <div class="en__field__element">
+          <input id="en__field_supporter_appealCode" type="text" class="en__field__input en__field__input--text" name="supporter.appealCode" />
+        </div>
+      </div>
+      <div class="en__field">
+        <div class="en__field__element">
+          <input id="en__field_supporter_emailAddress" type="email" class="en__field__input en__field__input--email" name="supporter.emailAddress" required />
+        </div>
+      </div>
+      <div class="en__submit">
+        <button type="submit">Submit</button>
+      </div>
     </form>
   </body>
 </html>

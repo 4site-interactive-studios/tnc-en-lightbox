@@ -416,16 +416,13 @@ async function assertFormIsolated(page: Page): Promise<void> {
 
 async function assertFormSubmitsAndValidates(page: Page): Promise<void> {
   const form = page.locator('#en-form')
-  const email = form.locator('input[name="email"]')
-  const name = form.locator('input[name="name"]')
+  const email = form.locator('input[name="supporter.emailAddress"]')
 
   await email.fill('')
-  await name.fill('')
   const invalid = await form.evaluate((el) => (el as HTMLFormElement).checkValidity())
   expect(invalid).toBe(false)
 
   await email.fill('test@example.com')
-  await name.fill('Test')
   const valid = await form.evaluate((el) => (el as HTMLFormElement).checkValidity())
   expect(valid).toBe(true)
 
@@ -513,8 +510,8 @@ test('a malformed config degrades: valid trigger still opens, no page error, EN 
   await page.locator('.enlb-close').click()
   await expect(overlay).toHaveCount(0)
   const form = page.locator('#en-form')
-  await form.locator('input[name="email"]').fill('test@example.com')
-  await expect(form.locator('input[name="email"]')).toHaveValue('test@example.com')
+  await form.locator('input[name="supporter.emailAddress"]').fill('test@example.com')
+  await expect(form.locator('input[name="supporter.emailAddress"]')).toHaveValue('test@example.com')
 })
 
 test('armTriggers with an unknown trigger type does not throw on the host page', async ({ page }) => {

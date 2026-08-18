@@ -48,7 +48,7 @@ test('debug=true logs lifecycle, absent-utag QA payloads, and reference-field wr
     `${harnessUrl({
       ...baseConfig,
       cta: { label: 'Accept', action: 'close' },
-      en: { referenceField: 'en_txn3' },
+      en: { referenceField: 'supporter.appealCode' },
     })}&debug=true`,
   )
 
@@ -59,7 +59,7 @@ test('debug=true logs lifecycle, absent-utag QA payloads, and reference-field wr
   await expect.poll(() => hasRecord(records, 'enlb:open', {})).toBe(true)
   await expect.poll(() => hasRecord(records, 'enlb:cta', { role: 'primary' })).toBe(true)
   await expect.poll(() => hasRecord(records, 'enlb:dismiss', { reason: 'cta-primary', pathname: '/e2e/harness.html' })).toBe(true)
-  await expect.poll(() => hasRecord(records, 'enlb:field-write', { action: 'write', field: 'en_txn3', value: 'lightbox_accepted' })).toBe(true)
+  await expect.poll(() => hasRecord(records, 'enlb:field-write', { action: 'write', field: 'supporter.appealCode', value: 'lightbox_accepted' })).toBe(true)
   await expect.poll(() => hasRecord(records, 'utag absent — would fire:', { event_name: 'lightbox_impression', lightbox_name: 'inactivity-exit' })).toBe(true)
   await expect.poll(() => hasRecord(records, 'utag absent — would fire:', { event_name: 'lightbox_click', lightbox_name: 'inactivity-exit' })).toBe(true)
 })
@@ -96,7 +96,7 @@ test('debug=log logs a deferred head-embed reference-field replay', async ({ pag
   await page.goto(
     harnessUrl({
       ...baseConfig,
-      en: { referenceField: 'en_txn3' },
+      en: { referenceField: 'supporter.appealCode' },
       cta: { label: 'Continue', href: destination, action: 'redirect' },
     }),
   )
@@ -107,10 +107,10 @@ test('debug=log logs a deferred head-embed reference-field replay', async ({ pag
   await page.locator('.enlb-cta:not(.enlb-cta--secondary)').click()
 
   await expect(page).toHaveURL(/\/e2e\/carry-over-head\.html\?debug=log$/)
-  await expect(page.locator('#en-form input[name="en_txn3"]')).toHaveValue('lightbox_accepted')
+  await expect(page.locator('#en-form input[name="supporter.appealCode"]')).toHaveValue('lightbox_accepted')
   await expect.poll(() => hasRecord(records, 'enlb:field-write', {
     action: 'replay',
-    field: 'en_txn3',
+    field: 'supporter.appealCode',
     value: 'lightbox_accepted',
   })).toBe(true)
 })

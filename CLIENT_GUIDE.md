@@ -330,12 +330,14 @@ pairs with any trigger.
 Yes. Configure the reference field designated by Membership:
 
 ```javascript
-en: { referenceField: "en_txn3" }
+en: { referenceField: "supporter.appealCode" }
 ```
 
 The primary CTA writes `lightbox_accepted`; close, Escape, overlay, secondary, dismiss, and API
-close paths write `lightbox_declined`. The writer is disabled unless `en.referenceField` is set,
-and the hidden input is never required. A redirect CTA carries the latest outcome through the
+close paths write `lightbox_declined`. The writer is disabled unless `en.referenceField` is set.
+Dotted EN names such as `supporter.appealCode` are supported. If the form already has a same-name
+input of any type, the library fills its value without changing attributes; otherwise it creates an
+optional hidden input. A redirect CTA carries the latest outcome through the
 current session only after the origin page wrote it to its EN form, so the origin form must be
 present. For carry-over, the destination page must embed `dist/en-lightbox.js` and use the same
 configured field. Replay waits automatically for DOM readiness, so a config-before-script embed in
