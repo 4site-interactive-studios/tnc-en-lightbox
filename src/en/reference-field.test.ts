@@ -1,41 +1,75 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { normalizeENConfig } from './config'
+import { isSafeReferenceFieldName, normalizeENConfig } from './config'
 import { installReferenceFieldListeners } from './reference-field'
 
-const FIELD = 'en_txn3'
+const FIELD = 'supporter.appealCode'
 
 type FormFixture = {
   form: HTMLFormElement
   input?: HTMLInputElement
 }
 
-function mountEnForm(existingField = false): FormFixture {
+function appendEnField(form: HTMLFormElement, input: HTMLInputElement): void {
+  const field = document.createElement('div')
+  field.className = 'en__field'
+  const element = document.createElement('div')
+  element.className = 'en__field__element'
+  element.appendChild(input)
+  field.appendChild(element)
+  form.appendChild(field)
+}
+
+function mountEnForm(existingField?: 'hidden' | 'visible'): FormFixture {
   const form = document.createElement('form')
+  form.method = 'post'
   form.id = 'en-form'
-  form.dataset.enComponent = 'form'
+  form.name = 'pb_test'
+  form.action = '#'
+  form.className = 'en__component en__component--page'
 
   const email = document.createElement('input')
   email.type = 'email'
-  email.name = 'email'
+  email.name = 'supporter.emailAddress'
+  email.className = 'en__field__input en__field__input--email'
   email.required = true
-  form.appendChild(email)
+  appendEnField(form, email)
 
   let input: HTMLInputElement | undefined
   if (existingField) {
     input = document.createElement('input')
-    input.type = 'hidden'
+    input.type = existingField
     input.name = FIELD
-    input.required = true
-    form.appendChild(input)
+    if (existingField === 'hidden') {
+      input.required = true
+    } else {
+      input.id = 'en__field_supporter_appealCode'
+      input.className = 'en__field__input en__field__input--text'
+    }
+    appendEnField(form, input)
   }
 
+  const submitWrapper = document.createElement('div')
+  submitWrapper.className = 'en__submit'
   const submit = document.createElement('button')
   submit.type = 'submit'
   submit.textContent = 'Submit'
-  form.appendChild(submit)
+  submitWrapper.appendChild(submit)
+  form.appendChild(submitWrapper)
   document.body.appendChild(form)
 
   return { form, input }
+}
+
+function mountLegacyEnForm(): FormFixture {
+  const form = document.createElement('form')
+  form.dataset.enComponent = 'form'
+  const email = document.createElement('input')
+  email.type = 'email'
+  email.name = 'supporter.emailAddress'
+  email.required = true
+  form.appendChild(email)
+  document.body.appendChild(form)
+  return { form }
 }
 
 function dispatch(name: string, detail: object): void {
@@ -81,7 +115,73 @@ describe('EN reference-field listener', () => {
 
   })
 
-  it('writes accepted for a primary CTA and emits the exact write detail', () => {
+  it('accepts safe dotted EN field names', () => {
+    expect(isSafeReferenceFieldName(FIELD)).toBe(true)
+    for (const field of [
+      'supporter.appealCode',
+      'supporter.questions.848518',
+      'contact.subject',
+      'supporter.phoneNumber2',
+      'transaction.paycurrency',
+      'supporter.submit',
+      'supporter.action',
+    ]) {
+      expect(isSafeReferenceFieldName(field)).toBe(true)
+      expect(normalizeENConfig({ en: { referenceField: field } })).toEqual({ referenceField: field })
+    }
+  })
+
+  it.each([
+    '',
+    '.appealCode',
+    'supporter.',
+    'supporter..appealCode',
+    'supporter appealCode',
+    'supporter\tappealCode',
+    'supporter.appeal-Code',
+    'supporter.é',
+    '1supporter',
+    'bad"name',
+    "bad'name",
+    'bad<name>',
+    'supporter[appealCode]',
+    'supporter>appealCode',
+    'supporter#appealCode',
+    'supporter:appealCode',
+    'supporter,appealCode',
+    'submit',
+    'action',
+    'SUBMIT',
+    'ACTION',
+  ])('rejects hostile, malformed, or form-clobbering field name %s', (field) => {
+    expect(isSafeReferenceFieldName(field)).toBe(false)
+    expect(normalizeENConfig({ en: { referenceField: field } })).toEqual({})
+  })
+
+  it.each([undefined, null, 123, {}, []])('rejects non-string field names', (field) => {
+    expect(() => isSafeReferenceFieldName(field)).not.toThrow()
+    expect(isSafeReferenceFieldName(field)).toBe(false)
+    expect(normalizeENConfig({ en: { referenceField: field } })).toEqual({})
+  })
+
+  it.each([
+    'supporter.__proto__',
+    '__proto__',
+    'constructor',
+    'supporter.constructor',
+    'prototype',
+  ])('rejects prototype-pollution field name %s', (field) => {
+    expect(isSafeReferenceFieldName(field)).toBe(false)
+    expect(normalizeENConfig({ en: { referenceField: field } })).toEqual({})
+  })
+
+  it('keeps the 128-character field-name limit', () => {
+    expect(isSafeReferenceFieldName(`a${'b'.repeat(127)}`)).toBe(true)
+    expect(isSafeReferenceFieldName(`a${'b'.repeat(128)}`)).toBe(false)
+    expect(normalizeENConfig({ en: { referenceField: `a${'b'.repeat(128)}` } })).toEqual({})
+  })
+
+  it('creates a hidden optional field for a primary CTA and emits the exact write detail', () => {
     const { form } = mountEnForm()
     const writes: CustomEvent[] = []
     const onWrite = (event: Event) => writes.push(event as CustomEvent)
@@ -92,6 +192,9 @@ describe('EN reference-field listener', () => {
 
     const input = fieldInput(form)
     expect(input).not.toBeNull()
+    expect(input!.type).toBe('hidden')
+    expect(input!.required).toBe(false)
+    expect(input!.hasAttribute('required')).toBe(false)
     expect(input!.value).toBe('lightbox_accepted')
     expect(writes).toHaveLength(1)
     expect(writes[0].target).toBe(document)
@@ -171,8 +274,8 @@ describe('EN reference-field listener', () => {
     },
   )
 
-  it('reuses an existing input, never duplicates it, and never leaves it required', () => {
-    const { form, input } = mountEnForm(true)
+  it('reuses an existing hidden input without changing its attributes', () => {
+    const { form, input } = mountEnForm('hidden')
     const uninstall = installReferenceFieldListeners({ referenceField: FIELD })
 
     dispatch('enlb:cta', { role: 'primary' })
@@ -181,29 +284,67 @@ describe('EN reference-field listener', () => {
     expect(form.querySelectorAll(`input[name="${FIELD}"]`)).toHaveLength(1)
     expect(fieldInput(form)).toBe(input)
     expect(input!.value).toBe('lightbox_declined')
-    expect(input!.required).toBe(false)
-    expect(input!.hasAttribute('required')).toBe(false)
+    expect(input!.type).toBe('hidden')
+    expect(input!.required).toBe(true)
+    expect(input!.hasAttribute('required')).toBe(true)
     uninstall()
   })
 
-  it('does not repurpose a visible input with the configured name', () => {
-    const { form } = mountEnForm()
-    const visible = document.createElement('input')
-    visible.name = FIELD
-    visible.type = 'text'
-    form.appendChild(visible)
+  it('writes an existing visible input without changing its attributes or duplicating it', () => {
+    const { form, input } = mountEnForm('visible')
+    const visible = input!
+    visible.required = true
+    visible.setAttribute('aria-describedby', 'appeal-code-help')
     const uninstall = installReferenceFieldListeners({ referenceField: FIELD })
 
     dispatch('enlb:cta', { role: 'primary' })
 
     expect(visible.type).toBe('text')
-    expect(visible.value).toBe('')
-    expect(form.querySelectorAll(`input[name="${FIELD}"]`)).toHaveLength(2)
-    expect(
-      Array.from(form.querySelectorAll<HTMLInputElement>(`input[name="${FIELD}"]`)).some(
-        (input) => input !== visible && input.type === 'hidden',
-      ),
-    ).toBe(true)
+    expect(visible.value).toBe('lightbox_accepted')
+    expect(visible.required).toBe(true)
+    expect(visible.hasAttribute('required')).toBe(true)
+    expect(visible.id).toBe('en__field_supporter_appealCode')
+    expect(visible.className).toBe('en__field__input en__field__input--text')
+    expect(visible.getAttribute('aria-describedby')).toBe('appeal-code-help')
+    expect(form.querySelectorAll(`input[name="${FIELD}"]`)).toHaveLength(1)
+    uninstall()
+  })
+
+  it('writes the first matching input in DOM order', () => {
+    const { form, input } = mountEnForm('visible')
+    const first = input!
+    const second = document.createElement('input')
+    second.type = 'hidden'
+    second.name = FIELD
+    form.appendChild(second)
+    const uninstall = installReferenceFieldListeners({ referenceField: FIELD })
+
+    dispatch('enlb:cta', { role: 'primary' })
+
+    expect(first.value).toBe('lightbox_accepted')
+    expect(second.value).toBe('')
+    uninstall()
+  })
+
+  it('detects a real EN page-builder form before an earlier legacy fallback form', () => {
+    const legacy = mountLegacyEnForm()
+    const { form } = mountEnForm()
+    const uninstall = installReferenceFieldListeners({ referenceField: FIELD })
+
+    dispatch('enlb:cta', { role: 'primary' })
+
+    expect(fieldInput(form)?.value).toBe('lightbox_accepted')
+    expect(fieldInput(legacy.form)).toBeNull()
+    uninstall()
+  })
+
+  it('uses the legacy EN form fallback when a page-builder form is absent', () => {
+    const { form } = mountLegacyEnForm()
+    const uninstall = installReferenceFieldListeners({ referenceField: FIELD })
+
+    dispatch('enlb:cta', { role: 'primary' })
+
+    expect(fieldInput(form)?.value).toBe('lightbox_accepted')
     uninstall()
   })
 

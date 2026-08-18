@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test'
 import { harnessUrl } from './helpers'
 import { installUtagStub, recordedUtagCalls } from './utag-stub'
 
-const FIELD = 'en_txn3'
+const FIELD = 'supporter.appealCode'
 const baseConfig = {
   header: 'Reference field header',
   body: 'Reference field body',
@@ -13,10 +13,10 @@ const baseConfig = {
 async function expectFormSubmits(page: Page): Promise<void> {
   const result = await page.locator('#en-form').evaluate((element) => {
     const form = element as HTMLFormElement
-    const email = form.elements.namedItem('email') as HTMLInputElement
-    const name = form.elements.namedItem('name') as HTMLInputElement
+    const email = form.elements.namedItem('supporter.emailAddress') as HTMLInputElement
+    const appealCode = form.elements.namedItem('supporter.appealCode') as HTMLInputElement
     email.value = 'test@example.com'
-    name.value = 'Test'
+    appealCode.value ||= 'Test'
 
     let fired = false
     let defaultPrevented = true
@@ -52,9 +52,30 @@ test('writes accepted for a close-action primary CTA and preserves form submissi
   await page.locator('.enlb-cta:not(.enlb-cta--secondary)').click()
   await expect(page.locator('.enlb-overlay')).toHaveCount(0)
   await expect(page.locator(`#en-form input[name="${FIELD}"]`)).toHaveCount(1)
+  await expect(page.locator(`#en-form input[name="${FIELD}"]`)).toBeVisible()
+  await expect(page.locator(`#en-form input[name="${FIELD}"]`)).toHaveAttribute('type', 'text')
   await expect(page.locator(`#en-form input[name="${FIELD}"]`)).toHaveValue('lightbox_accepted')
+  expect(await page.evaluate(() => document.querySelectorAll('input[name="supporter.appealCode"]').length)).toBe(1)
   await expect(page.locator(`#en-form input[name="${FIELD}"]`)).not.toHaveAttribute('required')
   await expectFormSubmits(page)
+})
+
+test('uses the legacy EN form selector when the page-builder class is absent', async ({ page }) => {
+  await page.goto(
+    harnessUrl({
+      ...baseConfig,
+      cta: { label: 'Accept', action: 'close' },
+    }),
+  )
+  await expect(page.locator('.enlb-overlay')).toBeVisible()
+
+  await page.locator('#en-form').evaluate((form) => {
+    form.setAttribute('class', 'legacy-en-form')
+    form.setAttribute('data-en-component', 'form')
+  })
+  await page.locator('.enlb-cta:not(.enlb-cta--secondary)').click()
+
+  await expect(page.locator(`#en-form input[name="${FIELD}"]`)).toHaveValue('lightbox_accepted')
 })
 
 test('writes accepted before native redirect and replays once on the destination page', async ({ page }) => {

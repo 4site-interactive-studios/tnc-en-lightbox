@@ -91,3 +91,4 @@ dismissal reasons before adding any lifecycle consumer.
   smaller than the wave's expected growth; put waiver tokens in commit messages from the start (git log
   is read fresh; event payloads are not).
 - **Wave exit:** round-0 BLOCK (carry-over replay timing under the documented head embed + journey-coverage gaps) → remediation PR #67 → round-1 APPROVED.
+- **Remediation R2:** real EN fixture markup exposed that dotted field paths and page-builder form detection had not been exercised; the writer now preserves visible same-name EN inputs while retaining the legacy fallback.

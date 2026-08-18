@@ -19,7 +19,7 @@ inert until Membership designates the deployed field.
 ### In scope
 
 - `src/en/config.ts`: defensive normalization and safe reference-field-name validation.
-- `src/en/reference-field.ts`: document-only lifecycle readers, same-page hidden-input writes,
+- `src/en/reference-field.ts`: document-only lifecycle readers, same-page reference-field writes,
   session-scoped redirect carry-over, and `enlb:field-write` observability events.
 - `src/index.ts`: thin guarded installation alongside the existing lifecycle readers.
 - Unit, EN-interference, and Playwright coverage for accept/decline precedence, safe DOM writes,
@@ -46,12 +46,14 @@ inert until Membership designates the deployed field.
 
 ## Safety and degradation
 
-The configured field must match a bounded identifier allowlist (`[A-Za-z_][A-Za-z0-9_]*`) and must
-not be a form-clobbering name such as `submit` or `action`. No untrusted field name is interpolated
-into a selector or markup. The writer only finds an existing hidden input or creates a new hidden
-input, always removes `required`, and never changes form validation or submit listeners. Every
-document, DOM, and storage boundary is guarded so malformed config, unavailable storage, missing
-forms, or host errors cannot escape the asset.
+The configured field must match a bounded dotted-path allowlist: an initial
+`[A-Za-z_][A-Za-z0-9_]*` segment followed by zero or more `.[A-Za-z0-9_]+` segments. It must not
+be a full-name form-clobbering value such as `submit` or `action`, or contain a prototype-pollution
+segment. No untrusted field name is interpolated into a selector or markup. The writer fills the
+first existing same-name input of any type without changing attributes, or creates a new optional
+hidden input, and never changes form validation or submit listeners. Every document, DOM, and
+storage boundary is guarded so malformed config, unavailable storage, missing forms, or host errors
+cannot escape the asset.
 
 ## Verification record
 
@@ -69,3 +71,16 @@ forms, or host errors cannot escape the asset.
   exists.
 - Coverage proves the documented head embed and jointly binds Tealium/reference-field assertions to
   primary accept and selected decline interactions.
+
+## Remediation R2 (real EN pages)
+
+- Safe field names support dotted EN paths: the first segment starts with a letter or underscore and
+  later word-character segments may be numeric; malformed paths, full-name `action`/`submit`, and
+  prototype-pollution segments (`__proto__`, `constructor`, `prototype`) remain rejected.
+- The writer selects `form.en__component--page` first and retains the former
+  `form[data-en-component="form"]` selector as a legacy fallback.
+- It writes only `.value` to the first same-name input in DOM order regardless of type, creating a
+  non-required hidden input only when no matching input exists; events and DOMContentLoaded replay
+  use that same path unchanged.
+- Reference-field fixtures must mirror real EN page-builder form markup, including the page component
+  class and visible dotted-name field, rather than relying on the legacy test-only form attribute.

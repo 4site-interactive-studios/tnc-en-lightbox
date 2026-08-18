@@ -14,7 +14,8 @@ type StoredOutcome = {
 }
 
 const STORAGE_KEY = 'enlb:reference-field'
-const EN_FORM_SELECTOR = 'form[data-en-component="form"]'
+const EN_FORM_SELECTOR = 'form.en__component--page'
+const LEGACY_EN_FORM_SELECTOR = 'form[data-en-component="form"]'
 const ACCEPTED = 'lightbox_accepted'
 const DECLINED = 'lightbox_declined'
 const DECLINE_REASONS = new Set(['close-button', 'esc', 'overlay', 'cta-secondary', 'cta-dismiss', 'api'])
@@ -83,14 +84,14 @@ function replayPending(field: string): void {
 function writeToForm(field: string, value: 'lightbox_accepted' | 'lightbox_declined', action: 'write' | 'replay'): boolean {
   try {
     if (!isSafeReferenceFieldName(field)) return false
-    const form = document.querySelector<HTMLFormElement>(EN_FORM_SELECTOR)
+    const form =
+      document.querySelector<HTMLFormElement>(EN_FORM_SELECTOR) ??
+      document.querySelector<HTMLFormElement>(LEGACY_EN_FORM_SELECTOR)
     if (!form) return false
 
     const input = findOrCreateInput(form, field)
     if (!input) return false
     input.value = value
-    input.required = false
-    input.removeAttribute('required')
     document.dispatchEvent(
       new CustomEvent('enlb:field-write', {
         detail: { action, field, value },
@@ -105,12 +106,9 @@ function writeToForm(field: string, value: 'lightbox_accepted' | 'lightbox_decli
 
 function findOrCreateInput(form: HTMLFormElement, field: string): HTMLInputElement | null {
   const existing = Array.from(form.querySelectorAll<HTMLInputElement>('input')).find(
-    (input) => input.name === field && input.type === 'hidden',
+    (input) => input.name === field,
   )
-  if (existing) {
-    existing.type = 'hidden'
-    return existing
-  }
+  if (existing) return existing
 
   const input = document.createElement('input')
   input.type = 'hidden'

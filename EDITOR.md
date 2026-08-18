@@ -78,7 +78,7 @@ interface ENLightboxConfig {
 
   // ── EN INTEGRATION: reference-field outcome ─────
   en?: {
-    referenceField?: string // Membership-designated EN field; inert when omitted
+    referenceField?: string // Membership-designated EN field, e.g. "supporter.appealCode"; inert when omitted
   }
 
   // ── PRESENTATION: layout ────────────────────────
@@ -174,16 +174,22 @@ writes the exact value `lightbox_accepted`; close-button, Escape, overlay, secon
 CTA, and API close paths write `lightbox_declined`. A primary CTA with `action: "close"` remains an
 accept, so its follow-up close event does not overwrite `lightbox_accepted`.
 
-The library finds or creates a non-required hidden input with that field name inside the EN form on
-the current page. It keeps the most recent outcome in `sessionStorage` for a native redirect only
+```js
+en: { referenceField: "supporter.appealCode" }
+```
+
+The library fills an existing same-name EN input of any type without changing its attributes, or
+creates a non-required hidden input when the field is absent. It keeps the most recent outcome in `sessionStorage` for a native redirect only
 after that origin-page write occurred, so the origin page needs its EN form present. The destination
 page must embed the same `dist/en-lightbox.js` asset and configure the same `en.referenceField`.
 Replay automatically waits for DOM readiness, so a config-before-script embed in `<head>` is allowed;
 the matching EN form then receives the value and the carry-over entry is cleared. Same-page writes do
 not require a redirect.
 
-Use a field name made of letters, numbers, and underscores, beginning with a letter or underscore.
-The library rejects unsafe names and form-clobbering names such as `submit` and `action`.
+EN dotted names are supported: the first segment starts with a letter or underscore, later segments
+contain letters, numbers, or underscores, and single dots separate segments (for example,
+`supporter.appealCode`). The library rejects unsafe names and full-name form-clobbering names such as
+`submit` and `action`.
 
 ## Examples
 
