@@ -45,6 +45,7 @@ export function installReferenceFieldListeners(config: NormalizedENIntegrationCo
   try {
     document.addEventListener('enlb:cta', onCta)
     document.addEventListener('enlb:dismiss', onDismiss)
+    ensureField(field)
     replayPending(field)
   } catch {
     return () => undefined
@@ -53,6 +54,25 @@ export function installReferenceFieldListeners(config: NormalizedENIntegrationCo
   return () => {
     document.removeEventListener('enlb:cta', onCta)
     document.removeEventListener('enlb:dismiss', onDismiss)
+  }
+}
+
+function findENForm(): HTMLFormElement | null {
+  return (
+    document.querySelector<HTMLFormElement>(EN_FORM_SELECTOR) ??
+    document.querySelector<HTMLFormElement>(LEGACY_EN_FORM_SELECTOR)
+  )
+}
+
+function ensureField(field: string): boolean {
+  try {
+    if (!isSafeReferenceFieldName(field)) return false
+    const form = findENForm()
+    if (!form) return false
+    return findOrCreateInput(form, field) !== null
+  } catch {
+    // Page-load ensure is best-effort and must not escape into the host page.
+    return false
   }
 }
 
@@ -84,9 +104,7 @@ function replayPending(field: string): void {
 function writeToForm(field: string, value: 'lightbox_accepted' | 'lightbox_declined', action: 'write' | 'replay'): boolean {
   try {
     if (!isSafeReferenceFieldName(field)) return false
-    const form =
-      document.querySelector<HTMLFormElement>(EN_FORM_SELECTOR) ??
-      document.querySelector<HTMLFormElement>(LEGACY_EN_FORM_SELECTOR)
+    const form = findENForm()
     if (!form) return false
 
     const input = findOrCreateInput(form, field)
@@ -113,6 +131,7 @@ function findOrCreateInput(form: HTMLFormElement, field: string): HTMLInputEleme
   const input = document.createElement('input')
   input.type = 'hidden'
   input.name = field
+  input.value = ''
   form.appendChild(input)
   return input
 }
