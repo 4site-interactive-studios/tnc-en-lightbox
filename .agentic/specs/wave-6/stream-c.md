@@ -84,3 +84,9 @@ cannot escape the asset.
   use that same path unchanged.
 - Reference-field fixtures must mirror real EN page-builder form markup, including the page component
   class and visible dotted-name field, rather than relying on the legacy test-only form attribute.
+
+## Remediation R3 (eager page-load creation)
+
+- When `en.referenceField` normalizes to a safe name, listener installation immediately ensures a matching input in the first `form.en__component--page`, falling back to `form[data-en-component="form"]`.
+- If no form exists while `document.readyState === "loading"`, installation registers exactly one `{ once: true }` `DOMContentLoaded` retry. A loaded document with no form is a silent no-op, uninstall removes a pending eager retry, and reinitialization cannot create the stale prior field.
+- Ensure reuses an existing same-name input of any type unchanged; otherwise it appends one bare optional hidden input with the dynamic normalized name and empty value. Empty ensure emits no `enlb:field-write`, writes no pending storage, changes no analytics or frequency state, and does not alter native submission. Existing accept, decline, and carry-over write/replay paths remain unchanged.

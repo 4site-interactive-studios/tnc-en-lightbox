@@ -169,21 +169,35 @@ If `localStorage` is unavailable (e.g., private mode), the library fails open: i
 
 Set `en.referenceField` to the available Engaging Networks reference field designated by
 Membership. Membership should choose a field that is not shared with the annual upsell (avoid
-`en_txn2` when that campaign is present). The writer is config-gated and fully inert when this option is omitted. A primary CTA
-writes the exact value `lightbox_accepted`; close-button, Escape, overlay, secondary close, dismiss
-CTA, and API close paths write `lightbox_declined`. A primary CTA with `action: "close"` remains an
-accept, so its follow-up close event does not overwrite `lightbox_accepted`.
+`en_txn2` when that campaign is present). The writer is config-gated and fully inert when this option is omitted.
 
 ```js
 en: { referenceField: "supporter.appealCode" }
 ```
 
-The library fills an existing same-name EN input of any type without changing its attributes, or
-creates a non-required hidden input when the field is absent. It keeps the most recent outcome in `sessionStorage` for a native redirect only
-after that origin-page write occurred, so the origin page needs its EN form present. The destination
-page must embed the same `dist/en-lightbox.js` asset and configure the same `en.referenceField`.
-Replay automatically waits for DOM readiness, so a config-before-script embed in `<head>` is allowed;
-the matching EN form then receives the value and the carry-over entry is cleared. Same-page writes do
+When a safe configured field is installed, the library immediately ensures that the matching input
+exists in the real EN page form (`form.en__component--page`), using the legacy
+`form[data-en-component="form"]` form only when the real selector is absent. If the form is not yet
+present while the document is loading, it makes one `DOMContentLoaded` retry. A loaded document
+with no matching form is a silent no-op.
+
+The page-load ensure is structural only: it is not an outcome, does not emit `enlb:field-write`,
+does not write pending carry-over storage, and does not affect analytics or dismissal frequency.
+The configured name is dynamic, including valid dotted names such as `supporter.appealCode`.
+The eager ensure leaves an existing same-name input of any type completely unchanged. When no matching
+input exists, it creates one bare, empty, non-required hidden input without an `id`. Only a later accept,
+decline, or replay outcome write updates the input's `.value`; those writes do not change its other
+attributes.
+
+A primary CTA writes the exact value `lightbox_accepted`; close-button, Escape, overlay, secondary
+close, dismiss CTA, and API close paths write `lightbox_declined`. A primary CTA with `action: "close"`
+remains an accept, so its follow-up close event does not overwrite `lightbox_accepted`.
+
+The library keeps the most recent outcome in `sessionStorage` for a native redirect only after that
+origin-page write occurred, so the origin page needs its EN form present. The destination page must
+embed the same `dist/en-lightbox.js` asset and configure the same `en.referenceField`. Replay
+automatically waits for DOM readiness, so a config-before-script embed in `<head>` is allowed; the
+matching EN form then receives the value and the carry-over entry is cleared. Same-page writes do
 not require a redirect.
 
 EN dotted names are supported: the first segment starts with a letter or underscore, later segments

@@ -333,17 +333,27 @@ Yes. Configure the reference field designated by Membership:
 en: { referenceField: "supporter.appealCode" }
 ```
 
-The primary CTA writes `lightbox_accepted`; close, Escape, overlay, secondary, dismiss, and API
-close paths write `lightbox_declined`. The writer is disabled unless `en.referenceField` is set.
-Dotted EN names such as `supporter.appealCode` are supported. If the form already has a same-name
-input of any type, the library fills its value without changing attributes; otherwise it creates an
-optional hidden input. A redirect CTA carries the latest outcome through the
-current session only after the origin page wrote it to its EN form, so the origin form must be
-present. For carry-over, the destination page must embed `dist/en-lightbox.js` and use the same
-configured field. Replay waits automatically for DOM readiness, so a config-before-script embed in
-`<head>` is allowed; the value is cleared after a successful replay. Membership owns the deployed
-field designation—avoid `en_txn2` when the annual upsell uses it, and do not share a field with
-another campaign.
+When the configured name is safe, the library ensures the matching input during listener
+installation, before any lightbox interaction. It selects the real EN page-builder form first and
+uses the legacy EN form selector as a fallback. If the form is absent while the page is still
+loading, it retries once on `DOMContentLoaded`; if the document is already loaded and no form is
+present, it does nothing.
+
+This empty ensure is not an outcome write: it emits no `enlb:field-write`, does not create pending
+carry-over storage, and does not affect analytics or frequency state. The primary CTA writes
+`lightbox_accepted`; close, Escape, overlay, secondary, dismiss, and API close paths write
+`lightbox_declined`. A primary CTA with `action: "close"` remains accepted. Dotted EN names such
+as `supporter.appealCode` are supported. The eager ensure leaves an existing same-name input of any type
+completely unchanged; otherwise it creates one empty, optional hidden input without an `id`. Only a
+later accept, decline, or replay outcome write updates the input's `.value`; those writes do not change
+its other attributes.
+
+A redirect CTA carries the latest outcome through the current session only after the origin page
+wrote it to its EN form, so the origin form must be present. For carry-over, the destination page
+must embed `dist/en-lightbox.js` and use the same configured field. Replay waits automatically for
+DOM readiness, so a config-before-script embed in `<head>` is allowed; the value is cleared after a
+successful replay. Membership owns the deployed field designation—avoid `en_txn2` when the annual
+upsell uses it, and do not share a field with another campaign.
 
 **Can the close button be bigger / easier to see?**
 
