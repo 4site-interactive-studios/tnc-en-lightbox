@@ -42,17 +42,78 @@ export function installReferenceFieldListeners(config: NormalizedENIntegrationCo
     }
   }
 
+  let uninstallEagerEnsure: () => void = () => undefined
+
   try {
     document.addEventListener('enlb:cta', onCta)
     document.addEventListener('enlb:dismiss', onDismiss)
+    uninstallEagerEnsure = ensureFieldOnLoad(field)
     replayPending(field)
   } catch {
+    uninstallEagerEnsure()
     return () => undefined
   }
 
   return () => {
+    uninstallEagerEnsure()
     document.removeEventListener('enlb:cta', onCta)
     document.removeEventListener('enlb:dismiss', onDismiss)
+  }
+}
+
+function findENForm(): HTMLFormElement | null {
+  return (
+    document.querySelector<HTMLFormElement>(EN_FORM_SELECTOR) ??
+    document.querySelector<HTMLFormElement>(LEGACY_EN_FORM_SELECTOR)
+  )
+}
+
+function ensureField(field: string): boolean {
+  try {
+    if (!isSafeReferenceFieldName(field)) return false
+    const form = findENForm()
+    if (!form) return false
+    return findOrCreateInput(form, field) !== null
+  } catch {
+    // Page-load ensure is best-effort and must not escape into the host page.
+    return false
+  }
+}
+
+function ensureFieldOnLoad(field: string): () => void {
+  let active = true
+  let pendingReady: (() => void) | null = null
+
+  // `ensureField` is fully self-guarded and never throws, so the only host-DOM boundaries that need
+  // an explicit guard here are the `readyState` read and listener (de)registration.
+  if (!ensureField(field)) {
+    try {
+      if (document.readyState === 'loading') {
+        const onReady = (): void => {
+          pendingReady = null
+          if (!active) return
+          ensureField(field)
+        }
+
+        pendingReady = onReady
+        document.addEventListener('DOMContentLoaded', onReady, { once: true })
+      }
+    } catch {
+      pendingReady = null
+      // A host document that rejects readyState reads or listener registration gets no retry.
+    }
+  }
+
+  return (): void => {
+    active = false
+    const onReady = pendingReady
+    pendingReady = null
+    if (!onReady) return
+    try {
+      document.removeEventListener('DOMContentLoaded', onReady)
+    } catch {
+      // The active flag still prevents a queued callback from creating a stale field.
+    }
   }
 }
 
@@ -84,9 +145,7 @@ function replayPending(field: string): void {
 function writeToForm(field: string, value: 'lightbox_accepted' | 'lightbox_declined', action: 'write' | 'replay'): boolean {
   try {
     if (!isSafeReferenceFieldName(field)) return false
-    const form =
-      document.querySelector<HTMLFormElement>(EN_FORM_SELECTOR) ??
-      document.querySelector<HTMLFormElement>(LEGACY_EN_FORM_SELECTOR)
+    const form = findENForm()
     if (!form) return false
 
     const input = findOrCreateInput(form, field)
@@ -113,6 +172,7 @@ function findOrCreateInput(form: HTMLFormElement, field: string): HTMLInputEleme
   const input = document.createElement('input')
   input.type = 'hidden'
   input.name = field
+  input.value = ''
   form.appendChild(input)
   return input
 }

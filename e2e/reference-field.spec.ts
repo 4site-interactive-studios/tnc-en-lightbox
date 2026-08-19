@@ -3,6 +3,7 @@ import { harnessUrl } from './helpers'
 import { installUtagStub, recordedUtagCalls } from './utag-stub'
 
 const FIELD = 'supporter.appealCode'
+const DYNAMIC_FIELD = 'supporter.questions.848518'
 const baseConfig = {
   header: 'Reference field header',
   body: 'Reference field body',
@@ -41,6 +42,36 @@ async function clearRecordedUtagCalls(page: Page): Promise<void> {
     target.__enlbUtagCalls?.splice(0)
   })
 }
+
+test('creates a dynamic reference field before interaction and preserves native submission', async ({ page }) => {
+  await page.goto(
+    harnessUrl({
+      ...baseConfig,
+      en: { referenceField: DYNAMIC_FIELD },
+      cta: { label: 'Accept', action: 'close' },
+    }),
+  )
+
+  const field = page.locator(`#en-form input[name="${DYNAMIC_FIELD}"]`)
+  await expect(field).toHaveCount(1)
+  await expect(field).toHaveAttribute('type', 'hidden')
+  await expect(field).toHaveValue('')
+  await expect(field).not.toHaveAttribute('id')
+  await expect(field).not.toHaveAttribute('required')
+
+  await expect(page.locator('.enlb-overlay')).toBeVisible()
+  await page.locator('.enlb-cta:not(.enlb-cta--secondary)').click()
+  await expect(field).toHaveValue('lightbox_accepted')
+
+  expect(
+    await page.locator('#en-form').evaluate(
+      (element, fieldName) => new FormData(element as HTMLFormElement).get(fieldName),
+      DYNAMIC_FIELD,
+    ),
+  ).toBe('lightbox_accepted')
+
+  await expectFormSubmits(page)
+})
 
 test('writes accepted for a close-action primary CTA and preserves form submission', async ({ page }) => {
   await page.goto(harnessUrl({
