@@ -3,6 +3,8 @@ import { isSafeReferenceFieldName, normalizeENConfig } from './config'
 import { installReferenceFieldListeners } from './reference-field'
 
 const FIELD = 'supporter.appealCode'
+const CLIENT_FIELD = 'en_txn10'
+const DYNAMIC_FIELD = 'supporter.questions.848518'
 
 type FormFixture = {
   form: HTMLFormElement
@@ -78,6 +80,12 @@ function dispatch(name: string, detail: object): void {
 
 function fieldInput(form: HTMLFormElement, field = FIELD): HTMLInputElement | null {
   return Array.from(form.querySelectorAll<HTMLInputElement>('input')).find((input) => input.name === field) ?? null
+}
+
+function attributeSnapshot(input: HTMLInputElement): Array<[string, string]> {
+  return Array.from(input.attributes).map(
+    (attribute): [string, string] => [attribute.name, attribute.value],
+  )
 }
 
 function setDocumentReadyState(value: DocumentReadyState): () => void {
@@ -179,6 +187,107 @@ describe('EN reference-field listener', () => {
     expect(isSafeReferenceFieldName(`a${'b'.repeat(127)}`)).toBe(true)
     expect(isSafeReferenceFieldName(`a${'b'.repeat(128)}`)).toBe(false)
     expect(normalizeENConfig({ en: { referenceField: `a${'b'.repeat(128)}` } })).toEqual({})
+  })
+
+  it('creates the configured field immediately during installation without writing an outcome', () => {
+    const { form } = mountEnForm()
+    const writes: CustomEvent[] = []
+    const onWrite = (event: Event) => writes.push(event as CustomEvent)
+    const setItem = vi.spyOn(Storage.prototype, 'setItem')
+    document.addEventListener('enlb:field-write', onWrite)
+
+    const uninstall = installReferenceFieldListeners({ referenceField: CLIENT_FIELD })
+
+    try {
+      const input = fieldInput(form, CLIENT_FIELD)
+      expect(form.querySelectorAll(`input[name="${CLIENT_FIELD}"]`)).toHaveLength(1)
+      expect(input).not.toBeNull()
+      expect(input!.type).toBe('hidden')
+      expect(input!.name).toBe(CLIENT_FIELD)
+      expect(input!.value).toBe('')
+      expect(input!.id).toBe('')
+      expect(input!.hasAttribute('id')).toBe(false)
+      expect(input!.hasAttribute('required')).toBe(false)
+      expect(input!.className).toBe('')
+      expect(input!.parentElement).toBe(form)
+      expect(writes).toHaveLength(0)
+      expect(setItem).not.toHaveBeenCalled()
+      expect(sessionStorage.length).toBe(0)
+    } finally {
+      uninstall()
+      document.removeEventListener('enlb:field-write', onWrite)
+      setItem.mockRestore()
+    }
+  })
+
+  it('uses the normalized dotted field name instead of a fixed field name', () => {
+    const { form } = mountEnForm()
+    const config = normalizeENConfig({ en: { referenceField: DYNAMIC_FIELD } })
+    const uninstall = installReferenceFieldListeners(config)
+
+    try {
+      expect(fieldInput(form, DYNAMIC_FIELD)).not.toBeNull()
+      expect(fieldInput(form, CLIENT_FIELD)).toBeNull()
+      expect(fieldInput(form, FIELD)).toBeNull()
+    } finally {
+      uninstall()
+    }
+  })
+
+  it.each(['hidden', 'visible'] as const)(
+    'does not alter an existing %s same-name input during eager ensure',
+    (kind) => {
+      const { form, input } = mountEnForm(kind)
+      const existing = input!
+      existing.value = 'preexisting'
+      existing.required = true
+      existing.setAttribute('aria-describedby', 'keep-me')
+      const before = {
+        type: existing.type,
+        value: existing.value,
+        id: existing.id,
+        required: existing.required,
+        className: existing.className,
+        attributes: attributeSnapshot(existing),
+      }
+
+      const uninstall = installReferenceFieldListeners({ referenceField: FIELD })
+
+      try {
+        expect(fieldInput(form)).toBe(existing)
+        expect(attributeSnapshot(existing)).toEqual(before.attributes)
+        expect({
+          type: existing.type,
+          value: existing.value,
+          id: existing.id,
+          required: existing.required,
+          className: existing.className,
+        }).toEqual({
+          type: before.type,
+          value: before.value,
+          id: before.id,
+          required: before.required,
+          className: before.className,
+        })
+        expect(form.querySelectorAll(`input[name="${FIELD}"]`)).toHaveLength(1)
+      } finally {
+        uninstall()
+      }
+    },
+  )
+
+  it('is idempotent across repeated installation for a missing configured field', () => {
+    const { form } = mountEnForm()
+    const firstUninstall = installReferenceFieldListeners({ referenceField: FIELD })
+    const secondUninstall = installReferenceFieldListeners({ referenceField: FIELD })
+
+    try {
+      expect(form.querySelectorAll(`input[name="${FIELD}"]`)).toHaveLength(1)
+      expect(fieldInput(form)!.value).toBe('')
+    } finally {
+      firstUninstall()
+      secondUninstall()
+    }
   })
 
   it('creates a hidden optional field for a primary CTA and emits the exact write detail', () => {
