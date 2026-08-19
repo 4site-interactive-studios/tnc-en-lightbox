@@ -290,6 +290,124 @@ describe('EN reference-field listener', () => {
     }
   })
 
+  it('creates the field once on the single DOMContentLoaded retry', () => {
+    const restoreReadyState = setDocumentReadyState('loading')
+    let uninstall: (() => void) | undefined
+
+    try {
+      uninstall = installReferenceFieldListeners({ referenceField: FIELD })
+      const { form } = mountEnForm()
+      expect(fieldInput(form)).toBeNull()
+
+      Object.defineProperty(document, 'readyState', { configurable: true, value: 'interactive' })
+      document.dispatchEvent(new Event('DOMContentLoaded'))
+      expect(form.querySelectorAll(`input[name="${FIELD}"]`)).toHaveLength(1)
+
+      document.dispatchEvent(new Event('DOMContentLoaded'))
+      expect(form.querySelectorAll(`input[name="${FIELD}"]`)).toHaveLength(1)
+    } finally {
+      uninstall?.()
+      restoreReadyState()
+    }
+  })
+
+  it('cancelling before DOMContentLoaded prevents eager creation', () => {
+    const restoreReadyState = setDocumentReadyState('loading')
+    let uninstall: (() => void) | undefined
+
+    try {
+      uninstall = installReferenceFieldListeners({ referenceField: FIELD })
+      const { form } = mountEnForm()
+      uninstall()
+      uninstall = undefined
+
+      Object.defineProperty(document, 'readyState', { configurable: true, value: 'interactive' })
+      document.dispatchEvent(new Event('DOMContentLoaded'))
+      expect(fieldInput(form)).toBeNull()
+    } finally {
+      uninstall?.()
+      restoreReadyState()
+    }
+  })
+
+  it('reinstalling before DOMContentLoaded never creates the stale field', () => {
+    const restoreReadyState = setDocumentReadyState('loading')
+    let uninstallOld: (() => void) | undefined
+    let uninstallCurrent: (() => void) | undefined
+
+    try {
+      uninstallOld = installReferenceFieldListeners({ referenceField: FIELD })
+      uninstallOld()
+      uninstallOld = undefined
+      uninstallCurrent = installReferenceFieldListeners({ referenceField: DYNAMIC_FIELD })
+      const { form } = mountEnForm()
+
+      Object.defineProperty(document, 'readyState', { configurable: true, value: 'interactive' })
+      document.dispatchEvent(new Event('DOMContentLoaded'))
+
+      expect(fieldInput(form, FIELD)).toBeNull()
+      expect(form.querySelectorAll(`input[name="${DYNAMIC_FIELD}"]`)).toHaveLength(1)
+    } finally {
+      uninstallOld?.()
+      uninstallCurrent?.()
+      restoreReadyState()
+    }
+  })
+
+  it('does not retry after DOMContentLoaded when the form is still absent', () => {
+    const restoreReadyState = setDocumentReadyState('loading')
+    let uninstall: (() => void) | undefined
+
+    try {
+      uninstall = installReferenceFieldListeners({ referenceField: FIELD })
+      Object.defineProperty(document, 'readyState', { configurable: true, value: 'interactive' })
+      document.dispatchEvent(new Event('DOMContentLoaded'))
+      const { form } = mountEnForm()
+      document.dispatchEvent(new Event('DOMContentLoaded'))
+      expect(fieldInput(form)).toBeNull()
+    } finally {
+      uninstall?.()
+      restoreReadyState()
+    }
+  })
+
+  it('does not retry in a loaded document with no form', () => {
+    const restoreReadyState = setDocumentReadyState('complete')
+    const addEventListener = vi.spyOn(document, 'addEventListener')
+    let uninstall: (() => void) | undefined
+
+    try {
+      uninstall = installReferenceFieldListeners({ referenceField: FIELD })
+      expect(document.querySelector(`input[name="${FIELD}"]`)).toBeNull()
+
+      // Arity-independent: only the first argument of each registration is inspected, so a
+      // two-argument addEventListener('DOMContentLoaded', fn) — no options object — cannot
+      // slip past this guard the way an argument-shape matcher would let it.
+      const registeredEventTypes = addEventListener.mock.calls.map(([type]) => type)
+      expect(registeredEventTypes).not.toContain('DOMContentLoaded')
+    } finally {
+      uninstall?.()
+      addEventListener.mockRestore()
+      restoreReadyState()
+    }
+  })
+
+  it('swallows eager DOM lookup failures without throwing into the host page', () => {
+    const querySelector = vi.spyOn(document, 'querySelector').mockImplementation(() => {
+      throw new Error('host DOM failure')
+    })
+    let uninstall: (() => void) | undefined
+
+    try {
+      expect(() => {
+        uninstall = installReferenceFieldListeners({ referenceField: FIELD })
+      }).not.toThrow()
+    } finally {
+      uninstall?.()
+      querySelector.mockRestore()
+    }
+  })
+
   it('creates a hidden optional field for a primary CTA and emits the exact write detail', () => {
     const { form } = mountEnForm()
     const writes: CustomEvent[] = []
