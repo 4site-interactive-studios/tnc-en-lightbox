@@ -42,16 +42,20 @@ export function installReferenceFieldListeners(config: NormalizedENIntegrationCo
     }
   }
 
+  let uninstallEagerEnsure: () => void = () => undefined
+
   try {
     document.addEventListener('enlb:cta', onCta)
     document.addEventListener('enlb:dismiss', onDismiss)
-    ensureField(field)
+    uninstallEagerEnsure = ensureFieldOnLoad(field)
     replayPending(field)
   } catch {
+    uninstallEagerEnsure()
     return () => undefined
   }
 
   return () => {
+    uninstallEagerEnsure()
     document.removeEventListener('enlb:cta', onCta)
     document.removeEventListener('enlb:dismiss', onDismiss)
   }
@@ -73,6 +77,43 @@ function ensureField(field: string): boolean {
   } catch {
     // Page-load ensure is best-effort and must not escape into the host page.
     return false
+  }
+}
+
+function ensureFieldOnLoad(field: string): () => void {
+  let active = true
+  let pendingReady: (() => void) | null = null
+
+  // `ensureField` is fully self-guarded and never throws, so the only host-DOM boundaries that need
+  // an explicit guard here are the `readyState` read and listener (de)registration.
+  if (!ensureField(field)) {
+    try {
+      if (document.readyState === 'loading') {
+        const onReady = (): void => {
+          pendingReady = null
+          if (!active) return
+          ensureField(field)
+        }
+
+        pendingReady = onReady
+        document.addEventListener('DOMContentLoaded', onReady, { once: true })
+      }
+    } catch {
+      pendingReady = null
+      // A host document that rejects readyState reads or listener registration gets no retry.
+    }
+  }
+
+  return (): void => {
+    active = false
+    const onReady = pendingReady
+    pendingReady = null
+    if (!onReady) return
+    try {
+      document.removeEventListener('DOMContentLoaded', onReady)
+    } catch {
+      // The active flag still prevents a queued callback from creating a stale field.
+    }
   }
 }
 
