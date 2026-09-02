@@ -14,7 +14,7 @@ On each page where the lightbox should appear, the page editor sets a global con
     cta: { label: "Sign now", href: "#petition", action: "redirect" },
   };
 </script>
-<script src="https://en-assets.tnc.org/en-lightbox.js?v=1.0.0" async></script>
+<script src="https://aaf1a18515da0e792f78-c27fdabe952dfc357fe25ebf5c8897ee.ssl.cf5.rackcdn.com/2246/en-lightbox.js" async></script>
 ```
 
 `window.ENLightbox` must be set **before or alongside** the script. The script auto-instantiates from it when it loads. It **does not open automatically** — it waits for the configured trigger (or an explicit `ENLightboxAPI.open()` call).
@@ -330,7 +330,7 @@ The built file is committed at `dist/en-lightbox.js`. It is a single, self-conta
 ### Per-release update workflow
 
 ```html
-<script src="https://en-assets.example.com/en-lightbox.js?v=1.2.3" async></script>
+<script src="https://aaf1a18515da0e792f78-c27fdabe952dfc357fe25ebf5c8897ee.ssl.cf5.rackcdn.com/2246/en-lightbox.js?v=1.2.3" async></script>
 ```
 
 - Append `?v=VERSION` as a cache-busting query parameter when deploying a new version.
