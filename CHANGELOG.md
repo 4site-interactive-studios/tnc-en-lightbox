@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.2.0](https://github.com/4site-interactive-studios/tnc-en-lightbox/compare/v1.1.0...v1.2.0) (2026-08-19)
+
+
+### Features
+
+* **analytics:** track lightbox impressions and primary accepts ([e649402](https://github.com/4site-interactive-studios/tnc-en-lightbox/commit/e64940292d7d14320cb208277811bf9fab65cd48))
+* **analytics:** track lightbox impressions and primary accepts ([30e95e3](https://github.com/4site-interactive-studios/tnc-en-lightbox/commit/30e95e31833bb361607a652dcb685db39713c8b4))
+* **debug:** add URL-query diagnostics for lightbox tracking ([93219cf](https://github.com/4site-interactive-studios/tnc-en-lightbox/commit/93219cfc0cee1ae0fcd782b0e8d7e637db219ad3))
+* **debug:** add URL-query diagnostics for lightbox tracking ([b2f454e](https://github.com/4site-interactive-studios/tnc-en-lightbox/commit/b2f454e3650974b01e854f3bf45b7e01dde8cf52))
+* **en:** cancel stale eager retries ([2f14000](https://github.com/4site-interactive-studios/tnc-en-lightbox/commit/2f140006c011075b2cf0d6f9dac9bbeb7788cff6))
+* **en:** create configured reference field on page load ([b39e211](https://github.com/4site-interactive-studios/tnc-en-lightbox/commit/b39e2118e6cbc971b4cadade550ad0a651f01341))
+* **en:** create reference field during installation ([43e7dc0](https://github.com/4site-interactive-studios/tnc-en-lightbox/commit/43e7dc0b4f6d2b4d110420dee8a6a1ec55090c66))
+* **en:** record lightbox outcomes in reference fields ([914e194](https://github.com/4site-interactive-studios/tnc-en-lightbox/commit/914e19470eac91ea2964971c0337ec0be4e2ab72))
+* **en:** record lightbox outcomes in reference fields ([ef144dd](https://github.com/4site-interactive-studios/tnc-en-lightbox/commit/ef144dd7ece3aabfa3aab893ddafd1ad82b572b3))
+* **lightbox:** add lifecycle event seam ([abfb474](https://github.com/4site-interactive-studios/tnc-en-lightbox/commit/abfb474f5a6b24cadd78c471f36e7c3bbf11387c))
+* **lightbox:** add lifecycle event seam ([7b86611](https://github.com/4site-interactive-studios/tnc-en-lightbox/commit/7b86611992c7a3e180f7df8dbad24c07f2705aae))
+
+
+### Bug Fixes
+
+* **en:** defer carry-over replay until DOM ready ([8a7d7bd](https://github.com/4site-interactive-studios/tnc-en-lightbox/commit/8a7d7bd78d907bcf133ae349b470221585e85ab1))
+* **en:** defer carry-over replay until DOM ready ([377215f](https://github.com/4site-interactive-studios/tnc-en-lightbox/commit/377215fa7bb0831805586f50e03368edf5d5b497))
+* **en:** support real EN page markup and dotted reference-field names ([2481b9c](https://github.com/4site-interactive-studios/tnc-en-lightbox/commit/2481b9c3b6466feafa3633d61075ce9ca87ba651))
+* **en:** support real EN page markup and dotted reference-field names ([9a3541b](https://github.com/4site-interactive-studios/tnc-en-lightbox/commit/9a3541b8e034ab5d6583d2f0ad199dc6c4ab183c))
+
 ## [1.1.0](https://github.com/4site-interactive-studios/tnc-en-lightbox/compare/v1.0.0...v1.1.0) (2026-07-02)
 
 
