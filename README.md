@@ -115,7 +115,11 @@ python3 tools/sdd/check_learnings_freshness.py --base main
 
 ## Contributing
 
-This project uses Spec-Driven Development under `.agentic/`. Before contributing code, read [`.agentic/AGENTS.md`](.agentic/AGENTS.md) and [`.agentic/WORKFLOW.md`](.agentic/WORKFLOW.md). Every PR needs an independent reviewer, a `Closes #N` body line, and green CI.
+This project uses Spec-Driven Development under `.agentic/`. Before contributing, read
+[`.agentic/AGENTS.md`](.agentic/AGENTS.md) and
+[`.agentic/WORKFLOW.md`](.agentic/WORKFLOW.md). Tests cover behavior changes in either order;
+default and docs-only work skip review, hard work gets one blocker-only review, and green reversible
+pull requests integrate automatically.
 
 ## Releasing & hosting
 

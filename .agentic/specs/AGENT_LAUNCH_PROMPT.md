@@ -1,32 +1,32 @@
 # Agent launch prompt
 
-Paste-ready prompt for dispatching a coding agent against a stream brief. Fill the brackets; keep the
-GATES block verbatim.
+Paste-ready prompt for a default or hard stream. The coordinator creates the worktree and supplies
+the exact values before dispatch. Eligible docs-only work uses the globally loaded scribe contract
+instead.
 
+```text
+STREAM: <stream id> - <name>
+CLASSIFICATION: default | hard
+WORKTREE: <absolute assigned worktree>
+BRANCH: <assigned branch>
+
+GATES:
+- Verify cwd and HEAD match the assigned worktree and branch. Never touch main, another worktree, or
+  Git state.
+- Read `.agentic/AGENTS.md`, `.agentic/WORKFLOW.md`, relevant `LEARNINGS.md` entries, and the brief.
+- Test every behavior change before or after implementation. If behavior does not change, report
+  `[no-test: <reason>]`.
+- Run the exact verification command under the real sandbox profile.
+- Never bypass hooks, weaken a gate, force-push, or add co-author trailers.
+
+GOAL: <exact requested outcome>
+CONSTRAINTS: <exact scope and invariants>
+ACCEPTANCE: <observable acceptance criteria>
+VERIFY: <literal command>
+
+REPORT: classification, changed files, exact verification output, sandbox profile, cross-stream
+flags, and any earned `LEARNINGS.md` entry. Leave the tree edited but uncommitted.
 ```
-========================================================
-STREAM: <stream id> — <name>
-========================================================
 
-GATES (self-check BEFORE any work):
-- WORKTREE: git worktree add ../.worktrees/<name> -b feat/<slug> main
-  — verify HEAD == branch; never touch main or another worktree.
-- IDENTITY: git config user.email fern@ndo.io && git config user.name "Fernando Santos";
-  export the GIT_AUTHOR_*/GIT_COMMITTER_* vars; verify `git var GIT_AUTHOR_IDENT` shows
-  fern@ndo.io. No Co-Authored-By. Never bypass hooks.
-- TDD + mutation-verify: red->green per behavior; then break ONE load-bearing line, show the NAMED
-  test that reds (file:line, before->after), revert. CI green (`npm test`) before the PR.
-- PR: conventional title; `Closes #<issue>` in the BODY; --force-with-lease only.
-  Body has "How tested" + "What was hard / non-obvious".
-- (Add AUTHZ / MIGRATION lines from WORKFLOW.md if this stream touches those surfaces.)
-
-REQUIRED READING (in order): .agentic/AGENTS.md, .agentic/WORKFLOW.md, the wave README, this brief.
-
-SCOPE: <paste the brief's In scope / Out of scope>.
-
-FIRST ACTION: <the brief's first action — usually the failing test>.
-
-REPORT BACK (one message): branch, PR#, what shipped, the mutation-verify line (named test +
-file:line), CI status, cross-stream flags.
-========================================================
-```
+For a hard stream, the coordinator sends this report and the risky-path focus to the independent
+reviewer. Default work proceeds directly to coordinator verification and integration.
