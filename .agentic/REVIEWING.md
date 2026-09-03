@@ -21,7 +21,9 @@ FINDINGS:
 - severity: blocker|major|minor | claim: <what is wrong> | evidence: <command and file:line>
 ```
 
-`VERDICT: BLOCKED` requires at least one blocker finding. `VERDICT: APPROVED` uses `FINDINGS: NONE`.
+`VERDICT: BLOCKED` requires at least one blocker finding. `VERDICT: APPROVED` may use
+`FINDINGS: NONE` or list only major/minor follow-ups. An approved verdict that lists a blocker is
+treated as blocked.
 Do not create review-audit branches or edit the worktree.
 
 ## Repair bound
