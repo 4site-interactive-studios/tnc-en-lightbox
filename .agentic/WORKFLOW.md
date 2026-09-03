@@ -1,63 +1,83 @@
-# WORKFLOW.md — the delivery loop and the GATES
+# WORKFLOW.md - lean delivery loop and gates
 
-## The delivery loop
+## Delivery loop
 
+```text
+ask -> classify docs-only | default | hard -> isolated worktree -> implement -> verify
+    -> hard only: one blocker-only review, at most one repair
+    -> pull request -> configured CI green -> automatic reversible merge -> cleanup
 ```
-Stream -> Coding Agent -> Pull Request -> Independent Reviewer -> (Changes -> re-review) -> Merge -> Cleanup
-```
 
-- **One tracking issue per stream**, linked from the PR body with `Closes #N`.
-- **Every PR gets an independent reviewer** (an agent that did NOT write it). See `REVIEWING.md`.
-- **Merge only on explicit, per-PR authorization** from the project owner or a recorded delegate.
-  No delegates configured — the principal authorizes every merge. Approval of one PR does not extend to the next.
-- Release tooling: **release-please**. HOLD for one consolidated release after a batch of PRs settles; vet every proposed version bump against the current manifest before merging — a bump proposing an already-released version is the tell that it's stale.
-- **Retrospective at wave exit.** Before starting the next wave, answer in the wave README: what
-  worked, what didn't, what to change. Lessons about *process* go here, not in `LEARNINGS.md` (which
-  is for technical invariants).
+The coordinator owns worktrees, branches, staging, commits, pushes, merge serialization, configured
+Git identity, and cleanup. Editing agents stay in the assigned worktree and leave an
+edited-but-uncommitted tree.
 
-## The GATES — self-check BEFORE and DURING every task
+Link an existing issue when one exists. Do not create an issue solely to satisfy ceremony.
 
-A GATE is a precondition you verify yourself, baked into the top of every dispatch. The point is to
-make expensive failures impossible by construction, not to catch them in review.
+## Classification
 
-- **WORKTREE.** Work in an isolated worktree off the base branch:
-  `git worktree add ../.worktrees/<name> -b feat/<slug> main`. Verify HEAD is the
-  new branch; never edit `main` directly or touch another worktree.
-- **IDENTITY.** Set and verify the commit identity before every commit (agent runtimes often inject
-  a wrong default):
-  ```
-  git config user.email fern@ndo.io && git config user.name "Fernando Santos"
-  export GIT_AUTHOR_NAME="Fernando Santos" GIT_AUTHOR_EMAIL=fern@ndo.io \
-         GIT_COMMITTER_NAME="Fernando Santos" GIT_COMMITTER_EMAIL=fern@ndo.io
-  ```
-  Then confirm `git var GIT_AUTHOR_IDENT` shows fern@ndo.io. No `Co-Authored-By` trailers.
-- **TDD + mutation-verify.** Red -> green -> refactor (history visible). Then prove the test bites:
-  break ONE load-bearing line, show the NAMED test going red (cite it file:line, before->after),
-  revert to green. CI green (`npm test`) before opening the PR.
-- **PR discipline.** Conventional-style title; body with a "How tested" section (command output) and
-  a "What was hard / non-obvious" section; `Closes #N` in the BODY (not the title); push with
-  `--force-with-lease` only, never plain `--force`; never bypass commit hooks.
-- **REPORT BACK in one message:** branch, PR number, what shipped, the mutation-verify line,
-  CI status, cross-stream flags.
+- **docs-only:** Every intended write is human-authored documentation or an already-required
+  generated documentation artifact. Follow the globally loaded exact-scope, one-scribe,
+  one-generation contract. Governance, tooling, source comments, configuration, CI, code, tests,
+  runtime assets, and distribution output do not qualify.
+- **default:** Ordinary reversible features, fixes, refactors, configuration, UI, and maintenance.
+- **hard:** Concurrency, state machines, ordering-sensitive work, schema or data migrations,
+  performance-critical paths, broad cross-cutting changes, durable `LEARNINGS.md` invariants, and
+  security-sensitive trust boundaries. When uncertain, choose hard.
 
-## Merge & cleanup discipline
+Split independently integrable work only when write paths are disjoint. Honor
+`sdd.config.json` `team.concurrent_streams`; overlapping paths serialize. A fourth batch or
+remediation-on-remediation stops and asks the owner before scope grows again.
 
-- **Merge with a merge commit** (`gh pr merge --merge`) — never squash. Squash collapses the
-  red -> green TDD history this workflow requires and the individual conventional commits
-  release-please reads. Never rebase a PR after approval — it invalidates the review (see
-  `REVIEWING.md`).
-- `--force-with-lease` only. Never bypass hooks — fix the cause or stash; don't work around it.
-- Audit branches (the reviewer's `*-review-audit`) are append-only, never force-pushed.
-- **Cleanup is gated on VERIFIED merge state**, never on the merge command having returned. Confirm
-  the PR's merged timestamp is non-null before deleting any branch or worktree.
-- The full close-out, every time: verify merged -> delete the remote branch -> remove the merged
-  worktree -> delete the local branch -> prune -> confirm the linked issue actually closed.
-- **Live worktrees are off-limits** — never run worktree surgery while an agent may be running in
-  one; confirm it's stopped first. A *merged* PR's worktree must be cleaned up.
+## Gates
 
-## Standing canon
+- **WORKTREE:** The coordinator creates and assigns an isolated worktree. Editing agents verify the
+  absolute cwd and branch, never mutate Git, and never touch `main` or another worktree.
+- **IDENTITY:** The coordinator uses the repository's configured `user.name` and `user.email`, then
+  verifies the commit with `git log -1 --format='%an <%ae>'`. Never bypass hooks or add generated
+  co-author trailers.
+- **BEHAVIOR COVERAGE:** Tests are required when behavior changes and may be written before or after
+  implementation. A no-behavior change uses `[no-test: <reason>]`; a bare waiver is invalid.
+- **CONTRACTS:** Regenerate and check committed artifacts from their source of truth. Diff-based
+  checks include untracked output.
+- **SANDBOX EVIDENCE:** Green claims require the exact verification command under the stream's real
+  sandbox profile.
+- **REPORT:** Return changed files, exact verification evidence, classification, cross-stream flags,
+  and any earned `LEARNINGS.md` entry in one message.
 
-- **No estimates.** Never estimate time/effort/duration. Factual progress ("5 of 8 done") and
-  calculated cost (tokens x rate) are fine; invented durations are not.
-- **Stay inside the stack** (ADR required to change it).
-- If blocked on an architectural decision outside your task's scope, stop and ask — don't guess.
+## Review hard streams only
+
+Default and docs-only streams receive no independent review. A hard stream receives one independent
+blocker-only review under `.agentic/REVIEWING.md`. One blocker may receive one fresh same-lane repair
+and one re-review. A remaining blocker becomes a separate fix-forward stream or a human decision;
+never grow a review loop.
+
+## Integration
+
+Before checks, capture the immutable target-base SHA used by diff-based gates. The coordinator
+commits, pushes, opens a conventional pull request, and runs configured CI. Include `Closes #N` only
+when an existing issue is linked. The body records `How tested`, `[no-test: <reason>]` when
+applicable, and `What was hard / non-obvious`.
+
+Red CI receives one fix round only when the failure belongs to the stream. If it remains red, stop
+and ask. Never weaken or remove a failing gate.
+
+Green reversible work merges automatically with a merge commit. Human approval is required only
+immediately before destructive schema or data migrations, deploys, publishes, releases, external
+service cutovers, secret rotation, force operations, or data deletion. Approval covers only the
+named irreversible action.
+
+## Cleanup and completion
+
+Verify `mergedAt` before cleanup. Fetch and fast-forward `main`, remove the exact merged worktree,
+delete the merged local and remote branch without force, prune, and confirm any linked issue closed.
+Never modify a live worktree.
+
+End the ask with one summary of merged work, CI state, deferred findings, fallbacks, and anything
+requiring human attention. There is no mandatory retrospective, review-audit branch, lessons sweep,
+or documentation sweep.
+
+## Historical guidance
+
+Process instructions in completed wave, roadmap, retrospective, and planning records describe their
+historical delivery. Decision 0002 and this file govern new work.
