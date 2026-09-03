@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/4site-interactive-studios/tnc-en-lightbox/compare/v1.2.0...v1.2.1) (2026-09-03)
+
+
+### Bug Fixes
+
+* **policy:** allow non-blocking review findings ([10b855b](https://github.com/4site-interactive-studios/tnc-en-lightbox/commit/10b855bb22ad181239a941ed083554a121003b47))
+
 ## [1.2.0](https://github.com/4site-interactive-studios/tnc-en-lightbox/compare/v1.1.0...v1.2.0) (2026-08-19)
 
 
