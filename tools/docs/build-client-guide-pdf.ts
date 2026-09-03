@@ -20,6 +20,17 @@
  * still read "Page 2 of N". `@page :first { margin: 0 }` (honored by Chromium for page geometry)
  * lets the cover background bleed to the paper edge in both passes.
  *
+ * Keep-together pagination is structural, not rule-based: Chromium ignores `break-after:
+ * avoid-page` on headings, so the converter wraps every h3 with the content that follows it (up
+ * to the next h2/h3, or the `---` that precedes one) in `<section class="subsection">` styled
+ * `break-inside: avoid-page`. Any subsection that fits on one page then moves as a unit — a
+ * heading is never stranded at a page bottom or separated from its code block — while a
+ * subsection taller than one page (demo 7, Example 4) still splits, as it must. h2 sections are
+ * not grouped: each h2 opens a fresh page via `page-break-before: always`. The `pre {
+ * break-after: avoid-page }` glue used for h2-level flow is switched back off inside
+ * subsections, where it would otherwise chain code-block-terminated subsections into one
+ * unbreakable run and force Chromium to split inside them anyway.
+ *
  * The cover is built from the guide itself: the h1 becomes the title and the h1's first paragraph
  * becomes the description under the fixed subtitle; both are dropped from the body flow (along
  * with the rule that separated them) so the body starts at the table of contents. The cover's
@@ -27,10 +38,11 @@
  * in CHANGELOG.md's top release heading — never the build clock — so builds are reproducible.
  *
  * Self-checks (fail the build): every `#anchor` TOC target must resolve to a generated heading id,
- * the four `### Example` headings must exist, the CDN URL must appear, no raw Markdown artifacts
- * may survive in the rendered text, both cover logo files must exist, be referenced by resolved
- * file path, and actually load in the page, and the cover's version + month/year line must match
- * package.json and the CHANGELOG-derived value.
+ * the four `### Example` headings must exist, the CDN URL must appear, all seven Live demo page
+ * links must survive into the rendered HTML and the `#live-demo-pages` anchor must resolve, no raw
+ * Markdown artifacts may survive in the rendered text, both cover logo files must exist, be
+ * referenced by resolved file path, and actually load in the page, and the cover's version +
+ * month/year line must match package.json and the CHANGELOG-derived value.
  */
 import { chromium } from '@playwright/test'
 import { execFileSync } from 'node:child_process'
@@ -222,6 +234,19 @@ function renderMarkdown(md: string): { body: string; headings: Heading[] } {
   const out: string[] = []
   const headings: Heading[] = []
   const usedSlugs = new Map<string, number>()
+  // Keep-together pagination: an open <section class="subsection"> wrapping the current h3 and
+  // everything after it. Chromium ignores `break-after: avoid-page` on headings, so the grouping
+  // is structural: `.subsection { break-inside: avoid-page }` moves any subsection that fits on
+  // one page as a unit and a heading is never stranded at a page bottom. Subsections taller than
+  // a page still split (expected — e.g. the long Design-options subsections). h2 sections are
+  // deliberately NOT grouped: each h2 starts a fresh page of its own.
+  let subsectionOpen = false
+  const closeSubsection = () => {
+    if (subsectionOpen) {
+      out.push('</section>')
+      subsectionOpen = false
+    }
+  }
   let i = 0
   while (i < lines.length) {
     const line = lines[i]
@@ -250,11 +275,25 @@ function renderMarkdown(md: string): { body: string; headings: Heading[] } {
       const raw = h[2].trim()
       const id = githubSlug(raw, usedSlugs)
       headings.push({ level, text: raw, id })
+      if (level === 3) {
+        closeSubsection()
+        out.push('<section class="subsection">')
+        subsectionOpen = true
+      } else if (level <= 2) {
+        closeSubsection()
+      }
       out.push(`<h${level} id="${id}">${renderInline(raw)}</h${level}>`)
       i++
       continue
     }
     if (/^-{3,}\s*$/.test(line)) {
+      // A `---` that precedes an h2/h3 closes the current subsection BEFORE the rule, so the
+      // rule stays a body-level sibling: `hr:has(+ h2)` keeps matching (the rule would be a
+      // stray line at the bottom of the previous page), and the rule between Example 3 and
+      // Example 4 stays outside the keep-together blocks.
+      let j = i + 1
+      while (j < lines.length && lines[j].trim() === '') j++
+      if (j < lines.length && /^#{2,3}\s/.test(lines[j])) closeSubsection()
       out.push('<hr>')
       i++
       continue
@@ -296,6 +335,7 @@ function renderMarkdown(md: string): { body: string; headings: Heading[] } {
     }
     out.push(`<p>${renderInline(buf.join(' '))}</p>`)
   }
+  closeSubsection()
   return { body: out.join('\n'), headings }
 }
 
@@ -422,12 +462,32 @@ const CSS = `
     padding-bottom: 6pt;
     border-bottom: 3px solid #006537;
     page-break-before: always;
-    page-break-after: avoid;
   }
   h3 { font-size: 15pt; font-weight: bold; color: #247b53; margin: 16pt 0 6pt; }
   h4 { font-size: 12.5pt; font-weight: bold; color: #2c3a33; margin: 12pt 0 4pt; }
-  h3, h4 { page-break-after: avoid; }
+  h2, h3, h4 { break-after: avoid-page; }
   p { margin: 0 0 10pt; }
+  /* ---- Pagination: never strand lines or split blocks across pages ---- */
+  p, li { orphans: 3; widows: 3; }
+  li { break-inside: avoid; }
+  pre, table, blockquote { break-inside: avoid-page; }
+  /* The converter wraps each h3 and everything up to the next h2/h3 (or the --- preceding
+     one) in <section class="subsection">, so a subsection that fits on one page moves as a
+     unit — a heading is never separated from the content that follows it. Subsections taller
+     than one page still split; that is expected (e.g. long Design-options subsections). */
+  .subsection { break-inside: avoid-page; }
+  /* A code block and the paragraph after it move to the next page together. */
+  pre { break-after: avoid-page; }
+  /* Inside a subsection, keep-together is the section's own job, so the pre glue above is
+     switched back off there. Left on, it defeats the subsection fix twice over: consecutive
+     subsections each ending in a code block (the demos, the examples) chain into one
+     unbreakable run far taller than any page — Chromium is then forced to split INSIDE a
+     subsection — and in a subsection too tall for one page, the code block glued to a tail
+     paragraph gets pushed to the next page, separating the heading from its code block. */
+  .subsection pre { break-after: auto; }
+  /* The h2 draws its own rule, so an hr immediately before it would be a stray line at
+     the bottom of the previous page. Rules between h3 examples stay. */
+  hr:has(+ h2) { display: none; }
   a { color: #006537; text-decoration: none; }
   hr { border: none; border-top: 1px solid #e5e7eb; margin: 14pt 0; }
   code {
@@ -441,9 +501,8 @@ const CSS = `
   pre {
     background: #0e1f17;
     border-radius: 8px;
-    padding: 16px 18px;
+    padding: 4px 18px;
     margin: 0 0 12pt;
-    page-break-inside: avoid;
   }
   pre code {
     background: transparent;
@@ -460,26 +519,30 @@ const CSS = `
   pre code .tk-c { color: #5b7d6b; }
   table {
     border-collapse: collapse;
+    table-layout: auto;
     width: 100%;
     margin: 0 0 12pt;
-    font-size: 10.5pt;
-    page-break-inside: avoid;
+    font-size: 9.5pt;
   }
   th {
     background: #003d24;
     color: #fff;
     font-weight: bold;
-    padding: 10px 14px;
+    padding: 7px 10px;
     text-align: left;
     vertical-align: top;
+    line-height: 1.4;
   }
   td {
     background: #fff;
     border-bottom: 1px solid #e5e7eb;
-    padding: 10px 14px;
+    padding: 7px 10px;
     text-align: left;
     vertical-align: top;
+    line-height: 1.4;
   }
+  /* Long URLs in table cells may wrap — links only, never inline-code chips. */
+  td a { overflow-wrap: anywhere; }
   ul, ol { margin: 0 0 10pt; padding-left: 20pt; }
   li { margin-bottom: 6px; }
   li::marker { color: #2c3a33; }
@@ -489,7 +552,6 @@ const CSS = `
     border-left: 3px solid #006537;
     border-radius: 6px;
     padding: 14px 18px;
-    page-break-inside: avoid;
   }
   blockquote p { margin: 0; }
 `
@@ -514,6 +576,20 @@ async function main(): Promise<void> {
   }
   if (!body.includes(CDN_URL_NEEDLE)) {
     throw new Error(`CDN URL '${CDN_URL_NEEDLE}' missing from rendered HTML`)
+  }
+  // Live demo pages section: all seven demo page links must survive into the rendered HTML,
+  // and the h2 must generate the #live-demo-pages anchor the TOC entry points at.
+  const demoPageIds = ['194392', '194390', '194391', '194707', '194708', '194709', '199476']
+  const missingDemoLinks = demoPageIds.filter(
+    (id) => !body.includes(`href="https://preserve.nature.org/page/${id}/`),
+  )
+  if (missingDemoLinks.length > 0) {
+    throw new Error(
+      `live demo page link(s) missing from rendered HTML: ${missingDemoLinks.join(', ')}`,
+    )
+  }
+  if (!ids.has('live-demo-pages')) {
+    throw new Error('#live-demo-pages anchor does not resolve to a generated heading id')
   }
 
   // --- Cover page ---
