@@ -19,11 +19,13 @@ when it appears, and how it looks — all from a few lines of config.
   - [Image position](#image-position)
   - [Close button](#close-button)
 - [How often it shows](#how-often-it-shows)
+- [Analytics tracking](#analytics-tracking)
 - [Optional diagnostics](#optional-diagnostics)
 - [Real examples](#real-examples)
   - [Example 1: Exit-intent monthly-giving nudge (forest)](#example-1-exit-intent-monthly-giving-nudge-forest)
   - [Example 2: Time-delayed donation prompt (sky)](#example-2-time-delayed-donation-prompt-sky)
   - [Example 3: Scroll-triggered petition signup](#example-3-scroll-triggered-petition-signup)
+  - [Example 4: Exit-intent redirect to a donation form (records the outcome on both pages)](#example-4-exit-intent-redirect-to-a-donation-form-records-the-outcome-on-both-pages)
 - [FAQ](#faq)
 
 ---
@@ -48,7 +50,7 @@ runs it). Place them anywhere — the `<head>` or before `</body>` both work.
     cta: { label: "Sign now", href: "#petition", action: "redirect" },
   };
 </script>
-<script src="https://en-assets.tnc.org/en-lightbox.js?v=1.0.0" async></script>
+<script src="https://aaf1a18515da0e792f78-c27fdabe952dfc357fe25ebf5c8897ee.ssl.cf5.rackcdn.com/2246/en-lightbox.js" async></script>
 ```
 
 The config must be set **before or at the same time** as the script tag. The popup does **not**
@@ -209,6 +211,62 @@ again until the window has passed.
 
 ---
 
+## Analytics tracking
+
+Analytics tracking is automatic. There is nothing to add to your lightbox config and no switch to
+turn on. The page must already have Tealium (`window.utag`), TNC's standard tag manager. When
+Tealium's `link` function is available, the lightbox sends the events below. When Tealium is not on
+the page, the lightbox sends nothing and keeps working normally.
+
+**What you will see:** Your config has no `analytics` setting. You use the same config and script
+tag as usual; tracking starts when Tealium is available.
+
+These are the only two analytics events:
+
+| Plain-language moment | Exact value sent |
+|---|---|
+| The lightbox opens | `lightbox_impression` |
+| The visitor clicks the main button (the primary CTA) | `lightbox_click` |
+
+The impression is sent once each time the lightbox opens. The click is sent only for the main
+button, including a main button that only closes the lightbox. Closing with X, Escape, by clicking
+the background, the "no thanks" link, or a secondary button sends no analytics event.
+
+`lightbox_name` is always the fixed value `inactivity-exit` on both events. It stays the same
+whether the lightbox opened because of time, scroll, inactivity, or exit intent. It is a label for
+the lightbox, not a third event.
+
+A payload is the small set of values sent for an event.
+
+The two exact payloads are:
+
+```javascript
+{ event_name: "lightbox_impression", lightbox_name: "inactivity-exit" }
+{ event_name: "lightbox_click", lightbox_name: "inactivity-exit" }
+```
+
+No personal or page data is ever included. The payload contains only the two fields shown above.
+
+To verify tracking, add `?debug=true` to the page URL and open the browser console. Open the
+lightbox and, if appropriate, click its main button. With Tealium on the page, the lines look like
+this:
+
+```text
+[ENLightbox debug] utag payload: { event_name: "lightbox_impression", lightbox_name: "inactivity-exit" }
+[ENLightbox debug] utag payload: { event_name: "lightbox_click", lightbox_name: "inactivity-exit" }
+```
+
+Without Tealium, the lines use this form instead:
+
+```text
+[ENLightbox debug] utag absent — would fire: { event_name: "lightbox_impression", lightbox_name: "inactivity-exit" }
+[ENLightbox debug] utag absent — would fire: { event_name: "lightbox_click", lightbox_name: "inactivity-exit" }
+```
+
+For the other diagnostic rules, see [Optional diagnostics](#optional-diagnostics).
+
+---
+
 ## Optional diagnostics
 
 For a QA run, append `?debug=true` or `?debug=log` to the **page URL**. Either value turns on
@@ -248,7 +306,7 @@ navigation).
     },
   };
 </script>
-<script src="https://en-assets.tnc.org/en-lightbox.js?v=1.0.0" async></script>
+<script src="https://aaf1a18515da0e792f78-c27fdabe952dfc357fe25ebf5c8897ee.ssl.cf5.rackcdn.com/2246/en-lightbox.js" async></script>
 ```
 
 ### Example 2: Time-delayed donation prompt (sky)
@@ -276,7 +334,7 @@ form. Uses the sky theme with the image on the left (`imagePosition: "left"`).
     },
   };
 </script>
-<script src="https://en-assets.tnc.org/en-lightbox.js?v=1.0.0" async></script>
+<script src="https://aaf1a18515da0e792f78-c27fdabe952dfc357fe25ebf5c8897ee.ssl.cf5.rackcdn.com/2246/en-lightbox.js" async></script>
 ```
 
 ### Example 3: Scroll-triggered petition signup
@@ -303,12 +361,77 @@ petition section. Light theme, image on top, close button placed outside the dia
     },
   };
 </script>
-<script src="https://en-assets.tnc.org/en-lightbox.js?v=1.0.0" async></script>
+<script src="https://aaf1a18515da0e792f78-c27fdabe952dfc357fe25ebf5c8897ee.ssl.cf5.rackcdn.com/2246/en-lightbox.js" async></script>
 ```
 
 ---
 
+### Example 4: Exit-intent redirect to a donation form (records the outcome on both pages)
+
+This example uses the same reference field on a cultivation page and its donation form.
+
+**Page 1 — cultivation page**
+
+```html
+<script>
+  window.ENLightbox = {
+    header: "Keep nature thriving",
+    body: "Your support protects the places and wildlife we all share.",
+    cta: {
+      label: "Donate now",
+      action: "redirect",
+      href: "https://example.org/donation-form", // replace with the donation page URL
+    },
+    dismissLabel: "No thanks",
+    en: { referenceField: "en_txn10" },
+    triggers: {
+      frequencyDays: 0, // for testing only
+      list: [{ type: "exit-intent" }],
+    },
+  };
+</script>
+<script src="https://aaf1a18515da0e792f78-c27fdabe952dfc357fe25ebf5c8897ee.ssl.cf5.rackcdn.com/2246/en-lightbox.js" async></script>
+```
+
+**Page 2 — donation form**
+
+The donation page must have an EN form with a field named `en_txn10`, then it can use this minimal
+config:
+
+```html
+<script>
+  window.ENLightbox = {
+    en: { referenceField: "en_txn10" },
+  };
+</script>
+<script src="https://aaf1a18515da0e792f78-c27fdabe952dfc357fe25ebf5c8897ee.ssl.cf5.rackcdn.com/2246/en-lightbox.js" async></script>
+```
+
+With no header, button, or triggers, no lightbox appears on page 2; the script only fills the
+`en_txn10` field.
+
+**What happens**
+
+1. When the visitor clicks the main button on page 1, the lightbox writes `lightbox_accepted` into
+   `en_txn10` on page 1 and remembers that outcome for the browser session.
+2. Page 2 fills its own `en_txn10` field before the visitor touches anything.
+3. The value submits with the donation. After the successful replay, the carry-over is cleared, so
+   it is written once on page 2 and then forgotten.
+
+This works within the same browser tab and session. The page 1 EN form must be present for the
+first write, and the donation page must use the same field name, `en_txn10`. Closing the lightbox
+with X, Escape, the background, "No thanks," or a secondary close action carries
+`lightbox_declined` the same way; a main button with `action: "close"` is still treated as accepted.
+
+---
+
 ## FAQ
+
+**Is the lightbox tracked in Tealium / Adobe Analytics?**
+
+The lightbox sends two fixed events through Tealium when `window.utag.link` is available; it does
+not send directly to Adobe Analytics. See [Analytics tracking](#analytics-tracking) for the exact
+payloads and a way to verify them.
 
 **Can the button link to another page?**
 

@@ -51,3 +51,7 @@ Before a release, confirm:
 - SDD gates green (`sdd-gates.yml` spec coupling, contracts, test coupling).
 - `npm run build` succeeds.
 - `gzip -c dist/en-lightbox.js | wc -c` ≤ 5200 (budget).
+
+## Client guide PDF
+
+`npm run docs:pdf` regenerates the client hand-off PDF at `docs/TNC-EN-Lightbox-Client-Guide.pdf` from `CLIENT_GUIDE.md` (via `tools/docs/build-client-guide-pdf.ts`). Rerun it whenever `CLIENT_GUIDE.md` changes so the committed PDF never goes stale.

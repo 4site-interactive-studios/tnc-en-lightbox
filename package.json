@@ -14,6 +14,7 @@
     "e2e:install": "playwright install --with-deps",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
+    "docs:pdf": "tsx tools/docs/build-client-guide-pdf.ts",
     "contracts:api-surface": "tsx tools/sdd/generate-api-surface.ts",
     "contracts:config-schema": "tsx tools/sdd/generate-config-schema.ts",
     "contracts:generate": "npm run contracts:api-surface && npm run contracts:config-schema"
