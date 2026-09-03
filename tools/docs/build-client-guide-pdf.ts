@@ -1,23 +1,63 @@
 #!/usr/bin/env node
 /**
- * build-client-guide-pdf.ts — renders CLIENT_GUIDE.md to docs/TNC-EN-Lightbox-Client-Guide.pdf.
+ * build-client-guide-pdf.ts — renders CLIENT_GUIDE.md to docs/TNC-EN-Lightbox-Client-Guide.pdf,
+ * styled after the delivered 4Site campaign-guide design (cover page, green section rules, dark
+ * code blocks, chip inline code, green-headed tables).
  *
- * Zero new dependencies: a small hand-written Markdown -> HTML converter covering exactly the
+ * Zero new npm dependencies: a small hand-written Markdown -> HTML converter covering exactly the
  * constructs CLIENT_GUIDE.md uses (ATX headings h1-h4, paragraphs, `---` rules, fenced code with
  * language, inline code, bold, italics, nested ordered/unordered lists, pipe tables with header
- * row, `[text](url)` links including `#anchor` links, blockquotes) plus Playwright's bundled
- * Chromium for the print. No network access at build time: system font stack, no external assets.
+ * row, `[text](url)` links including `#anchor` links, blockquotes), a minimal syntax tinter for
+ * `html`/`javascript`/`js` fences (object keys, string literals, `//` comments — no library), and
+ * Playwright's bundled Chromium for the print. No network access at build time: system font stack
+ * and local logo files only.
+ *
+ * One system tool is required beyond node/npm: poppler's `pdfunite` (and `pdfinfo`). Chromium's
+ * footerTemplate is drawn on every sheet of a render pass — CSS cannot suppress it for just the
+ * cover — so the cover is rendered as its own pass (`pageRanges: '1'`, zero margins, no footer)
+ * and the body as a second pass (`pageRanges: '2-'`, real margins, footer template); the two are
+ * then merged with pdfunite. Chromium keeps absolute page numbers under pageRanges, so body pages
+ * still read "Page 2 of N". `@page :first { margin: 0 }` (honored by Chromium for page geometry)
+ * lets the cover background bleed to the paper edge in both passes.
+ *
+ * Keep-together pagination is structural, not rule-based: Chromium ignores `break-after:
+ * avoid-page` on headings, so the converter wraps every h3 with the content that follows it (up
+ * to the next h2/h3, or the `---` that precedes one) in `<section class="subsection">` styled
+ * `break-inside: avoid-page`. Any subsection that fits on one page then moves as a unit — a
+ * heading is never stranded at a page bottom or separated from its code block — while a
+ * subsection taller than one page (demo 7, Example 4) still splits, as it must. h2 sections are
+ * not grouped: each h2 opens a fresh page via `page-break-before: always`. The `pre {
+ * break-after: avoid-page }` glue used for h2-level flow is switched back off inside
+ * subsections, where it would otherwise chain code-block-terminated subsections into one
+ * unbreakable run and force Chromium to split inside them anyway.
+ *
+ * The cover is built from the guide itself: the h1 becomes the title and the h1's first paragraph
+ * becomes the description under the fixed subtitle; both are dropped from the body flow (along
+ * with the rule that separated them) so the body starts at the table of contents. The cover's
+ * "Version X · Month Y" line takes the version from package.json and the month/year from the date
+ * in CHANGELOG.md's top release heading — never the build clock — so builds are reproducible.
  *
  * Self-checks (fail the build): every `#anchor` TOC target must resolve to a generated heading id,
- * the four `### Example` headings must exist, the CDN URL must appear, and no raw Markdown
- * artifacts may survive in the rendered text.
+ * the four `### Example` headings must exist, the CDN URL must appear, all seven Live demo page
+ * links must survive into the rendered HTML and the `#live-demo-pages` anchor must resolve, no raw
+ * Markdown artifacts may survive in the rendered text, both cover logo files must exist, be
+ * referenced by resolved file path, and actually load in the page, and the cover's version +
+ * month/year line must match package.json and the CHANGELOG-derived value.
  */
 import { chromium } from '@playwright/test'
+import { execFileSync } from 'node:child_process'
 import * as fs from 'node:fs'
+import * as os from 'node:os'
+import * as path from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 const SRC = 'CLIENT_GUIDE.md'
+const CHANGELOG = 'CHANGELOG.md'
 const OUT = 'docs/TNC-EN-Lightbox-Client-Guide.pdf'
 const CDN_URL_NEEDLE = 'rackcdn.com/2246/en-lightbox.js'
+const LOGO_TNC = 'docs/assets/logo-tnc.png'
+const LOGO_4SITE = 'docs/assets/logo-4site.png'
+const COVER_SUBTITLE = 'A campaign popup for your Engaging Networks pages.'
 
 interface Heading {
   level: number
@@ -60,6 +100,54 @@ function renderInline(input: string): string {
   text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
   text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>')
   return text.replace(/\uE000(\d+)\uE001/g, (_m, i: string) => codeSpans[Number(i)])
+}
+
+/**
+ * Minimal syntax tint for `html`/`javascript`/`js` fences, run on the ESCAPED code so markup like
+ * `<script>` stays literal. Double-quoted strings (`&quot;` after escaping) -> .tk-s, `//` line
+ * comments -> .tk-c, identifiers immediately before `:` (object keys) -> .tk-k, everything else
+ * keeps the base color. HTML tags are never tinted: their text contains no keys/strings/comments.
+ * `text` and other fences are not tinted at all.
+ */
+function tintCode(lang: string, raw: string): string {
+  const esc = escapeHtml(raw)
+  if (!/^(html|javascript|js)$/.test(lang)) return esc
+  const out: string[] = []
+  let i = 0
+  while (i < esc.length) {
+    if (esc.startsWith('&quot;', i)) {
+      let j = esc.indexOf('&quot;', i + 6)
+      while (j !== -1 && esc[j - 1] === '\\') j = esc.indexOf('&quot;', j + 6)
+      const end = j === -1 ? esc.length : j + 6
+      out.push(`<span class="tk-s">${esc.slice(i, end)}</span>`)
+      i = end
+      continue
+    }
+    if (esc.startsWith('//', i)) {
+      const nl = esc.indexOf('\n', i)
+      const end = nl === -1 ? esc.length : nl
+      out.push(`<span class="tk-c">${esc.slice(i, end)}</span>`)
+      i = end
+      continue
+    }
+    if (/[A-Za-z_$]/.test(esc[i])) {
+      let j = i + 1
+      while (j < esc.length && /[\w$]/.test(esc[j])) j++
+      let k = j
+      while (k < esc.length && (esc[k] === ' ' || esc[k] === '\t')) k++
+      if (esc[k] === ':') {
+        out.push(`<span class="tk-k">${esc.slice(i, j)}</span>${esc.slice(j, k)}:`)
+        i = k + 1
+        continue
+      }
+      out.push(esc.slice(i, j))
+      i = j
+      continue
+    }
+    out.push(esc[i])
+    i++
+  }
+  return out.join('')
 }
 
 function splitTableRow(line: string): string[] {
@@ -141,12 +229,24 @@ function renderList(lines: string[], start: number): { html: string; next: numbe
   return { html: out.join('\n'), next: i }
 }
 
-function renderMarkdown(md: string): { body: string; headings: Heading[]; title: string } {
+function renderMarkdown(md: string): { body: string; headings: Heading[] } {
   const lines = md.replace(/\r\n/g, '\n').split('\n')
   const out: string[] = []
   const headings: Heading[] = []
   const usedSlugs = new Map<string, number>()
-  let title = ''
+  // Keep-together pagination: an open <section class="subsection"> wrapping the current h3 and
+  // everything after it. Chromium ignores `break-after: avoid-page` on headings, so the grouping
+  // is structural: `.subsection { break-inside: avoid-page }` moves any subsection that fits on
+  // one page as a unit and a heading is never stranded at a page bottom. Subsections taller than
+  // a page still split (expected — e.g. the long Design-options subsections). h2 sections are
+  // deliberately NOT grouped: each h2 starts a fresh page of its own.
+  let subsectionOpen = false
+  const closeSubsection = () => {
+    if (subsectionOpen) {
+      out.push('</section>')
+      subsectionOpen = false
+    }
+  }
   let i = 0
   while (i < lines.length) {
     const line = lines[i]
@@ -165,7 +265,7 @@ function renderMarkdown(md: string): { body: string; headings: Heading[]; title:
       }
       i++ // closing fence
       out.push(
-        `<pre><code${lang ? ` class="language-${lang}"` : ''}>${escapeHtml(buf.join('\n'))}</code></pre>`,
+        `<pre><code${lang ? ` class="language-${lang}"` : ''}>${tintCode(lang, buf.join('\n'))}</code></pre>`,
       )
       continue
     }
@@ -175,12 +275,25 @@ function renderMarkdown(md: string): { body: string; headings: Heading[]; title:
       const raw = h[2].trim()
       const id = githubSlug(raw, usedSlugs)
       headings.push({ level, text: raw, id })
-      if (title === '' && level === 1) title = raw
+      if (level === 3) {
+        closeSubsection()
+        out.push('<section class="subsection">')
+        subsectionOpen = true
+      } else if (level <= 2) {
+        closeSubsection()
+      }
       out.push(`<h${level} id="${id}">${renderInline(raw)}</h${level}>`)
       i++
       continue
     }
     if (/^-{3,}\s*$/.test(line)) {
+      // A `---` that precedes an h2/h3 closes the current subsection BEFORE the rule, so the
+      // rule stays a body-level sibling: `hr:has(+ h2)` keeps matching (the rule would be a
+      // stray line at the bottom of the previous page), and the rule between Example 3 and
+      // Example 4 stays outside the keep-together blocks.
+      let j = i + 1
+      while (j < lines.length && lines[j].trim() === '') j++
+      if (j < lines.length && /^#{2,3}\s/.test(lines[j])) closeSubsection()
       out.push('<hr>')
       i++
       continue
@@ -222,75 +335,233 @@ function renderMarkdown(md: string): { body: string; headings: Heading[]; title:
     }
     out.push(`<p>${renderInline(buf.join(' '))}</p>`)
   }
-  return { body: out.join('\n'), headings, title }
+  closeSubsection()
+  return { body: out.join('\n'), headings }
+}
+
+/**
+ * Pulls the cover material out of the Markdown: the h1 (title) and the first paragraph after it
+ * (description). Returns the remaining Markdown with the h1, that paragraph, and the rule(s) that
+ * separated them from the content removed, so the rendered body starts at the table of contents.
+ */
+function extractCover(md: string): { title: string; description: string; bodyMd: string } {
+  const lines = md.replace(/\r\n/g, '\n').split('\n')
+  let i = 0
+  while (i < lines.length && lines[i].trim() === '') i++
+  const h1 = i < lines.length ? lines[i].match(/^#\s+(.*)$/) : null
+  if (!h1) throw new Error(`${SRC} must start with an h1 — it becomes the cover title`)
+  const title = h1[1].trim()
+  i++
+  while (i < lines.length && lines[i].trim() === '') i++
+  const para: string[] = []
+  while (i < lines.length && lines[i].trim() !== '') {
+    para.push(lines[i].trim())
+    i++
+  }
+  if (para.length === 0) {
+    throw new Error(`no paragraph after the h1 in ${SRC} — it becomes the cover description`)
+  }
+  while (i < lines.length && (lines[i].trim() === '' || /^-{3,}\s*$/.test(lines[i]))) i++
+  return { title, description: para.join(' '), bodyMd: lines.slice(i).join('\n') }
+}
+
+const MONTHS = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+]
+
+/** "Month YYYY" from the date in CHANGELOG.md's top release heading, e.g. `(2026-08-19)`. */
+function changelogMonthYear(changelog: string): string {
+  const m = changelog.match(/^## \[[^\]]+\]\([^)]*\) \((\d{4})-(\d{2})-(\d{2})\)/m)
+  if (!m) throw new Error(`no dated release heading (## [x.y.z](…) (YYYY-MM-DD)) found in ${CHANGELOG}`)
+  const month = MONTHS[Number(m[2]) - 1]
+  if (!month) throw new Error(`unparseable month in CHANGELOG release date '${m[0]}'`)
+  return `${month} ${m[1]}`
 }
 
 const CSS = `
+  @page :first { margin: 0; }
+  html { -webkit-print-color-adjust: exact; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family: Helvetica, "Helvetica Neue", Arial, sans-serif;
     font-size: 11pt;
-    line-height: 1.5;
-    color: #1a1a1a;
+    line-height: 1.55;
+    color: #2c3a33;
+    margin: 0;
   }
-  h1 { font-size: 20pt; margin: 0 0 12pt; }
-  h2 { font-size: 15pt; margin: 18pt 0 6pt; padding-bottom: 3pt; border-bottom: 1px solid #d0d7de; }
-  h3 { font-size: 12.5pt; margin: 14pt 0 4pt; }
-  h4 { font-size: 11pt; margin: 12pt 0 4pt; }
-  h1, h2, h3, h4 { page-break-after: avoid; }
-  p { margin: 0 0 8pt; }
-  a { color: #1a5fb4; text-decoration: none; }
-  hr { border: none; border-top: 1px solid #d0d7de; margin: 16pt 0; }
+  /* ---- Cover (page 1; @page :first removes the margins so the background bleeds) ---- */
+  .cover {
+    box-sizing: border-box;
+    width: 215.9mm;
+    height: 279.4mm;
+    padding: 26mm 18mm 20mm;
+    background: #fcfbf7;
+    display: flex;
+    flex-direction: column;
+    page-break-after: always;
+  }
+  .logo-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28pt;
+  }
+  .logo-tnc { height: 78px; }
+  .logo-4site { height: 92px; }
+  .cover-rule { border-top: 1px solid #e5e7eb; }
+  .cover-lede { margin-top: 40pt; }
+  .eyebrow {
+    color: #9ca3af;
+    font-size: 10pt;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin: 0;
+  }
+  .cover-title {
+    color: #2f6e2a;
+    font-size: 54pt;
+    font-weight: bold;
+    line-height: 1.04;
+    margin: 18pt 0 0;
+  }
+  .cover-subtitle { color: #2c3a33; font-size: 18pt; margin: 22pt 0 0; }
+  .cover-desc {
+    color: #767c83;
+    font-size: 13pt;
+    line-height: 1.55;
+    margin: 16pt 0 0;
+    max-width: 118mm;
+  }
+  .cover-foot { margin-top: auto; }
+  .cf-guide {
+    color: #111827;
+    font-size: 10pt;
+    font-weight: bold;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin: 16pt 0 0;
+  }
+  .cf-prepared { color: #4b5563; font-size: 12pt; margin: 9pt 0 0; }
+  .cf-version { color: #9ca3af; font-size: 11pt; margin: 7pt 0 0; }
+  /* ---- Body ---- */
+  h2 {
+    font-size: 24pt;
+    font-weight: bold;
+    color: #003d24;
+    margin: 0 0 14pt;
+    padding-bottom: 6pt;
+    border-bottom: 3px solid #006537;
+    page-break-before: always;
+  }
+  h3 { font-size: 15pt; font-weight: bold; color: #247b53; margin: 16pt 0 6pt; }
+  h4 { font-size: 12.5pt; font-weight: bold; color: #2c3a33; margin: 12pt 0 4pt; }
+  h2, h3, h4 { break-after: avoid-page; }
+  p { margin: 0 0 10pt; }
+  /* ---- Pagination: never strand lines or split blocks across pages ---- */
+  p, li { orphans: 3; widows: 3; }
+  li { break-inside: avoid; }
+  pre, table, blockquote { break-inside: avoid-page; }
+  /* The converter wraps each h3 and everything up to the next h2/h3 (or the --- preceding
+     one) in <section class="subsection">, so a subsection that fits on one page moves as a
+     unit — a heading is never separated from the content that follows it. Subsections taller
+     than one page still split; that is expected (e.g. long Design-options subsections). */
+  .subsection { break-inside: avoid-page; }
+  /* A code block and the paragraph after it move to the next page together. */
+  pre { break-after: avoid-page; }
+  /* Inside a subsection, keep-together is the section's own job, so the pre glue above is
+     switched back off there. Left on, it defeats the subsection fix twice over: consecutive
+     subsections each ending in a code block (the demos, the examples) chain into one
+     unbreakable run far taller than any page — Chromium is then forced to split INSIDE a
+     subsection — and in a subsection too tall for one page, the code block glued to a tail
+     paragraph gets pushed to the next page, separating the heading from its code block. */
+  .subsection pre { break-after: auto; }
+  /* The h2 draws its own rule, so an hr immediately before it would be a stray line at
+     the bottom of the previous page. Rules between h3 examples stay. */
+  hr:has(+ h2) { display: none; }
+  a { color: #006537; text-decoration: none; }
+  hr { border: none; border-top: 1px solid #e5e7eb; margin: 14pt 0; }
   code {
     font-family: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
-    font-size: 9.5pt;
-    background: #f3f4f6;
-    padding: 0.1em 0.3em;
-    border-radius: 3px;
-    overflow-wrap: anywhere;
+    font-size: 90%;
+    background: #eef2ef;
+    color: #2c3a33;
+    padding: 1px 6px;
+    border-radius: 4px;
   }
   pre {
-    background: #f6f8fa;
-    border: 1px solid #e1e4e8;
-    border-radius: 6px;
-    padding: 10px 12px;
-    margin: 0 0 10pt;
-    page-break-inside: avoid;
+    background: #0e1f17;
+    border-radius: 8px;
+    padding: 4px 18px;
+    margin: 0 0 12pt;
   }
   pre code {
     background: transparent;
     padding: 0;
-    font-size: 9pt;
+    border-radius: 0;
+    font-size: 9.5pt;
+    line-height: 1.5;
+    color: #d9efe3;
     white-space: pre-wrap;
     word-break: break-all;
   }
+  pre code .tk-k { color: #8dbbdc; }
+  pre code .tk-s { color: #ffd9a0; }
+  pre code .tk-c { color: #5b7d6b; }
   table {
     border-collapse: collapse;
+    table-layout: auto;
     width: 100%;
-    margin: 0 0 10pt;
-    font-size: 10pt;
-    page-break-inside: avoid;
+    margin: 0 0 12pt;
+    font-size: 9.5pt;
   }
-  th, td {
-    border: 1px solid #d0d7de;
-    padding: 5px 8px;
+  th {
+    background: #003d24;
+    color: #fff;
+    font-weight: bold;
+    padding: 7px 10px;
     text-align: left;
     vertical-align: top;
+    line-height: 1.4;
   }
-  th { background: #f0f2f5; }
-  ul, ol { margin: 0 0 8pt; padding-left: 22pt; }
-  li { margin-bottom: 2pt; }
+  td {
+    background: #fff;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 7px 10px;
+    text-align: left;
+    vertical-align: top;
+    line-height: 1.4;
+  }
+  /* Long URLs in table cells may wrap — links only, never inline-code chips. */
+  td a { overflow-wrap: anywhere; }
+  ul, ol { margin: 0 0 10pt; padding-left: 20pt; }
+  li { margin-bottom: 6px; }
+  li::marker { color: #2c3a33; }
   blockquote {
-    margin: 0 0 8pt;
-    padding-left: 12px;
-    border-left: 3px solid #d0d7de;
-    color: #555;
+    margin: 0 0 10pt;
+    background: #f2f5f3;
+    border-left: 3px solid #006537;
+    border-radius: 6px;
+    padding: 14px 18px;
   }
+  blockquote p { margin: 0; }
 `
 
 async function main(): Promise<void> {
   const md = fs.readFileSync(SRC, 'utf8')
   const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8')) as { version: string }
-  const { body, headings, title } = renderMarkdown(md)
+  const monthYear = changelogMonthYear(fs.readFileSync(CHANGELOG, 'utf8'))
+  const { title, description, bodyMd } = extractCover(md)
+  const { body, headings } = renderMarkdown(bodyMd)
 
   // --- Self-checks on the source/AST side ---
   const anchorTargets = [...md.matchAll(/\]\(#([^)]+)\)/g)].map((m) => m[1])
@@ -306,6 +577,60 @@ async function main(): Promise<void> {
   if (!body.includes(CDN_URL_NEEDLE)) {
     throw new Error(`CDN URL '${CDN_URL_NEEDLE}' missing from rendered HTML`)
   }
+  // Live demo pages section: all seven demo page links must survive into the rendered HTML,
+  // and the h2 must generate the #live-demo-pages anchor the TOC entry points at.
+  const demoPageIds = ['194392', '194390', '194391', '194707', '194708', '194709', '199476']
+  const missingDemoLinks = demoPageIds.filter(
+    (id) => !body.includes(`href="https://preserve.nature.org/page/${id}/`),
+  )
+  if (missingDemoLinks.length > 0) {
+    throw new Error(
+      `live demo page link(s) missing from rendered HTML: ${missingDemoLinks.join(', ')}`,
+    )
+  }
+  if (!ids.has('live-demo-pages')) {
+    throw new Error('#live-demo-pages anchor does not resolve to a generated heading id')
+  }
+
+  // --- Cover page ---
+  const logoTncPath = path.resolve(LOGO_TNC)
+  const logo4sitePath = path.resolve(LOGO_4SITE)
+  const logoTncUrl = pathToFileURL(logoTncPath).toString()
+  const logo4siteUrl = pathToFileURL(logo4sitePath).toString()
+  const versionLine = `Version ${pkg.version} · ${monthYear}`
+  const cover = `<div class="cover">
+  <div class="cover-head">
+    <div class="logo-row">
+      <img class="logo-tnc" src="${logoTncUrl}" alt="The Nature Conservancy">
+      <img class="logo-4site" src="${logo4siteUrl}" alt="4Site Studios">
+    </div>
+    <div class="cover-rule"></div>
+  </div>
+  <div class="cover-lede">
+    <p class="eyebrow">The Nature Conservancy</p>
+    <h1 class="cover-title">${renderInline(title)}</h1>
+    <p class="cover-subtitle">${COVER_SUBTITLE}</p>
+    <p class="cover-desc">${renderInline(description)}</p>
+  </div>
+  <div class="cover-foot">
+    <div class="cover-rule"></div>
+    <p class="cf-guide">Campaign Guide</p>
+    <p class="cf-prepared">Prepared by 4Site Studios for The Nature Conservancy</p>
+    <p class="cf-version">${versionLine}</p>
+  </div>
+</div>`
+
+  for (const [name, logoPath, logoUrl] of [
+    ['logo-tnc', logoTncPath, logoTncUrl],
+    ['logo-4site', logo4sitePath, logo4siteUrl],
+  ] as const) {
+    if (!fs.existsSync(logoPath)) {
+      throw new Error(`cover ${name} missing at ${logoPath} — run the logo extraction first`)
+    }
+    if (!cover.includes(`src="${logoUrl}"`)) {
+      throw new Error(`cover does not reference ${name} by its resolved file path ${logoUrl}`)
+    }
+  }
 
   const doc = `<!DOCTYPE html>
 <html lang="en">
@@ -315,46 +640,92 @@ async function main(): Promise<void> {
 <style>${CSS}</style>
 </head>
 <body>
+${cover}
 ${body}
 </body>
 </html>`
 
-  const browser = await chromium.launch()
+  if (!doc.includes(versionLine)) {
+    throw new Error(`cover version line '${versionLine}' missing from the document`)
+  }
+
+  // The logos are referenced by file path, so the page must itself be a file: document —
+  // Chromium refuses file: subresources on an about:blank (setContent) page.
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'client-guide-pdf-'))
   try {
-    const page = await browser.newPage()
-    await page.setContent(doc, { waitUntil: 'load' })
+    const htmlPath = path.join(tmpDir, 'guide.html')
+    const coverPdf = path.join(tmpDir, 'cover.pdf')
+    const bodyPdf = path.join(tmpDir, 'body.pdf')
+    fs.writeFileSync(htmlPath, doc)
 
-    // --- Self-check on the rendered text: no raw Markdown artifacts survive ---
-    const renderedText = await page.evaluate(() => document.body.innerText)
-    for (const artifact of ['**', '```', '|---|']) {
-      if (renderedText.includes(artifact)) {
-        throw new Error(`raw Markdown artifact survived in rendered text: '${artifact}'`)
+    const browser = await chromium.launch()
+    try {
+      const page = await browser.newPage()
+      await page.goto(pathToFileURL(htmlPath).toString(), { waitUntil: 'load' })
+
+      // --- Self-checks on the rendered page ---
+      const logoStatus = await page.evaluate(() => {
+        const imgs = Array.from(document.images)
+        return {
+          count: imgs.length,
+          allLoaded: imgs.every((img) => img.complete && img.naturalWidth > 0),
+        }
+      })
+      if (logoStatus.count !== 2 || !logoStatus.allLoaded) {
+        throw new Error('cover logos did not load in the rendered page')
       }
-    }
+      const renderedText = await page.evaluate(() => document.body.innerText)
+      for (const artifact of ['**', '```', '|---|']) {
+        if (renderedText.includes(artifact)) {
+          throw new Error(`raw Markdown artifact survived in rendered text: '${artifact}'`)
+        }
+      }
 
-    const footer = `<div style="font-size:8px; color:#666; width:100%; padding:0 18mm; display:flex; justify-content:space-between;">
+      const footer = `<div style="font-family:Helvetica,'Helvetica Neue',Arial,sans-serif; font-size:8.5pt; color:#9ca3af; width:100%; padding:0 18mm; display:flex; justify-content:space-between;">
   <span>TNC EN Lightbox — Client Guide · v${pkg.version}</span>
   <span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
 </div>`
 
+      // Pass 1: the cover alone — zero margins, no Chromium header/footer.
+      await page.pdf({
+        path: coverPdf,
+        format: 'Letter',
+        printBackground: true,
+        margin: { top: '0', bottom: '0', left: '0', right: '0' },
+        pageRanges: '1',
+      })
+      // Pass 2: the body — real margins and the footer. Chromium keeps absolute page
+      // numbers under pageRanges, so these read "Page 2 of N" … "Page N of N".
+      await page.pdf({
+        path: bodyPdf,
+        format: 'Letter',
+        printBackground: true,
+        displayHeaderFooter: true,
+        headerTemplate: '<div></div>',
+        footerTemplate: footer,
+        margin: { top: '20mm', bottom: '22mm', left: '18mm', right: '18mm' },
+        pageRanges: '2-',
+      })
+    } finally {
+      await browser.close()
+    }
+
     fs.mkdirSync('docs', { recursive: true })
-    await page.pdf({
-      path: OUT,
-      format: 'Letter',
-      printBackground: true,
-      displayHeaderFooter: true,
-      headerTemplate: '<div></div>',
-      footerTemplate: footer,
-      margin: { top: '18mm', bottom: '18mm', left: '18mm', right: '18mm' },
-    })
+    try {
+      execFileSync('pdfunite', [coverPdf, bodyPdf, OUT], { stdio: 'inherit' })
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : String(err)
+      throw new Error(`pdfunite (poppler) is required to merge the cover/body passes — ${detail}`, {
+        cause: err,
+      })
+    }
   } finally {
-    await browser.close()
+    fs.rmSync(tmpDir, { recursive: true, force: true })
   }
 
   const bytes = fs.statSync(OUT).size
-  const pdfText = fs.readFileSync(OUT).toString('latin1')
-  const pageMarkers = pdfText.match(/\/Type\s*\/Pages?/g) ?? []
-  const pageCount = pageMarkers.filter((m) => !m.endsWith('s')).length
+  const info = execFileSync('pdfinfo', [OUT]).toString('utf8')
+  const pageCount = Number(info.match(/^Pages:\s*(\d+)/m)?.[1])
   console.log(`wrote ${OUT} (${bytes} bytes, ${pageCount} pages)`)
 }
 

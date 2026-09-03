@@ -55,3 +55,4 @@ Before a release, confirm:
 ## Client guide PDF
 
 `npm run docs:pdf` regenerates the client hand-off PDF at `docs/TNC-EN-Lightbox-Client-Guide.pdf` from `CLIENT_GUIDE.md` (via `tools/docs/build-client-guide-pdf.ts`). Rerun it whenever `CLIENT_GUIDE.md` changes so the committed PDF never goes stale.
+`npm run docs:pdf` also needs poppler's `pdfunite` and `pdfinfo` on the machine (macOS: `brew install poppler`), because the branded build renders the cover and body separately and merges them.

@@ -7,6 +7,14 @@ when it appears, and how it looks — all from a few lines of config.
 
 ## Table of contents
 
+- [Live demo pages](#live-demo-pages)
+  - [1. Forest, exit intent, one button that closes](#1-forest-exit-intent-one-button-that-closes)
+  - [2. Sky, five-second delay, button to donation](#2-sky-five-second-delay-button-to-donation)
+  - [3. Forest, scroll or inactivity, button to membership](#3-forest-scroll-or-inactivity-button-to-membership)
+  - [4. Sky, time or exit intent, with a decline link](#4-sky-time-or-exit-intent-with-a-decline-link)
+  - [5. Forest, scroll, custom color, image on top](#5-forest-scroll-custom-color-image-on-top)
+  - [6. Dark, inactivity, no close button](#6-dark-inactivity-no-close-button)
+  - [7. Sky, exit intent, donation redirect with outcome tracking](#7-sky-exit-intent-donation-redirect-with-outcome-tracking)
 - [How it works](#how-it-works)
 - [Adding it to a page](#adding-it-to-a-page)
 - [When it appears — the triggers](#when-it-appears--the-triggers)
@@ -27,6 +35,187 @@ when it appears, and how it looks — all from a few lines of config.
   - [Example 3: Scroll-triggered petition signup](#example-3-scroll-triggered-petition-signup)
   - [Example 4: Exit-intent redirect to a donation form (records the outcome on both pages)](#example-4-exit-intent-redirect-to-a-donation-form-records-the-outcome-on-both-pages)
 - [FAQ](#faq)
+
+---
+
+## Live demo pages
+
+These pages are live in Engaging Networks demo mode, so open one to see the behaviour for yourself. Each page includes its settings block so you can copy it as a starting point. All seven use `frequencyDays: 0`, so the popup appears on every visit; this is a testing setting, and the normal default is 7 days.
+
+| # | Look | When it appears | Button | Also shows | Page |
+|---|---|---|---|---|---|
+| 1 | Forest, image right | Exit intent on desktop | `Give monthly` closes the popup | `Last chance` eyebrow | [Open page 1](https://preserve.nature.org/page/194392/action/1?mode=DEMO&locale=en-US) |
+| 2 | Sky, image left | After 5 seconds | `Donate now` goes to the donation page | `Matching gift` eyebrow | [Open page 2](https://preserve.nature.org/page/194390/action/1?mode=DEMO&locale=en-US) |
+| 3 | Forest, image right | After 50% scroll or 20 seconds of inactivity | `Become a member` goes to the membership page | `Limited time` eyebrow; close button outside | [Open page 3](https://preserve.nature.org/page/194391/donate/1?mode=DEMO&locale=en-US) |
+| 4 | Sky, image right | After 30 seconds or exit intent on desktop | `Give today` goes to the donation page | `Before you go` eyebrow; `No thanks` link | [Open page 4](https://preserve.nature.org/page/194707/action/1?mode=DEMO&locale=en-US) |
+| 5 | Forest, image on top | After scrolling | See the page | Custom color; eyebrow | [Open page 5](https://preserve.nature.org/page/194708/donate/1?mode=DEMO&locale=en-US) |
+| 6 | Dark, image left | After 10 seconds of inactivity | `Subscribe` goes to the signup page | `Don't miss this` eyebrow; no close button; image hidden on phones | [Open page 6](https://preserve.nature.org/page/194709/action/1?mode=DEMO&locale=en-US) |
+| 7 | Sky, image left | Exit intent on desktop | `Give now` goes to donation page 199477 | `Matching gift` eyebrow; `No thanks` link; outcome field `en_txn10` | [Open page 7](https://preserve.nature.org/page/199476/action/1?mode=DEMO&locale=en-US) |
+
+### 1. Forest, exit intent, one button that closes
+
+- Move the mouse toward the browser close button or address bar on a desktop to trigger the popup.
+- The main `Give monthly` button closes the popup without navigating. It still counts as accepted.
+- The forest design puts the image on the right and shows the `Last chance` eyebrow.
+
+[Open live demo page 1](https://preserve.nature.org/page/194392/action/1?mode=DEMO&locale=en-US)
+
+```javascript
+window.ENLightbox = {
+  eyebrow: "Last chance",
+  header: "Don't go yet",
+  body: "Your monthly gift protects forests, rivers, and wildlife year-round.",
+  image: { src: "https://natureconservancy-h.assetsadobe.com/is/image/content/dam/tnc/nature/en/photos/i/l/IL_MRCC181025_D524_square.jpg?wid=1000&hei=600&fit=crop", alt: "Forest landscape" },
+  cta: { label: "Give monthly", action: "close" },
+  theme: { preset: "forest" },
+  layout: { imagePosition: "right" },
+  triggers: { frequencyDays: 0, list: [{ type: "exit-intent" }] },
+};
+```
+
+### 2. Sky, five-second delay, button to donation
+
+- Wait five seconds for the popup to appear.
+- The `Donate now` button goes to the donation page.
+- The sky design puts the image on the left and shows the `Matching gift` eyebrow.
+
+[Open live demo page 2](https://preserve.nature.org/page/194390/action/1?mode=DEMO&locale=en-US)
+
+```javascript
+window.ENLightbox = {
+  eyebrow: "Matching gift",
+  header: "Double your impact",
+  body: "Every dollar donated today is matched through midnight. Don't miss this chance.",
+  image: { src: "https://natureconservancy-h.assetsadobe.com/is/image/content/dam/tnc/nature/en/photos/w/o/WOPA160517_D056-resized.jpg?crop=864%2C0%2C1728%2C2304&wid=600&hei=800&scl=2.88", alt: "Matching gift" },
+  cta: { label: "Donate now", href: "https://support.nature.org/donate", action: "redirect" },
+  theme: { preset: "sky" },
+  layout: { imagePosition: "left" },
+  triggers: { frequencyDays: 0, list: [{ type: "time", delayMs: 5000 }] },
+};
+```
+
+### 3. Forest, scroll or inactivity, button to membership
+
+- Scroll to 50% of the page or stop interacting for 20 seconds to trigger the popup. The first trigger to fire wins.
+- The `Become a member` button goes to the membership page.
+- The forest design puts the image on the right, shows the `Limited time` eyebrow, and places the close button outside the dialog.
+
+[Open live demo page 3](https://preserve.nature.org/page/194391/donate/1?mode=DEMO&locale=en-US)
+
+```javascript
+window.ENLightbox = {
+  eyebrow: "Limited time",
+  header: "Will you join us?",
+  body: "Members like you fund the science that saves the lands and waters we all rely on.",
+  image: { src: "https://natureconservancy-h.assetsadobe.com/is/image/content/dam/tnc/nature/en/photos/t/n/tnc_42230974.jpg?wid=1000&hei=600&fit=crop", alt: "Member" },
+  cta: { label: "Become a member", href: "https://support.nature.org/membership", action: "redirect" },
+  theme: { preset: "forest" },
+  layout: { imagePosition: "right", closeButton: "outside" },
+  triggers: {
+    frequencyDays: 0,
+    list: [
+      { type: "scroll", percent: 50 },
+      { type: "inactivity", idleMs: 20000 },
+    ],
+  },
+};
+```
+
+### 4. Sky, time or exit intent, with a decline link
+
+- Wait 30 seconds or move the mouse toward the browser close button or address bar on a desktop to trigger the popup. The first trigger to fire wins.
+- The `Give today` button goes to the donation page, and `No thanks` is the decline link.
+- The sky design puts the image on the right and shows the `Before you go` eyebrow.
+
+[Open live demo page 4](https://preserve.nature.org/page/194707/action/1?mode=DEMO&locale=en-US)
+
+```javascript
+window.ENLightbox = {
+  eyebrow: "Before you go",
+  header: "One last thing",
+  body: "A gift today funds clean water, climate action, and resilient communities.",
+  image: { src: "https://natureconservancy-h.assetsadobe.com/is/image/content/dam/tnc/nature/en/photos/i/l/IL_MRCC181025_D524_square.jpg?wid=1000&hei=600&fit=crop", alt: "Clean water" },
+  cta: { label: "Give today", href: "https://support.nature.org/donate", action: "redirect" },
+  dismissLabel: "No thanks",
+  theme: { preset: "sky" },
+  layout: { imagePosition: "right" },
+  triggers: {
+    frequencyDays: 0,
+    list: [
+      { type: "time", delayMs: 30000 },
+      { type: "exit-intent" },
+    ],
+  },
+};
+```
+
+### 5. Forest, scroll, custom color, image on top
+
+- Scroll down the page to trigger the popup.
+- It uses the forest theme, a custom color, and an image above the text.
+- It includes an eyebrow label.
+
+[Open live demo page 5](https://preserve.nature.org/page/194708/donate/1?mode=DEMO&locale=en-US)
+
+Open the page and view its source to see the settings block used.
+
+### 6. Dark, inactivity, no close button
+
+- Stop interacting for 10 seconds to trigger the popup.
+- The `Subscribe` button goes to the signup page. There is no X close button; press Escape or click outside the popup to dismiss it.
+- The dark design puts the image on the left and hides the image on phones. It shows the `Don't miss this` eyebrow.
+
+[Open live demo page 6](https://preserve.nature.org/page/194709/action/1?mode=DEMO&locale=en-US)
+
+```javascript
+window.ENLightbox = {
+  eyebrow: "Don't miss this",
+  header: "Stay in the loop",
+  body: "Get the latest conservation news delivered to your inbox.",
+  image: { src: "https://natureconservancy-h.assetsadobe.com/is/image/content/dam/tnc/nature/en/photos/w/o/WOPA160517_D056-resized.jpg?crop=864%2C0%2C1728%2C2304&wid=600&hei=800&scl=2.88", alt: "Conservation news" },
+  cta: { label: "Subscribe", href: "https://support.nature.org/signup", action: "redirect" },
+  theme: { preset: "dark" },
+  layout: { imagePosition: "left", closeButton: "none" },
+  hideImageOnMobile: true,
+  triggers: { frequencyDays: 0, list: [{ type: "inactivity", idleMs: 10000 }] },
+};
+```
+
+### 7. Sky, exit intent, donation redirect with outcome tracking
+
+This is the live version of [Example 4: Exit-intent redirect to a donation form (records the outcome on both pages)](#example-4-exit-intent-redirect-to-a-donation-form-records-the-outcome-on-both-pages).
+
+- Move the mouse toward the browser close button or address bar on a desktop to trigger the popup.
+- The `Give now` button goes to donation page 199477 and records the outcome in `en_txn10`. For the outcome to carry over, the donation page must embed the script with the same `en.referenceField`.
+- The sky design puts the image on the left, shows the `Matching gift` eyebrow, and includes the `No thanks` link.
+
+[Open live demo page 7](https://preserve.nature.org/page/199476/action/1?mode=DEMO&locale=en-US)
+
+```javascript
+window.ENLightbox = {
+  eyebrow: "Matching gift",
+  header: "Double your impact",
+  body: "Every dollar donated today is matched through midnight. Don't miss this chance.",
+  image: { src: "https://natureconservancy-h.assetsadobe.com/is/image/content/dam/tnc/nature/en/photos/w/o/WOPA160517_D056-resized.jpg?crop=864%2C0%2C1728%2C2304&wid=600&hei=800&scl=2.88", alt: "Matching gift" },
+  cta: {
+    label: "Give now",
+    action: "redirect",
+    href: "https://preserve.nature.org/page/199477/donate/1",
+  },
+  dismissLabel: "No thanks",
+  theme: { preset: "sky" },
+  layout: { imagePosition: "left" },
+  triggers: {
+    exitIntent: true,     // desktop only: fires when the mouse leaves the viewport
+    frequencyDays: 0,     // testing only: show on every page load (default is 7)
+  },
+  en: {
+    referenceField: "en_txn10",
+  },
+};
+```
+
+See [When it appears — the triggers](#when-it-appears--the-triggers) and [Design options](#design-options) to understand what each setting means.
 
 ---
 
