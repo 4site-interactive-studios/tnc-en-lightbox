@@ -1,45 +1,33 @@
-# REVIEWING.md — the independent-reviewer protocol
+# REVIEWING.md - hard-stream review contract
 
-Every PR gets a reviewer that did **not** write it. Treat the author's report as a *claim* to be
-verified, not a fact. Default to skepticism; try to break each claim before accepting it.
+Only hard streams receive independent review. The reviewer did not write the change, treats the
+author's report as a claim, and verifies the risky path under the real sandbox profile.
 
-## Stance
+## Verify
 
-- **Reproduce, don't trust.** Re-run the suite (`npm test`), re-run the author's mutation-verify
-  yourself, re-trace the load-bearing paths. A claim you didn't reproduce is unverified.
-- **Verify against the durable record.** Confirm every relevant invariant in `LEARNINGS.md` is
-  preserved (quote the line where ordering/placement matters).
-
-## MUST-VERIFY checklist
-
-- CI is green on the exact head SHA (not just a local unit run).
-- The load-bearing correctness claim reproduces (run the mutation-verify yourself).
-- Behavior-equivalence claims hold (diff the path you're told is unchanged).
-- Scope is minimal; commit identity is `fern@ndo.io`; `Closes #N` is in the body.
+- Re-run the exact focused verification and confirm CI state on the reviewed head.
+- Trace the hard-risk path and every relevant `LEARNINGS.md` invariant.
+- Confirm scope, generated artifacts, and behavior-equivalence claims.
+- Report blocker findings only when the change is unsafe to integrate. Major and minor findings are
+  follow-up notes and do not block green reversible integration.
 
 ## Output
 
-- Append your verdict as `REVIEW-<stream>.md` to the wave's `*-review-audit` branch — **append-only,
-  never force-push** (the audit trail is evidence).
-- Reply ONE line to the coordinator: `APPROVED`, or `BLOCKED` + the specific failing item.
+Return exactly one canonical block:
 
-## Re-review rules
+```text
+VERDICT: APPROVED|BLOCKED
+FINDINGS:
+- severity: blocker|major|minor | claim: <what is wrong> | evidence: <command and file:line>
+```
 
-- **A BLOCKED -> APPROVED flip must be real.** When the blocked item is fixed, the *same* reviewer
-  re-verifies *exactly* that item. Never wave a fix through as "mechanical enough to skip re-review."
-- **A post-approval change invalidates the approval.** The review gates the EXACT code that lands.
-  If the PR changes after approval — a rebase touching logic, a regenerated artifact, any new commit
-  — the version bound for `main` is unreviewed; dispatch a fresh review of the integration delta.
-  Whoever resolved the change cannot review it.
+`VERDICT: BLOCKED` requires at least one blocker finding. `VERDICT: APPROVED` may use
+`FINDINGS: NONE` or list only major/minor follow-ups. An approved verdict that lists a blocker is
+treated as blocked.
+Do not create review-audit branches or edit the worktree.
 
-## Escalation
+## Repair bound
 
-- **Author-reviewer disagreement.** If the author believes a BLOCK is wrong, they write a one-line
-  dissent. The block stands until the project owner (or a recorded delegate) rules. The reviewer is
-  not overruled by the author's say-so.
-- **Owner unavailable.** If the owner is unreachable for more than 24 hours, a recorded delegate may
-  authorize a temporary merge **only** with a filed ADR documenting the override. This is exceptional,
-  not routine, and the owner reviews the ADR on return.
-- **Reviewer error pattern.** If the same reviewer is demonstrably wrong twice on the same PR (verified
-  by the owner), they are replaced by another independent reviewer for that PR. The incident is noted
-  in the review audit.
+A blocker receives at most one fresh same-lane repair followed by one re-review. If a blocker
+remains, the coordinator chooses a separate fix-forward stream or asks the owner. A post-review
+change to the risky path requires that one allowed re-review; never start another repair loop.

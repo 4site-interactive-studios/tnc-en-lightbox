@@ -19,13 +19,20 @@ Captured from the project brief — every agent must respect these:
 
 ## How agents work here
 
-- **Test-Driven Development**, always: red -> green -> refactor, with the commit history showing the
-  red commit before the green one.
-- **Stay inside the stack.** Don't introduce a new language, framework, or major dependency without
+- **Classify first.** Eligible documentation uses the global docs-only lane; ordinary reversible
+  work is default; concurrency, migrations, performance risk, broad cross-cutting work,
+  `LEARNINGS.md` invariants, and security-sensitive trust boundaries are hard.
+- **Test behavior changes.** Tests are required when runtime behavior changes and may be written
+  before or after implementation. Use `[no-test: <reason>]` when behavior does not change.
+- **Review hard work only.** Default and docs-only work skip independent review. Hard work receives
+  one blocker-only review and at most one repair.
+- **Integrate green reversible work automatically.** Human approval is reserved for the exact
+  irreversible class in `.agentic/WORKFLOW.md`.
+- **Stay inside the stack.** Do not introduce a new language, framework, or major dependency without
   an ADR in `.agentic/decisions/`.
-- **Conventional-style commits**; the PR body carries the issue-close keyword (`Closes #N`).
-- **The full working agreement is in `.agentic/WORKFLOW.md` (the GATES + delivery loop) and
-  `.agentic/REVIEWING.md` (how independent review works). Read both before your first task.**
+- **Use conventional commits.** Link an existing issue with `Closes #N`; do not create an issue only
+  for ceremony.
+- Read `.agentic/WORKFLOW.md` and `.agentic/REVIEWING.md` before the first task.
 
 ## Memory — two tiers, deterministic
 
@@ -42,6 +49,7 @@ future automation read and feed it, never gate it.
 
 ## Forbidden
 
-Bypassing TDD; adding dependencies without justification; committing secrets or large binaries;
-force-pushing shared branches; bypassing commit hooks; skipping/weakening tests to get green;
-estimating time/effort/duration (factual progress and calculated cost only — see WORKFLOW.md).
+Skipping required behavior coverage; adding dependencies without justification; committing secrets
+or large unexplained binaries; force-pushing shared branches; bypassing hooks; weakening tests or
+contracts to get green; expanding a docs-only request; exceeding the one-repair bound; estimating
+time, effort, or duration instead of reporting factual progress.
